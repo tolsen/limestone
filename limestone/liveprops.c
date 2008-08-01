@@ -175,6 +175,13 @@ void dav_repos_build_lpr_hash(dav_repos_resource * db_r)
 	apr_hash_set(db_r->lpr_hash, "creationdate", APR_HASH_KEY_STRING, creationdate);
     }
 
+    char *getlastmodified = apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
+    if (db_r->updated_at != NULL) {
+	dav_repos_format_strtime(DAV_STYLE_RFC822, db_r->updated_at, getlastmodified);
+	apr_hash_set(db_r->lpr_hash, "getlastmodified", APR_HASH_KEY_STRING,
+		 apr_pstrdup(pool, getlastmodified));
+    }
+
     if (db_r->displayname != NULL) {
 	apr_hash_set(db_r->lpr_hash, "displayname", APR_HASH_KEY_STRING,
 		     db_r->displayname);
@@ -183,13 +190,6 @@ void dav_repos_build_lpr_hash(dav_repos_resource * db_r)
     if (db_r->resourcetype == dav_repos_COLLECTION ||
         db_r->resourcetype == dav_repos_VERSIONED_COLLECTION)
         return;
-
-    char *getlastmodified = apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
-    if (db_r->updated_at != NULL) {
-	dav_repos_format_strtime(DAV_STYLE_RFC822, db_r->updated_at, getlastmodified);
-	apr_hash_set(db_r->lpr_hash, "getlastmodified", APR_HASH_KEY_STRING,
-		 apr_pstrdup(pool, getlastmodified));
-    }
 
     if (db_r->getcontentlength != DAV_REPOS_NODATA) {
 	s = apr_psprintf(pool, "%ld", db_r->getcontentlength);

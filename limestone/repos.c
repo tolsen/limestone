@@ -615,17 +615,17 @@ static dav_error *dav_repos_set_headers(request_rec * r,
     if (!resource->exists)
 	return NULL;
 
+    /* make sure the proper mtime is in the request record */
+    ap_update_mtime(r, dav_repos_parse_time(db_r->updated_at));
+
+    /* ### note that these use r->filename rather than <resource> */
+    ap_set_last_modified(r);
+
     /* For a directory, we will send text/html or text/xml. */
     if (db_r->resourcetype == dav_repos_COLLECTION) {
-        /* do not send a Last-Modified for a collection */
-        /* also, no etags */
+        /* do not send a Etag for a collection */
 	r->content_type = "text/html";
     } else {
-        /* make sure the proper mtime is in the request record */
-        ap_update_mtime(r, dav_repos_parse_time(db_r->updated_at));
-
-        /* ### note that these use r->filename rather than <resource> */
-        ap_set_last_modified(r);
 
         /* generate our etag and place it into the output */
         if(etag)

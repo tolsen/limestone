@@ -30,7 +30,7 @@
 <div class='indent'>
 <table width='100%'>
 <tr><td class='container' valign='bottom'><b>
-36 Foreign Key Constraints:</b>
+35 Foreign Key Constraints:</b>
 </td><td class='container' align='right'>
 <table>
   <tr><td class='container' align='right' valign='top'><a href='http://sourceforge.net' target='_blank'><img src='http://sourceforge.net/sflogo.php?group_id=137197&amp;type=1' alt='SourceForge.net' border='0' height='31' width='88'></a></td></tr>
@@ -91,13 +91,8 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
   <td class='detail'><a href='tables/acl_privileges.html'>acl_privileges</a>.id</td>
  </tr>
  <tr>
-  <td class='detail'>dav_acl_inheritance_parent_id_fkey</td>
-  <td class='detail'><a href='tables/dav_acl_inheritance.html'>dav_acl_inheritance</a>.parent_id</td>
-  <td class='detail'><a href='tables/dav_acl_inheritance.html'>dav_acl_inheritance</a>.resource_id</td>
- </tr>
- <tr>
-  <td class='detail'>dav_acl_inheritance_resource_id_fkey</td>
-  <td class='detail'><a href='tables/dav_acl_inheritance.html'>dav_acl_inheritance</a>.resource_id</td>
+  <td class='detail'>fk_acl_inheritance_resources</td>
+  <td class='detail'><a href='tables/acl_inheritance.html'>acl_inheritance</a>.resource_id</td>
   <td class='detail'><a href='tables/resources.html'>resources</a>.id</td>
  </tr>
  <tr>
@@ -108,6 +103,11 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <tr>
   <td class='detail'>fk_quota_pp_resource</td>
   <td class='detail'><a href='tables/quota.html'>quota</a>.principal_id</td>
+  <td class='detail'><a href='tables/principals.html'>principals</a>.resource_id</td>
+ </tr>
+ <tr>
+  <td class='detail'>fk_user_domains_principals</td>
+  <td class='detail'><a href='tables/user_domains.html'>user_domains</a>.principal_id</td>
   <td class='detail'><a href='tables/principals.html'>principals</a>.resource_id</td>
  </tr>
  <tr>
@@ -179,11 +179,6 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
   <td class='detail'>resources_owner_id_fkey</td>
   <td class='detail'><a href='tables/resources.html'>resources</a>.owner_id</td>
   <td class='detail'><a href='tables/principals.html'>principals</a>.resource_id</td>
- </tr>
- <tr>
-  <td class='detail'>resources_type_id_fkey</td>
-  <td class='detail'><a href='tables/resources.html'>resources</a>.type_id</td>
-  <td class='detail'><a href='tables/resource_types.html'>resource_types</a>.id</td>
  </tr>
  <tr>
   <td class='detail'>transitive_group_members_transitive_group_id_fkey</td>

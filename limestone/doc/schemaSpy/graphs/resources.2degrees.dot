@@ -1,4 +1,4 @@
-// dot 2.16.1 on Linux 2.6.24-1-amd64
+// dot 2.20.2 on Linux 2.6.25-2-amd64
 digraph "twoDegreesRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -15,14 +15,15 @@ digraph "twoDegreesRelationshipsGraph" {
     arrowsize="0.8"
   ];
   "aces":"resource_id":w -> "resources":"id.type":e [arrowtail=crowtee arrowhead=none];
+  "acl_inheritance":"resource_id":w -> "resources":"id.type":e [arrowtail=tee arrowhead=none];
   "binds":"collection_id":w -> "resources":"id.type":e [arrowtail=crowtee arrowhead=none];
   "binds":"resource_id":w -> "resources":"id.type":e [arrowtail=crowtee arrowhead=none];
   "binds_locks":"binds_locks.heading":w -> "locks":"locks.heading":e [arrowtail=crowtee arrowhead=none];
   "cleanup":"resource_id":w -> "resources":"id.type":e [arrowtail=crowtee arrowhead=none];
   "dav_aces_privileges":"dav_aces_privileges.heading":w -> "aces":"id":e [arrowtail=crowtee arrowhead=none];
-  "dav_acl_inheritance":"resource_id":w -> "resources":"id.type":e [arrowtail=tee arrowhead=none];
   "group_members":"group_members.heading":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
   "group_members":"group_members.heading":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
+  "locks":"locks.heading":w -> "users":"users.heading":e [arrowtail=crowtee arrowhead=none];
   "locks":"resource_id":w -> "resources":"id.type":e [arrowtail=crowtee arrowhead=none];
   "locks_resources":"resource_id":w -> "resources":"id.type":e [arrowtail=crowtee arrowhead=none];
   "media":"resource_id":w -> "resources":"id.type":e [arrowtail=crowtee arrowhead=none];
@@ -32,10 +33,9 @@ digraph "twoDegreesRelationshipsGraph" {
   "quota":"quota.heading":w -> "principals":"resource_id":e [arrowtail=tee arrowhead=none];
   "resources":"creator_id":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
   "resources":"owner_id":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
-  "resources":"type_id":w -> "resource_types":"id":e [arrowtail=crowtee arrowhead=none];
   "transitive_group_members":"transitive_group_members.heading":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
   "transitive_group_members":"transitive_group_members.heading":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
-  "users":"users.heading":w -> "principals":"resource_id":e [arrowtail=tee arrowhead=none];
+  "user_domains":"user_domains.heading":w -> "principals":"resource_id":e [arrowtail=crowodot arrowhead=none];
   "vcrs":"resource_id":w -> "resources":"id.type":e [arrowtail=tee arrowhead=none];
   "versions":"resource_id":w -> "resources":"id.type":e [arrowtail=tee arrowhead=none];
   "vhrs":"resource_id":w -> "resources":"id.type":e [arrowtail=tee arrowhead=none];
@@ -54,6 +54,17 @@ digraph "twoDegreesRelationshipsGraph" {
     </TABLE>>
     URL="aces.html#graph"
     tooltip="aces"
+  ];
+  "acl_inheritance" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="acl_inheritance.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">acl_inheritance</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="path" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">path</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="acl_inheritance.html#graph"
+    tooltip="acl_inheritance"
   ];
   "binds" [
     label=<
@@ -97,19 +108,6 @@ digraph "twoDegreesRelationshipsGraph" {
     </TABLE>>
     URL="dav_aces_privileges.html#graph"
     tooltip="dav_aces_privileges"
-  ];
-  "dav_acl_inheritance" [
-    label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD PORT="dav_acl_inheritance.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">dav_acl_inheritance</TD></TR>
-      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
-      <TR><TD PORT="parent_id" COLSPAN="3" ALIGN="LEFT">parent_id</TD></TR>
-      <TR><TD PORT="lft" COLSPAN="3" ALIGN="LEFT">lft</TD></TR>
-      <TR><TD PORT="rgt" COLSPAN="3" ALIGN="LEFT">rgt</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">3 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">1 &gt;</TD></TR>
-    </TABLE>>
-    URL="dav_acl_inheritance.html#graph"
-    tooltip="dav_acl_inheritance"
   ];
   "group_members" [
     label=<
@@ -179,7 +177,7 @@ digraph "twoDegreesRelationshipsGraph" {
       <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
       <TR><TD PORT="name" COLSPAN="3" ALIGN="LEFT">name</TD></TR>
       <TR><TD PORT="email" COLSPAN="3" ALIGN="LEFT">email</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">9 &gt;</TD></TR>
     </TABLE>>
     URL="principals.html#graph"
     tooltip="principals"
@@ -208,17 +206,6 @@ digraph "twoDegreesRelationshipsGraph" {
     URL="quota.html#graph"
     tooltip="quota"
   ];
-  "resource_types" [
-    label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD PORT="resource_types.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">resource_types</TD></TR>
-      <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="name" COLSPAN="3" ALIGN="LEFT">name</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">  </TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">1 &gt;</TD></TR>
-    </TABLE>>
-    URL="resource_types.html#graph"
-    tooltip="resource_types"
-  ];
   "resources" [
     label=<
     <TABLE BORDER="2" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
@@ -229,10 +216,10 @@ digraph "twoDegreesRelationshipsGraph" {
       <TR><TD PORT="displayname" COLSPAN="2" ALIGN="LEFT">displayname</TD><TD PORT="displayname.type" ALIGN="LEFT">varchar[1024]</TD></TR>
       <TR><TD PORT="contentlanguage" COLSPAN="2" ALIGN="LEFT">contentlanguage</TD><TD PORT="contentlanguage.type" ALIGN="LEFT">varchar[255]</TD></TR>
       <TR><TD PORT="comment" COLSPAN="2" ALIGN="LEFT">comment</TD><TD PORT="comment.type" ALIGN="LEFT">text[2147483647]</TD></TR>
-      <TR><TD PORT="type_id" COLSPAN="2" ALIGN="LEFT">type_id</TD><TD PORT="type_id.type" ALIGN="LEFT">int8[19]</TD></TR>
       <TR><TD PORT="owner_id" COLSPAN="2" ALIGN="LEFT">owner_id</TD><TD PORT="owner_id.type" ALIGN="LEFT">int8[19]</TD></TR>
       <TR><TD PORT="creator_id" COLSPAN="2" ALIGN="LEFT">creator_id</TD><TD PORT="creator_id.type" ALIGN="LEFT">int8[19]</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
+      <TR><TD PORT="type" COLSPAN="2" ALIGN="LEFT">type</TD><TD PORT="type.type" ALIGN="LEFT">resourcetype[2147483647]</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
     </TABLE>>
     URL="resources.html#"
     tooltip="resources"
@@ -245,6 +232,15 @@ digraph "twoDegreesRelationshipsGraph" {
     </TABLE>>
     URL="transitive_group_members.html#graph"
     tooltip="transitive_group_members"
+  ];
+  "user_domains" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="user_domains.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">user_domains</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="user_domains.html#graph"
+    tooltip="user_domains"
   ];
   "users" [
     label=<

@@ -120,6 +120,11 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
     <td class='constraint'>transitive_group_members_transitive_member_id_fkey</td>
    </tr>
    <tr valign='top'>
+    <td class='relatedTable' title="user_domains.principal_id refs principals.resource_id via fk_user_domains_principals"><a href='user_domains.html'>user_domains</a><span class='relatedKey'>.principal_id</span>
+    </td>
+    <td class='constraint'>fk_user_domains_principals</td>
+   </tr>
+   <tr valign='top'>
     <td class='relatedTable' title="users.principal_id refs principals.resource_id via users_principal_id_fkey"><a href='users.html'>users</a><span class='relatedKey'>.principal_id</span>
     </td>
     <td class='constraint'>users_principal_id_fkey</td>
@@ -160,7 +165,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 </table>
-<p/>Table contained 4 rows at Fri Feb 29 18:26 GMT-05:00 2008
+<p/>Table contained 4 rows at Fri Aug 01 16:13 GMT-05:00 2008
 </td></tr></table>
 <div class='indent'>
 <b>Indexes:</b>
@@ -189,32 +194,33 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
 </span><b>:</b></form>
   <a name='graph'><img src='../graphs/principals.1degree.png' usemap='#oneDegreeRelationshipsGraph' id='relationships' border='0' alt='' align='left'></a>
 <map id="oneDegreeRelationshipsGraph" name="oneDegreeRelationshipsGraph">
-<area shape="rect" href="group_members.html#graph" title="group_members" alt="" coords="521,11,652,126"/>
-<area shape="rect" href="principals.html#" title="principals" alt="" coords="228,232,425,352"/>
-<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="28,78,159,328"/>
-<area shape="rect" href="quota.html#graph" title="quota" alt="" coords="532,160,641,275"/>
-<area shape="rect" href="transitive_group_members.html#graph" title="transitive_group_members" alt="" coords="495,310,679,424"/>
-<area shape="rect" href="users.html#graph" title="users" alt="" coords="532,459,641,550"/>
+<area shape="rect" href="group_members.html#graph" title="group_members" alt="" coords="525,11,656,125"/>
+<area shape="rect" href="principals.html#" title="principals" alt="" coords="232,307,429,427"/>
+<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="32,175,163,425"/>
+<area shape="rect" href="quota.html#graph" title="quota" alt="" coords="536,160,645,275"/>
+<area shape="rect" href="transitive_group_members.html#graph" title="transitive_group_members" alt="" coords="499,309,683,424"/>
+<area shape="rect" href="user_domains.html#graph" title="user_domains" alt="" coords="529,459,652,595"/>
+<area shape="rect" href="users.html#graph" title="users" alt="" coords="516,629,665,744"/>
 </map>
 <map id="twoDegreesRelationshipsGraph" name="twoDegreesRelationshipsGraph">
-<area shape="rect" href="aces.html#graph" title="aces" alt="" coords="557,251,667,296"/>
-<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="313,330,444,580"/>
-<area shape="rect" href="principals.html#" title="principals" alt="" coords="20,656,217,776"/>
-<area shape="rect" href="resource_types.html#graph" title="resource_types" alt="" coords="52,488,185,534"/>
-<area shape="rect" href="binds.html#graph" title="binds" alt="" coords="557,331,667,376"/>
-<area shape="rect" href="cleanup.html#graph" title="cleanup" alt="" coords="561,411,663,456"/>
-<area shape="rect" href="dav_acl_inheritance.html#graph" title="dav_acl_inheritance" alt="" coords="540,491,684,536"/>
-<area shape="rect" href="group_members.html#graph" title="group_members" alt="" coords="313,615,444,730"/>
-<area shape="rect" href="locks.html#graph" title="locks" alt="" coords="557,811,667,856"/>
-<area shape="rect" href="users.html#graph" title="users" alt="" coords="324,764,433,855"/>
-<area shape="rect" href="locks_resources.html#graph" title="locks_resources" alt="" coords="547,571,677,616"/>
-<area shape="rect" href="media.html#graph" title="media" alt="" coords="564,651,660,696"/>
-<area shape="rect" href="properties.html#graph" title="properties" alt="" coords="560,731,664,776"/>
-<area shape="rect" href="quota.html#graph" title="quota" alt="" coords="324,890,433,1004"/>
-<area shape="rect" href="transitive_group_members.html#graph" title="transitive_group_members" alt="" coords="287,1039,471,1154"/>
-<area shape="rect" href="vcrs.html#graph" title="vcrs" alt="" coords="557,11,667,56"/>
-<area shape="rect" href="versions.html#graph" title="versions" alt="" coords="557,91,667,136"/>
-<area shape="rect" href="vhrs.html#graph" title="vhrs" alt="" coords="557,171,667,216"/>
+<area shape="rect" href="aces.html#graph" title="aces" alt="" coords="545,11,657,56"/>
+<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="309,347,440,597"/>
+<area shape="rect" href="principals.html#" title="principals" alt="" coords="16,727,213,847"/>
+<area shape="rect" href="acl_inheritance.html#graph" title="acl_inheritance" alt="" coords="539,91,664,136"/>
+<area shape="rect" href="binds.html#graph" title="binds" alt="" coords="545,171,657,216"/>
+<area shape="rect" href="cleanup.html#graph" title="cleanup" alt="" coords="551,251,652,296"/>
+<area shape="rect" href="group_members.html#graph" title="group_members" alt="" coords="309,632,440,747"/>
+<area shape="rect" href="locks.html#graph" title="locks" alt="" coords="545,331,657,376"/>
+<area shape="rect" href="locks_resources.html#graph" title="locks_resources" alt="" coords="536,411,667,456"/>
+<area shape="rect" href="media.html#graph" title="media" alt="" coords="552,491,651,536"/>
+<area shape="rect" href="properties.html#graph" title="properties" alt="" coords="548,571,655,616"/>
+<area shape="rect" href="quota.html#graph" title="quota" alt="" coords="320,781,429,896"/>
+<area shape="rect" href="transitive_group_members.html#graph" title="transitive_group_members" alt="" coords="283,931,467,1045"/>
+<area shape="rect" href="user_domains.html#graph" title="user_domains" alt="" coords="313,1080,436,1216"/>
+<area shape="rect" href="users.html#graph" title="users" alt="" coords="300,1251,449,1365"/>
+<area shape="rect" href="vcrs.html#graph" title="vcrs" alt="" coords="545,651,657,696"/>
+<area shape="rect" href="versions.html#graph" title="versions" alt="" coords="545,731,657,776"/>
+<area shape="rect" href="vhrs.html#graph" title="vhrs" alt="" coords="545,811,657,856"/>
 </map>
 </td></tr></table>
 </div>

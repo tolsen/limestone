@@ -1,4 +1,4 @@
-// dot 2.16.1 on Linux 2.6.24-1-amd64
+// dot 2.20.2 on Linux 2.6.25-2-amd64
 digraph "oneDegreeRelationshipsGraph" {
   graph [
     rankdir="RL"

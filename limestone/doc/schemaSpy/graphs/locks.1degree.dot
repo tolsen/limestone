@@ -1,4 +1,4 @@
-// dot 2.16.1 on Linux 2.6.24-1-amd64
+// dot 2.20.2 on Linux 2.6.25-2-amd64
 digraph "oneDegreeRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -68,10 +68,10 @@ digraph "oneDegreeRelationshipsGraph" {
       <TR><TD PORT="displayname" COLSPAN="3" ALIGN="LEFT">displayname</TD></TR>
       <TR><TD PORT="contentlanguage" COLSPAN="3" ALIGN="LEFT">contentlanguage</TD></TR>
       <TR><TD PORT="comment" COLSPAN="3" ALIGN="LEFT">comment</TD></TR>
-      <TR><TD PORT="type_id" COLSPAN="3" ALIGN="LEFT">type_id</TD></TR>
       <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="creator_id" COLSPAN="3" ALIGN="LEFT">creator_id</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
+      <TR><TD PORT="type" COLSPAN="3" ALIGN="LEFT">type</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
     </TABLE>>
     URL="resources.html#graph"
     tooltip="resources"
@@ -82,6 +82,7 @@ digraph "oneDegreeRelationshipsGraph" {
       <TR><TD PORT="users.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">users</TD></TR>
       <TR><TD PORT="principal_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">principal_id</TD></TR>
       <TR><TD PORT="pwhash" COLSPAN="3" ALIGN="LEFT">pwhash</TD></TR>
+      <TR><TD PORT="login_to_all_domains" COLSPAN="3" ALIGN="LEFT">login_to_all_domains</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">1 &gt;</TD></TR>
     </TABLE>>
     URL="users.html#graph"

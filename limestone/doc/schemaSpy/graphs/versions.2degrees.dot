@@ -1,4 +1,4 @@
-// dot 2.16.1 on Linux 2.6.24-1-amd64
+// dot 2.20.2 on Linux 2.6.25-2-amd64
 digraph "twoDegreesRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -15,10 +15,10 @@ digraph "twoDegreesRelationshipsGraph" {
     arrowsize="0.8"
   ];
   "aces":"aces.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
+  "acl_inheritance":"acl_inheritance.heading":w -> "resources":"resources.heading":e [arrowtail=tee arrowhead=none];
   "binds":"binds.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
   "binds":"binds.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
   "cleanup":"cleanup.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
-  "dav_acl_inheritance":"dav_acl_inheritance.heading":w -> "resources":"resources.heading":e [arrowtail=tee arrowhead=none];
   "locks":"locks.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
   "locks_resources":"locks_resources.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
   "media":"media.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
@@ -26,7 +26,6 @@ digraph "twoDegreesRelationshipsGraph" {
   "properties":"properties.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
   "resources":"resources.heading":w -> "principals":"principals.heading":e [arrowtail=crowtee arrowhead=none];
   "resources":"resources.heading":w -> "principals":"principals.heading":e [arrowtail=crowtee arrowhead=none];
-  "resources":"resources.heading":w -> "resource_types":"resource_types.heading":e [arrowtail=crowtee arrowhead=none];
   "vcrs":"checked_id":w -> "versions":"resource_id.type":e [arrowtail=crowtee arrowhead=none];
   "versions":"resource_id":w -> "resources":"id":e [arrowtail=tee arrowhead=none];
   "versions":"vcr_id":w -> "vcrs":"resource_id":e [arrowtail=crowodot arrowhead=none];
@@ -40,6 +39,15 @@ digraph "twoDegreesRelationshipsGraph" {
     </TABLE>>
     URL="aces.html#graph"
     tooltip="aces"
+  ];
+  "acl_inheritance" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="acl_inheritance.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">acl_inheritance</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="acl_inheritance.html#graph"
+    tooltip="acl_inheritance"
   ];
   "binds" [
     label=<
@@ -58,15 +66,6 @@ digraph "twoDegreesRelationshipsGraph" {
     </TABLE>>
     URL="cleanup.html#graph"
     tooltip="cleanup"
-  ];
-  "dav_acl_inheritance" [
-    label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD PORT="dav_acl_inheritance.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">dav_acl_inheritance</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">3 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">1 &gt;</TD></TR>
-    </TABLE>>
-    URL="dav_acl_inheritance.html#graph"
-    tooltip="dav_acl_inheritance"
   ];
   "locks" [
     label=<
@@ -99,7 +98,7 @@ digraph "twoDegreesRelationshipsGraph" {
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="principals.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">principals</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">9 &gt;</TD></TR>
     </TABLE>>
     URL="principals.html#graph"
     tooltip="principals"
@@ -113,15 +112,6 @@ digraph "twoDegreesRelationshipsGraph" {
     URL="properties.html#graph"
     tooltip="properties"
   ];
-  "resource_types" [
-    label=<
-    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
-      <TR><TD PORT="resource_types.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">resource_types</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">  </TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">1 &gt;</TD></TR>
-    </TABLE>>
-    URL="resource_types.html#graph"
-    tooltip="resource_types"
-  ];
   "resources" [
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
@@ -132,10 +122,10 @@ digraph "twoDegreesRelationshipsGraph" {
       <TR><TD PORT="displayname" COLSPAN="3" ALIGN="LEFT">displayname</TD></TR>
       <TR><TD PORT="contentlanguage" COLSPAN="3" ALIGN="LEFT">contentlanguage</TD></TR>
       <TR><TD PORT="comment" COLSPAN="3" ALIGN="LEFT">comment</TD></TR>
-      <TR><TD PORT="type_id" COLSPAN="3" ALIGN="LEFT">type_id</TD></TR>
       <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="creator_id" COLSPAN="3" ALIGN="LEFT">creator_id</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
+      <TR><TD PORT="type" COLSPAN="3" ALIGN="LEFT">type</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
     </TABLE>>
     URL="resources.html#graph"
     tooltip="resources"

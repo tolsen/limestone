@@ -1,4 +1,4 @@
-// dot 2.16.1 on Linux 2.6.24-1-amd64
+// dot 2.20.2 on Linux 2.6.25-2-amd64
 digraph "oneDegreeRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -22,6 +22,7 @@ digraph "oneDegreeRelationshipsGraph" {
   "resources":"owner_id":w -> "principals":"resource_id.type":e [arrowtail=crowtee arrowhead=none];
   "transitive_group_members":"transitive_group_id":w -> "principals":"resource_id.type":e [arrowtail=crowtee arrowhead=none];
   "transitive_group_members":"transitive_member_id":w -> "principals":"resource_id.type":e [arrowtail=crowtee arrowhead=none];
+  "user_domains":"principal_id":w -> "principals":"resource_id.type":e [arrowtail=crowodot arrowhead=none];
   "users":"principal_id":w -> "principals":"resource_id.type":e [arrowtail=tee arrowhead=none];
   "group_members" [
     label=<
@@ -42,7 +43,7 @@ digraph "oneDegreeRelationshipsGraph" {
       <TR><TD PORT="resource_id" COLSPAN="2" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD><TD PORT="resource_id.type" ALIGN="LEFT">int8[19]</TD></TR>
       <TR><TD PORT="name" COLSPAN="2" ALIGN="LEFT">name</TD><TD PORT="name.type" ALIGN="LEFT">varchar[1024]</TD></TR>
       <TR><TD PORT="email" COLSPAN="2" ALIGN="LEFT">email</TD><TD PORT="email.type" ALIGN="LEFT">varchar[255]</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">9 &gt;</TD></TR>
     </TABLE>>
     URL="principals.html#"
     tooltip="principals"
@@ -69,10 +70,10 @@ digraph "oneDegreeRelationshipsGraph" {
       <TR><TD PORT="displayname" COLSPAN="3" ALIGN="LEFT">displayname</TD></TR>
       <TR><TD PORT="contentlanguage" COLSPAN="3" ALIGN="LEFT">contentlanguage</TD></TR>
       <TR><TD PORT="comment" COLSPAN="3" ALIGN="LEFT">comment</TD></TR>
-      <TR><TD PORT="type_id" COLSPAN="3" ALIGN="LEFT">type_id</TD></TR>
       <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="creator_id" COLSPAN="3" ALIGN="LEFT">creator_id</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
+      <TR><TD PORT="type" COLSPAN="3" ALIGN="LEFT">type</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
     </TABLE>>
     URL="resources.html#graph"
     tooltip="resources"
@@ -89,12 +90,26 @@ digraph "oneDegreeRelationshipsGraph" {
     URL="transitive_group_members.html#graph"
     tooltip="transitive_group_members"
   ];
+  "user_domains" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="user_domains.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">user_domains</TD></TR>
+      <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
+      <TR><TD PORT="principal_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">principal_id</TD></TR>
+      <TR><TD PORT="domain" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">domain</TD></TR>
+      <TR><TD PORT="path" COLSPAN="3" ALIGN="LEFT">path</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="user_domains.html#graph"
+    tooltip="user_domains"
+  ];
   "users" [
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="users.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">users</TD></TR>
       <TR><TD PORT="principal_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">principal_id</TD></TR>
       <TR><TD PORT="pwhash" COLSPAN="3" ALIGN="LEFT">pwhash</TD></TR>
+      <TR><TD PORT="login_to_all_domains" COLSPAN="3" ALIGN="LEFT">login_to_all_domains</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">1 &gt;</TD></TR>
     </TABLE>>
     URL="users.html#graph"

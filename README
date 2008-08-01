@@ -1,0 +1,106 @@
+README for Limestone server 
+
+0. Dependencies:
+  - PostgreSQL >= 8.2
+  - PostgreSQL JDBC driver (libpg-java package in debian)
+
+1. Simple file description
+  - mod_dav_repos - apache module hooker
+  - repos.c      - repository interface
+  - props.c      - properties interface
+  - liveprops.c  - implements live property hooks of mod_dav
+  - version.c    - implements the versioning hooks of mod_dav
+  - search.c     - search(DASL) interface
+  - util.c       - utility functions
+  - dbms.[ch]    - Data Access Layer
+  - dbms_api.h   - API for performing database queries 
+  - dbms_dbd.[ch]- Implements the API using mod_dbd
+
+2. Set up a mysql/pgsql database with its own user and password.
+Notes for pgsql:
+Ensure that the user can add/drop schemas to the database -
+GRANT ALL ON DATABASE $LIMESTONE_DB TO $LIMESTONE_USER;
+
+3. Set the following environment variables: 
+LIMESTONE_HOST_DOMAIN - The domain of the server. Make sure that *.domain.com also resolves to domain.com
+                        If configured correctly, users can use username.domain.com to access their home directory
+
+LIMESTONE_PGSQL_VHOST_PORT, 
+LIMESTONE_PGSQL_DB_HOST, LIMESTONE_PGSQL_DB_PORT,
+LIMESTONE_PGSQL_DB_USER, LIMESTONE_PGSQL_DB_PASS, LIMESTONE_PGSQL_DB_NAME
+and six more similar variables with MYSQL substituted for PGSQL. MYSQL also has
+the additional variable LIMESTONE_MYSQL_DB_SOCK
+
+ See 4 for descriptions of the variables.
+
+4. To build:
+    a. autoconf
+    b. ./configure [--with-mysql=PATH] [--with-pgsql=PATH]
+        Ubuntu defaults for PATH: /usr in case of mysql and /usr/include in case of pgsql
+
+        --with-mysql configures a virtual host with a mysql backed DAV
+         location. This virtual host is configured using the following
+         environment variables:
+
+                LIMESTONE_MYSQL_VHOST_PORT    - port on which the virtual server listens
+                LIMESTONE_MYSQL_DB_HOST - The Mysql server address
+                LIMESTONE_MYSQL_DB_PORT - port to connect to on sql server
+                LIMESTONE_MYSQL_DB_SOCK - use unix_socket instead of TCP connection
+                LIMESTONE_MYSQL_DB_USER - username of the mysql account to use
+                LIMESTONE_MYSQL_DB_PASS - corresponding password
+                LIMESTONE_MYSQL_DB_NAME - name of the database
+
+        --with-pgsql configures a virtual host which uses pgsql backed
+         DAV location.  Substitute MYSQL for PGSQL in the above
+         variables to configure this Vhost.  There is no
+         LIMESTONE_PGSQL_DB_SOCK variable. If want to use a unix
+         socket to connect to the server, you must specify the
+         directory in DB_HOST and the socket file name in DB_PORT
+         variables
+
+        You can opt for only one virtual server or for both.
+    c. make
+    
+    This builds apache and limestone
+
+5. To run litmus tests, type "make tests"
+
+6. How to start Apache
+
+./aproot/bin/apachectl start
+
+7. Create a user
+
+./limestone/adduser -p test1 test1
+
+8. How to connect to WebDAV server running at localhost:
+
+- Open the home directory ( localhost/limespot is not accessible to user directly )
+  	
+	open http://localhost:8080/limespot/test1 
+
+- Provide authentication details
+  	
+	Login: 		test1
+	Password:	test1
+
+9. How to DEBUG apache
+cd /usr/local/apache2/bin/
+% gdb httpd
+...
+...
+(gdb) b xxx_yyy_zzz
+(gdb) run -X -d ..   [ if you are in apache/bin or give full path ]
+(gdb) "Enjoy!!"
+
+10. Developer mailing list :
+
+- limestone@limewire.co.in
+
+11. For a static build of limestone, type "make static"
+
+12. To build limestone for profiling with gprof, type "make gprof"
+
+13. To run Prestan benchmarks, type "make benchmarks"
+
+14. To quickly rebuild changes made *only* in limestone & mod_dav modules, type "make reinstall"

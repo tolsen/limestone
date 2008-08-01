@@ -1,0 +1,553 @@
+# $HeadURL$
+# $Id$
+
+LIMESTONE_PREFIX := 
+PWD := $(shell pwd)
+APROOT := $(PWD)/aproot
+APXS=$(APROOT)/bin/apxs
+WITH_APXS=--with-apxs=$(APXS)
+LIQUIBASE_SCRIPT = $(abspath ../liquibase/liquibase)
+#mysql_vhost=
+#pgsql_vhost=@PGSQL_VHOST@
+TEST_USER1=test1
+TEST_USER2=test2
+MYSQL_DBI=mysql
+PGSQL_DBI=pg
+ifeq "$(origin LIMESTONE_PGSQL_DB_PORT)" "undefined"
+LIMESTONE_PGSQL_DB_PORT = 5432
+endif
+
+APACHE_DIR=../apache
+HAMMOCK_DIR=../hammock
+RUBYDAV_DIR=../rubydav
+
+apacheextracleantargets= \
+		$(APACHE_DIR)/configure \
+		$(APACHE_DIR)/config.nice \
+		$(APACHE_DIR)/httpd.spec \
+		$(APACHE_DIR)/srclib/apr/configure \
+		$(APACHE_DIR)/srclib/apr/build-outputs.mk \
+		$(APACHE_DIR)/srclib/apr/config.nice \
+		$(APACHE_DIR)/srclib/apr/include/arch/unix/apr_private.h.in \
+		$(APACHE_DIR)/srclib/apr/build/libtool.m4 \
+		$(APACHE_DIR)/srclib/apr/build/ltmain.sh \
+		$(APACHE_DIR)/srclib/pcre/configure \
+		$(APACHE_DIR)/srclib/apr-util/configure \
+		$(APACHE_DIR)/srclib/apr-util/build-outputs.mk \
+		$(APACHE_DIR)/srclib/apr-util/config.nice \
+		$(APACHE_DIR)/srclib/apr-util/include/private/apu_config.h.in \
+		$(APACHE_DIR)/srclib/apr-util/build/install.sh \
+		$(APACHE_DIR)/srclib/apr-util/build/config.guess \
+		$(APACHE_DIR)/srclib/apr-util/build/config.sub \
+		$(APACHE_DIR)/srclib/apr-util/build/find_apr.m4 \
+		$(APACHE_DIR)/srclib/apr-util/build/apr_common.m4 \
+		$(APACHE_DIR)/srclib/apr-util/build/get-version.sh \
+		$(APACHE_DIR)/srclib/apr-util/xml/expat/config.h.in \
+		$(APACHE_DIR)/srclib/apr-util/xml/expat/configure \
+		$(APACHE_DIR)/srclib/apr-util/xml/expat/aclocal.m4 \
+		$(APACHE_DIR)/srclib/apr-util/xml/expat/conftools/ltmain.sh \
+		$(APACHE_DIR)/include/ap_config_auto.h.in \
+		$(APACHE_DIR)/build/config.guess \
+		$(APACHE_DIR)/build/config.sub \
+		$(APACHE_DIR)/build/ltmain.sh \
+		$(APACHE_DIR)/build/find_apu.m4 \
+		$(APACHE_DIR)/build/PrintPath \
+		$(APACHE_DIR)/build/find_apr.m4 \
+		$(APACHE_DIR)/build/apr_common.m4
+
+all: limestone-install 
+
+stamps/stampdir:
+	mkdir stamps
+	touch $@
+
+# Apache
+
+APACHE_BUILDCONF_DEPS = \
+	$(APACHE_DIR)/buildconf \
+	$(APACHE_DIR)/srclib/apr/buildconf \
+	$(APACHE_DIR)/srclib/apr/build/buildcheck.sh \
+	$(APACHE_DIR)/srclib/apr/build/PrintPath \
+	$(APACHE_DIR)/srclib/apr/configure.in \
+	$(APACHE_DIR)/srclib/apr/build/get-version.sh \
+    $(APACHE_DIR)/srclib/apr/build/gen-build.py \
+	$(APACHE_DIR)/srclib/apr/include/apr_version.h \
+	$(APACHE_DIR)/srclib/apr/build/rpm/apr.spec.in \
+	$(APACHE_DIR)/srclib/apr-util/buildconf \
+	$(APACHE_DIR)/srclib/apr/build/apr_common.m4 \
+	$(APACHE_DIR)/srclib/apr/build/find_apr.m4 \
+    $(APACHE_DIR)/srclib/apr/build/install.sh \
+	$(APACHE_DIR)/srclib/apr/build/config.guess \
+    $(APACHE_DIR)/srclib/apr/build/config.sub \
+	$(APACHE_DIR)/srclib/apr-util/configure.in \
+	$(APACHE_DIR)/srclib/apr-util/xml/expat/buildconf.sh \
+	$(APACHE_DIR)/srclib/apr-util/xml/expat/conftools/PrintPath \
+	$(APACHE_DIR)/srclib/apr-util/xml/expat/configure.in \
+	$(APACHE_DIR)/srclib/apr-util/include/apu_version.h \
+	$(APACHE_DIR)/srclib/apr-util/build/rpm/apr-util.spec.in \
+	$(APACHE_DIR)/srclib/apr-util/build/find_apu.m4 \
+	$(APACHE_DIR)/srclib/pcre/configure.in \
+	$(APACHE_DIR)/configure.in \
+	$(APACHE_DIR)/build/get-version.sh \
+	$(APACHE_DIR)/include/ap_mmn.h \
+	$(APACHE_DIR)/include/ap_release.h \
+	$(APACHE_DIR)/build/rpm/httpd.spec.in
+
+APACHE_BUILDCONF_OUT = \
+	$(APACHE_DIR)/srclib/pcre/configure \
+	$(APACHE_DIR)/srclib/apr-util/xml/expat/aclocal.m4 \
+	$(APACHE_DIR)/srclib/apr-util/xml/expat/config.h.in \
+	$(APACHE_DIR)/srclib/apr-util/xml/expat/configure \
+	$(APACHE_DIR)/srclib/apr-util/configure \
+	$(APACHE_DIR)/srclib/apr-util/include/private/apu_config.h.in \
+	$(APACHE_DIR)/srclib/apr-util/build-outputs.mk \
+	$(APACHE_DIR)/srclib/apr/configure \
+	$(APACHE_DIR)/srclib/apr/include/arch/unix/apr_private.h.in \
+	$(APACHE_DIR)/srclib/apr/build/libtool.m4 \
+	$(APACHE_DIR)/srclib/apr/build-outputs.mk \
+	$(APACHE_DIR)/configure \
+	$(APACHE_DIR)/include/ap_config_auto.h.in \
+	$(APACHE_DIR)/httpd.spec \
+	$(APACHE_DIR)/build/config.sub \
+	$(APACHE_DIR)/build/find_apu.m4 \
+	$(APACHE_DIR)/build/ltmain.sh \
+	$(APACHE_DIR)/build/config.guess \
+	$(APACHE_DIR)/build/apr_common.m4 \
+	$(APACHE_DIR)/build/PrintPath \
+	$(APACHE_DIR)/build/find_apr.m4
+
+APACHE_CONFIGURE_OUT = \
+	$(APACHE_DIR)/srclib/pcre/Makefile \
+	$(APACHE_DIR)/srclib/pcre/config.status \
+	$(APACHE_DIR)/srclib/pcre/pcre.h \
+	$(APACHE_DIR)/srclib/pcre/config.h \
+	$(APACHE_DIR)/srclib/pcre/pcre-config \
+	$(APACHE_DIR)/srclib/pcre/config.log \
+	$(APACHE_DIR)/srclib/Makefile \
+	$(APACHE_DIR)/srclib/apr-util/export_vars.sh \
+	$(APACHE_DIR)/srclib/apr-util/Makefile \
+	$(APACHE_DIR)/srclib/apr-util/config.status \
+	$(APACHE_DIR)/srclib/apr-util/apu-1-config \
+	$(APACHE_DIR)/srclib/apr-util/apr-util.pc \
+	$(APACHE_DIR)/srclib/apr-util/include/apr_ldap.h \
+	$(APACHE_DIR)/srclib/apr-util/include/apu.h \
+	$(APACHE_DIR)/srclib/apr-util/include/private/apu_select_dbm.h \
+	$(APACHE_DIR)/srclib/apr-util/include/private/apu_config.h \
+	$(APACHE_DIR)/srclib/apr-util/include/apu_want.h \
+	$(APACHE_DIR)/srclib/apr-util/build/rules.mk \
+	$(APACHE_DIR)/srclib/apr-util/build/pkg/pkginfo \
+	$(APACHE_DIR)/srclib/apr-util/test/Makefile \
+	$(APACHE_DIR)/srclib/apr-util/config.nice \
+	$(APACHE_DIR)/srclib/apr-util/config.log \
+	$(APACHE_DIR)/srclib/apr/Makefile \
+	$(APACHE_DIR)/srclib/apr/apr.pc \
+	$(APACHE_DIR)/srclib/apr/config.status \
+	$(APACHE_DIR)/srclib/apr/apr-1-config \
+	$(APACHE_DIR)/srclib/apr/libtool \
+	$(APACHE_DIR)/srclib/apr/include/apr.h \
+	$(APACHE_DIR)/srclib/apr/include/arch/unix/apr_private.h \
+	$(APACHE_DIR)/srclib/apr/build/apr_rules.mk \
+	$(APACHE_DIR)/srclib/apr/build/pkg/pkginfo \
+	$(APACHE_DIR)/srclib/apr/test/internal/Makefile \
+	$(APACHE_DIR)/srclib/apr/test/Makefile \
+	$(APACHE_DIR)/srclib/apr/config.nice \
+	$(APACHE_DIR)/srclib/apr/config.log \
+	$(APACHE_DIR)/Makefile \
+	$(APACHE_DIR)/support/envvars-std \
+	$(APACHE_DIR)/support/split-logfile \
+	$(APACHE_DIR)/support/Makefile \
+	$(APACHE_DIR)/support/log_server_status \
+	$(APACHE_DIR)/support/apachectl \
+	$(APACHE_DIR)/support/phf_abuse_log.cgi \
+	$(APACHE_DIR)/support/dbmmanage \
+	$(APACHE_DIR)/support/apxs \
+	$(APACHE_DIR)/support/logresolve.pl \
+	$(APACHE_DIR)/config.status \
+	$(APACHE_DIR)/modules.c \
+	$(APACHE_DIR)/os/unix/Makefile \
+	$(APACHE_DIR)/os/Makefile \
+	$(APACHE_DIR)/docs/conf/extra/httpd-languages.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-vhosts.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-userdir.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-default.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-info.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-autoindex.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-ssl.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-mpm.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-manual.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-dav.conf \
+	$(APACHE_DIR)/docs/conf/extra/httpd-multilang-errordoc.conf \
+	$(APACHE_DIR)/docs/conf/httpd.conf \
+	$(APACHE_DIR)/server/mpm/Makefile \
+	$(APACHE_DIR)/server/mpm/worker/Makefile \
+	$(APACHE_DIR)/server/mpm/worker/.deps \
+	$(APACHE_DIR)/server/Makefile \
+	$(APACHE_DIR)/include/ap_config_auto.h \
+	$(APACHE_DIR)/include/ap_config_layout.h \
+	$(APACHE_DIR)/modules/debug/Makefile \
+	$(APACHE_DIR)/modules/debug/modules.mk \
+	$(APACHE_DIR)/modules/experimental/Makefile \
+	$(APACHE_DIR)/modules/experimental/.deps \
+	$(APACHE_DIR)/modules/experimental/modules.mk \
+	$(APACHE_DIR)/modules/Makefile \
+	$(APACHE_DIR)/modules/echo/Makefile \
+	$(APACHE_DIR)/modules/echo/modules.mk \
+	$(APACHE_DIR)/modules/generators/Makefile \
+	$(APACHE_DIR)/modules/generators/modules.mk \
+	$(APACHE_DIR)/modules/dav/lock/Makefile \
+	$(APACHE_DIR)/modules/dav/lock/modules.mk \
+	$(APACHE_DIR)/modules/dav/main/Makefile \
+	$(APACHE_DIR)/modules/dav/main/modules.mk \
+	$(APACHE_DIR)/modules/dav/fs/Makefile \
+	$(APACHE_DIR)/modules/dav/fs/modules.mk \
+	$(APACHE_DIR)/modules/arch/win32/Makefile \
+	$(APACHE_DIR)/modules/arch/win32/modules.mk \
+	$(APACHE_DIR)/modules/mappers/Makefile \
+	$(APACHE_DIR)/modules/mappers/modules.mk \
+	$(APACHE_DIR)/modules/cache/Makefile \
+	$(APACHE_DIR)/modules/cache/modules.mk \
+	$(APACHE_DIR)/modules/proxy/Makefile \
+	$(APACHE_DIR)/modules/proxy/modules.mk \
+	$(APACHE_DIR)/modules/database/Makefile \
+	$(APACHE_DIR)/modules/database/modules.mk \
+	$(APACHE_DIR)/modules/ssl/Makefile \
+	$(APACHE_DIR)/modules/ssl/modules.mk \
+	$(APACHE_DIR)/modules/loggers/Makefile \
+	$(APACHE_DIR)/modules/loggers/modules.mk \
+	$(APACHE_DIR)/modules/test/Makefile \
+	$(APACHE_DIR)/modules/test/modules.mk \
+	$(APACHE_DIR)/modules/metadata/Makefile \
+	$(APACHE_DIR)/modules/metadata/modules.mk \
+	$(APACHE_DIR)/modules/aaa/Makefile \
+	$(APACHE_DIR)/modules/aaa/modules.mk \
+	$(APACHE_DIR)/modules/ldap/Makefile \
+	$(APACHE_DIR)/modules/ldap/modules.mk \
+	$(APACHE_DIR)/modules/filters/Makefile \
+	$(APACHE_DIR)/modules/filters/modules.mk \
+	$(APACHE_DIR)/modules/http/Makefile \
+	$(APACHE_DIR)/modules/http/modules.mk \
+	$(APACHE_DIR)/build/rules.mk \
+	$(APACHE_DIR)/build/pkg/pkginfo \
+	$(APACHE_DIR)/build/config_vars.mk \
+	$(APACHE_DIR)/build/config_vars.sh \
+	$(APACHE_DIR)/test/Makefile \
+	$(APACHE_DIR)/config.nice
+
+apache-buildconf: $(APACHE_BUILDCONF_OUT)
+$(APACHE_BUILDCONF_OUT): $(APACHE_BUILDCONF_DEPS)
+	cd $(APACHE_DIR) && ./buildconf
+
+apache-configure: $(APACHE_CONFIGURE_OUT)
+$(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
+	cd $(APACHE_DIR) && ./configure \
+	   --prefix=$(APROOT) \
+	   --with-mpm=worker \
+	   --with-included-apr \
+	   --with-devrandom=/dev/urandom \
+	   --enable-auth-digest \
+	   --enable-so \
+	   --enable-dav \
+	   --enable-dbd \
+	   --enable-authn-dbd \
+	   --enable-rewrite \
+	   --enable-ssl \
+	   --enable-headers \
+	   @WITH_DB_FLAG@ @PROFILE@
+
+APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')
+
+APACHE_DERIVED_SOURCES = \
+	$(APACHE_DIR)/server/test_char.h \
+	$(APACHE_DIR)/server/export_vars.h \
+	$(APACHE_DIR)/srclib/apr/include/apr.h \
+	$(APACHE_DIR)/srclib/apr/include/arch/unix/apr_private.h \
+	$(APACHE_DIR)/srclib/pcre/pcre.h \
+	$(APACHE_DIR)/srclib/pcre/config.h \
+	$(APACHE_DIR)/srclib/apr-util/include/apu_want.h \
+	$(APACHE_DIR)/srclib/apr-util/include/apr_ldap.h \
+	$(APACHE_DIR)/srclib/apr-util/include/apu.h \
+	$(APACHE_DIR)/srclib/apr-util/include/private/apu_config.h \
+	$(APACHE_DIR)/srclib/apr-util/include/private/apu_select_dbm.h \
+	$(APACHE_DIR)/include/ap_config_auto.h \
+	$(APACHE_DIR)/include/ap_config_layout.h \
+	$(APACHE_DIR)/modules.c \
+	$(APACHE_DIR)/server/exports.c \
+	$(APACHE_DIR)/srclib/apr/exports.c \
+	$(APACHE_DIR)/srclib/apr/export_vars.c \
+	$(APACHE_DIR)/srclib/pcre/chartables.c \
+	$(APACHE_DIR)/srclib/apr-util/exports.c \
+	$(APACHE_DIR)/srclib/apr-util/export_vars.c
+
+APACHE_BUILD_DEPS = $(filter-out $(APACHE_DERIVED_SOURCES), $(APACHE_SOURCES))
+
+
+APACHE_BUILD_OUT = $(APACHE_DIR)/httpd $(shell find $(APACHE_DIR) -name '*.la')
+
+apache-build: $(APACHE_BUILD_OUT)
+$(APACHE_BUILD_OUT): $(APACHE_CONFIGURE_OUT) $(APACHE_BUILD_DEPS)
+	cd $(APACHE_DIR) && $(MAKE)
+
+ORIGINAL_HTTPD_CONF = $(APROOT)/conf/original/httpd.conf
+
+APACHE_SUPPORT_PROGS = apxs apachectl dbmmanage envvars-std htpasswd htdigest rotatelogs logresolve ab checkgid htdbm htcacheclean httxt2dbm
+
+APACHE_INSTALL_DEPS = \
+	$(APACHE_DIR)/docs/conf/magic \
+	$(APACHE_DIR)/docs/conf/mime.types \
+	$(APACHE_DIR)/docs/conf/httpd.conf \
+	$(wildcard $(APACHE_DIR)/docs/conf/extra/httpd-*.conf) \
+	$(wildcard $(APACHE_DIR)/build/*.mk) \
+	$(APACHE_DIR)/config.nice \
+	$(APACHE_DIR)/build/mkdir.sh \
+	$(APACHE_DIR)/build/instdso.sh \
+	$(shell find $(APACHE_DIR) -regextype posix-extended -type f -regex '.*\.(exp|pc|awk|1|8|out)') \
+	$(APACHE_DIR)/srclib/apr/build/apr_rules.mk \
+	$(patsubst %,$(APACHE_DIR)/support/%,$(APACHE_SUPPORT_PROGS))
+
+apache-install: $(ORIGINAL_HTTPD_CONF) $(APXS)
+$(ORIGINAL_HTTPD_CONF) $(APXS): $(APACHE_BUILD_OUT) $(APACHE_INSTALL_DEPS)
+	cd $(APACHE_DIR) && $(MAKE) install
+	touch $@
+
+
+# LimeStone
+
+LS_CONFIGURE = limestone/configure
+LS_MAKEFILE = limestone/Makefile
+LS_MODULE = limestone/libmod_dav_repos.la
+LS_INSTALLED_CONFIG = aproot/conf/limestone.conf
+LS_INSTALLED_MODULE = aproot/modules/libmod_dav_repos.so
+
+limestone-buildconf: $(LS_CONFIGURE)
+$(LS_CONFIGURE): $(APXS)
+	cd limestone && ./buildconf.sh
+	touch $@
+
+limestone-configure: $(LS_MAKEFILE)
+$(LS_MAKEFILE): $(LS_CONFIGURE)
+	cd limestone && ./configure --with-debug $(WITH_APXS)
+
+limestone-build: $(LS_MODULE)
+$(LS_MODULE): $(LS_MAKEFILE) $(wildcard limestone/*.[ch])
+	cd limestone && $(MAKE)
+	touch $@
+
+limestone-install-config: $(LS_INSTALLED_CONFIG)
+$(LS_INSTALLED_CONFIG): $(LS_MODULE)
+	-rm -f $(HAMMOCK_INSTALLED_MODULE)
+	./install-config @INSTALL_CONF_FLAGS@
+
+limestone-install-modules: $(LS_INSTALLED_MODULE)
+$(LS_INSTALLED_MODULE): $(LS_MODULE)
+	cd limestone && $(MAKE) install
+
+limestone-install: limestone-install-config limestone-install-modules hammock-install
+
+# Hammock
+
+HAMMOCK_CONFIGURE = $(HAMMOCK_DIR)/configure
+HAMMOCK_MAKEFILE = $(HAMMOCK_DIR)/Makefile
+HAMMOCK_MODULE = $(HAMMOCK_DIR)/libmod_hammock.la
+HAMMOCK_INSTALLED_MODULE = aproot/modules/libmod_hammock.so
+
+hammock-buildconf: $(HAMMOCK_CONFIGURE)
+$(HAMMOCK_CONFIGURE):
+	cd $(HAMMOCK_DIR) && ./buildconf.sh
+
+hammock-configure: $(HAMMOCK_MAKEFILE)
+$(HAMMOCK_MAKEFILE): $(HAMMOCK_CONFIGURE) $(APXS)
+	cd $(HAMMOCK_DIR) && ./configure $(WITH_APXS)
+
+hammock-build: $(HAMMOCK_MODULE) 
+$(HAMMOCK_MODULE): $(HAMMOCK_MAKEFILE) $(wildcard $(HAMMOCK_DIR)/*.[ch])
+	cd $(HAMMOCK_DIR) && $(MAKE)
+	touch $@
+
+hammock-install: $(HAMMOCK_INSTALLED_MODULE)
+$(HAMMOCK_INSTALLED_MODULE): $(HAMMOCK_MODULE)
+	cd $(HAMMOCK_DIR) && $(MAKE) install
+
+# Litmus
+
+LITMUS_DIR = ../litmus
+LITMUS_CONF_OUT = $(LITMUS_DIR)/Makefile $(LITMUS_DIR)/litmus
+LITMUS_BUILD_OUT = $(patsubst %,$(LITMUS_DIR)/%,principal bind version props copymove basic locks acl http)
+
+litmus-configure: $(LITMUS_CONF_OUT)
+$(LITMUS_CONF_OUT):
+	cd $(LITMUS_DIR) && ./configure --with-included-neon
+
+litmus-build: $(LITMUS_BUILD_OUT)
+$(LITMUS_BUILD_OUT): $(LITMUS_CONF_OUT)
+	cd $(LITMUS_DIR) && $(MAKE)
+
+# Prestan
+
+PRESTAN_DIR = ../Prestan
+PRESTAN_MAKEFILE = $(PRESTAN_DIR)/Makefile
+
+prestan-configure: $(PRESTAN_MAKEFILE)
+$(PRESTAN_MAKEFILE):
+	cd $(PRESTAN_DIR) && ./configure --with-included-neon
+
+prestan-build: $(PRESTAN_MAKEFILE)
+	cd $(PRESTAN_DIR) && $(MAKE)
+
+define start-apache
+$(APROOT)/bin/apachectl start
+touch stamps/apache-start
+endef
+
+apache-start: stamps/apache-start
+stamps/apache-start: stamps/stampdir
+	$(start-apache)
+
+ifeq ($(strip $(wildcard stamps/apache-start)),)
+stop-apache=
+else
+define stop-apache
+-$(APROOT)/bin/apachectl stop
+-rm -f stamps/apache-start
+endef
+endif
+
+define migrate-database-pgsql
+cd limestone/database && $(LIQUIBASE_SCRIPT) --classpath="@PGSQL_JDBC_JAR@" --driver="org.postgresql.Driver" --url="jdbc:postgresql://$(LIMESTONE_PGSQL_DB_HOST):$(LIMESTONE_PGSQL_DB_PORT)/$(LIMESTONE_PGSQL_DB_NAME)" --username=$(LIMESTONE_PGSQL_DB_USER) --password=$(LIMESTONE_PGSQL_DB_PASS) --defaultSchemaName=$(LIMESTONE_PGSQL_DB_USER) --changeLogFile=main.xml migrate
+endef
+
+define migrate-database
+$(migrate-database-pgsql)
+endef
+
+define reset-database
+-cd limestone && ./drop_and_create_populated_database
+-rm -f stamps/create-test-users-??SQL
+$(migrate-database)
+endef
+
+apache-stop:
+	$(stop-apache)
+
+limestone-start: limestone-install apache-start
+
+limestone-stop: apache-stop
+
+database-reset: limestone-stop
+	$(reset-database)
+
+database-migrate: limestone-stop
+	$(migrate-database)
+
+database-reset-and-limestone-start: database-reset stamps/stampdir
+	sleep 1
+	$(start-apache)
+
+define test-garbage-on-vhost
+	cd limestone && ruby check_garbage_collection.rb -d $($(1)_DBI) -n $(LIMESTONE_$(1)_DB_HOST) -P $(LIMESTONE_$(1)_DB_PORT) -u $(LIMESTONE_$(1)_DB_USER) -p $(LIMESTONE_$(1)_DB_PASS) -l $(LIMESTONE_$(1)_DB_NAME)
+endef
+
+define test-garbage
+$(foreach vhost, @VHOSTS@, $(call test-garbage-on-vhost,$(vhost)))
+endef
+
+# this is meant to be eval'd
+# pass in MYSQL or PGSQL
+define database-dependent-targets-template
+create-test-users: create-test-users-$(1)
+create-test-users-$(1): stamps/create-test-users-$(1)
+stamps/create-test-users-$(1): stamps/stampdir
+	./limestone/adduser -P $$(LIMESTONE_$(1)_VHOST_PORT) -d$(TEST_USER1) -p$(TEST_USER1) $(TEST_USER1)
+	./limestone/adduser -P $$(LIMESTONE_$(1)_VHOST_PORT) -d$(TEST_USER2) -p$(TEST_USER2) $(TEST_USER2)
+	touch $$@
+
+litmus-tests: litmus-tests-$(1)
+litmus-tests-$(1): litmus-build apache-start create-test-users-$(1) 
+	cd $(LITMUS_DIR) && $(MAKE) URL=http://localhost:$$(LIMESTONE_$(1)_VHOST_PORT)$(LIMESTONE_PREFIX)/home/$(TEST_USER1) CREDS="$(TEST_USER1) $(TEST_USER1)" check
+
+rubydav-tests: rubydav-tests-$(1)
+rubydav-tests-$(1): apache-start create-test-users-$(1) 
+	cd $(RUBYDAV_DIR) && ruby test/integration/ts_webdav.rb -- -u $(TEST_USER1) -p $(TEST_USER1) -s http://$(LIMESTONE_HOST_DOMAIN):$$(LIMESTONE_$(1)_VHOST_PORT)$(LIMESTONE_PREFIX)/home/$(TEST_USER1)/
+
+garbage-test: garbage-test-$(1)
+garbage-test-$(1): apache-stop
+	$$(call test-garbage,$(1))
+
+benchmarks: benchmarks-$(1)
+benchmarks-$(1): prestan-build database-reset-and-limestone-start
+	-cd $(PRESTAN_DIR) && ./Prestan http://localhost:$$(LIMESTONE_$(1)_VHOST_PORT)$(LIMESTONE_PREFIX)/home/$(TEST_USER1) $(TEST_USER1) $(TEST_USER1)
+
+.PHONY: create-test-users create-test-users-$(1) litmus-tests-$(1) rubydav-tests-$(1) garbage-test-$(1)
+
+endef
+
+$(foreach vhost, @VHOSTS@, $(eval $(call database-dependent-targets-template,$(vhost))))
+
+tests: database-reset-and-limestone-start litmus-tests rubydav-tests
+	$(stop-apache)
+	$(test-garbage)
+	$(reset-database)
+
+
+distclean: clean
+	-$(reset-database)
+	-cd $(LITMUS_DIR) && $(MAKE) distclean
+	-cd limestone && $(MAKE) init
+	-cd $(APACHE_DIR) && $(MAKE) distclean
+	-cd $(HAMMOCK_DIR) && $(MAKE) distclean
+	-rm -f $(apacheextracleantargets)
+	-rm -rf stamps
+	-rm -rf $(APACHE_DIR)/modules/dav/limestone
+	-rm -rf config.* autom4te.* configure *~
+	-rm -f Makefile
+
+clean:
+	$(stop-apache)
+	-cd $(LITMUS_DIR) && $(MAKE) clean
+	-cd $(PRESTAN_DIR) && $(MAKE) clean
+	-cd limestone && $(MAKE) clean
+	-cd $(HAMMOCK_DIR) && $(MAKE) clean
+	-cd $(APACHE_DIR) && $(MAKE) clean
+	-rm -rf $(APROOT) files tmp
+	-rm -f stamps/*-build stamps/*-install*
+
+clean-for-reinstall:
+	$(stop-apache)
+	-rm -rf $(APROOT) files
+	-rm -f stamps/apache-install
+	-rm -f stamps/limestone-install-*
+
+reinstall: clean-for-reinstall limestone-install 
+
+.PHONY: apache-build \
+        apache-buildconf \
+        apache-configure \
+        apache-install \
+        apache-start \
+        apache-stop \
+        benchmarks \
+        clean \
+        clean-for-reinstall \
+        database-reset \
+        database-reset-keep-limestone-running \
+        distclean \
+		hammock-buildconf \
+		hammock-configure \
+		hammock-build \
+		hammock-install \
+        limestone-build \
+        limestone-buildconf \
+        limestone-configure \
+        limestone-install \
+        limestone-install-config \
+        limestone-install-modules \
+        limestone-start \
+        limestone-stop \
+        litmus-build \
+        litmus-configure \
+        litmus-tests \
+		prestan-configure \
+		prestan-build \
+        reinstall \
+        rubydav-tests \
+        tests
+

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment>Create acl_inheritance table</comment>
+    <createTable tableName="acl_inheritance">
+        <column name="resource_id" type="bigint">
+           <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="path" type="varchar(255)"/>
+    </createTable>
+    <addForeignKeyConstraint 
+        constraintName="fk_acl_inheritance_resources" 
+        baseTableName="acl_inheritance" 
+        baseColumnNames="resource_id" 
+        referencedTableName="resources" 
+        referencedColumnNames="id"
+        deferrable="true"
+        deleteCascade="true" 
+    />
+    <createIndex tableName="acl_inheritance" indexName="idx_acl_inheritance_path">
+        <column name="path"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="paritosh" id="2">
+    <comment>Migrate the existing dav_acl_inheritance tree in nested set representation to it's materialized path equivalent at acl_inheritance</comment>
+    <executeCommand executable="./nested_set_to_materialized_path.rb"/>
+  </changeSet>
+
+  <changeSet author="paritosh" id="3">
+    <comment>Drop dav_acl_inheritance</comment>
+    <dropTable tableName="dav_acl_inheritance"/>
+  </changeSet>
+
+  <changeSet author="chetan" id="4">
+    <comment>Put groups in acl_inheritance</comment>
+    <insert tableName="acl_inheritance">
+      <column name="resource_id" valueNumeric="6"/>
+      <column name="path" value="2,6"/>
+    </insert>
+  </changeSet>
+</databaseChangeLog>

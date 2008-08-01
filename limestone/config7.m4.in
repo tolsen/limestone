@@ -1,0 +1,42 @@
+# -*- autoconf -*-
+# ====================================================================
+# Copyright 2007 Lime Spot LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ====================================================================
+
+dnl modules enabled in this directory by default
+
+APACHE_MODPATH_INIT(dav/limestone)
+
+limestone_objects="mod_dav_repos.lo repos.lo props.lo search.lo dbms.lo util.lo deltav_bridge.lo lock.lo version.lo bind.lo dbms_dbd.lo dbms_deltav.lo dbms_acl.lo dav_acl.lo liveprops.lo dbms_bind.lo bridge.lo lock_bridge.lo deltav_util.lo dbms_locks.lo dbms_quota.lo"
+
+
+if test "x$enable_dav" != "x"; then
+  limestone_enable=$enable_dav
+else
+  limestone_enable=$dav_enable
+fi
+
+case "$host" in
+  *os2*)
+    # OS/2 DLLs must resolve all symbols at build time
+    # and we need some from main DAV module
+    dav_fs_objects="$dav_fs_objects ../main/mod_dav.la"
+    ;;
+esac
+
+APACHE_MODULE(dav_repos, DAV provider for the DBMS, $limestone_objects, , $limestone_enable)
+
+APACHE_MODPATH_FINISH

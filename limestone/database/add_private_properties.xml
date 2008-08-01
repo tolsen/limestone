@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="chetan" id="1">
+    <comment>Add namespace_id column to acl_privileges table </comment>
+    <addColumn tableName="acl_privileges">
+      <column name="priv_namespace_id" type="int8" value="0"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="chetan" id="2">
+    <comment>script to insert lb:read-private-properties into acl_privileges</comment>
+    <executeCommand executable="./insert_priv_read_private_properties.rb"/>
+  </changeSet>
+  <changeSet author="chetan" id="3">
+    <comment>add not-null constraint and foreign key constraint fk_privilege_namespace</comment>
+    <addNotNullConstraint tableName="acl_privileges" columnName="priv_namespace_id"/>
+    <addForeignKeyConstraint constraintName="fk_privilege_namespace" baseTableName="acl_privileges" baseColumnNames="priv_namespace_id"
+                             referencedTableName="namespaces" referencedColumnNames="id"
+    />
+  </changeSet>
+</databaseChangeLog>

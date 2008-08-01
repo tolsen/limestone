@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment>Drop FK check on resources.type_id</comment>
+    <dropForeignKeyConstraint 
+        constraintName="resources_type_id_fkey" baseTableName="resources"/>
+
+    <comment>Drop resource_types table</comment>
+    <dropTable tableName="resource_types"/>
+
+    <comment>Define resourcetype as ENUM</comment>
+    <executeCommand executable="./define_resourcetype_as_enum.rb"/>
+
+    <comment>Add resources.type column</comment>
+    <addColumn tableName="resources">
+        <column name="type" type="resourcetype" value="Resource"/>
+    </addColumn>
+
+    <comment>Fill resources.type for existing resources</comment>
+    <update tableName="resources">
+        <column name="type" value="Resource"/>
+        <where>type_id=1</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="Collection"/>
+        <where>type_id=2</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="Principal"/>
+        <where>type_id=3</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="User"/>
+        <where>type_id=4</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="Group"/>
+        <where>type_id=5</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="Redirect"/>
+        <where>type_id=6</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="Version"/>
+        <where>type_id=7</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="VersionControlled"/>
+        <where>type_id=8</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="VersionHistory"/>
+        <where>type_id=9</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="VersionedCollection"/>
+        <where>type_id=10</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="CollectionVersion"/>
+        <where>type_id=11</where>
+    </update>
+    <update tableName="resources">
+        <column name="type" value="LockNull"/>
+        <where>type_id=12</where>
+    </update>
+
+    <comment>Drop resource.type_id</comment>
+    <dropColumn tableName="resources" columnName="type_id"/>
+  </changeSet>
+</databaseChangeLog>

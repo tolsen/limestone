@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="chetan" id="1">
+    <comment>Create bits_pw_reset table</comment>
+    <createTable tableName="bits_pw_reset">
+        <column name="principal_id" type="bigint"/>
+        <column name="reset_token" type="varchar(255)"/>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>

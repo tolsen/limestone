@@ -1,0 +1,48 @@
+#
+# REMOVE the item, if you're done
+#
+
+* Limestone Issues
+
+- Should we include DAV:owner in PROPFIND-propname, 
+  required by DAVExplorer for principal-match REPORT ?
+- PUT with Digest Authentication problem in Slide Client
+    1. Slide initially sends 'contents' of file using basic auth
+    2. server returns 401
+    3. Slide sends Digest Auth headers but does not resend the data
+- 403 vs 412
+  Move resource to self!
+- No WebDAV client with binds support
+
+------------------------ 
+
+* TODOs for LimeStone
+
+- Modularize build_vpr_hash. 
+- Fix getcontentlanguage.
+- Separate the report functions into a new file from version.c & acl.c
+- change functions to use char *user instead of passing rec
+- Pass the dav_err generated in dav_is_allow_method_* to dav_method_*
+- add another member to dav_repos_resource - 'getlastmodified'. separating DAV:getlastmodified from updated_at of the body
+
+-------------------------
+
+* TODOs for Locks
+
+- adding of depth infinity locks is done one child at a time. try and optimize
+
+-------------------------
+
+* TODOs for versioning
+
+- allow vhrs to contain multiple vcrs
+- deleting VHRs of VCCs that are circularly dependent on each other
+
+-------------------------
+
+* Things we would like to do but are too much of an effort
+
+- change dbms layer functions to return dav_error instead of int  
+- Think about moving from dbms_api to apr_dbd ( instead of wrapping it )
+- bridge layer gets calls with dav_repos_db, which can be done away with and handled in the dbms layer itself
+- reorganise limestone code into specific folders ( dbms/ , bridge/, etc. ) so that files are easire to find/manage and don't clutter the root folder.

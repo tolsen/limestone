@@ -19,6 +19,8 @@
 #include "dbms_principal.h"
 #include <apr_strings.h>
 #include "dbms_api.h"
+#include "bridge.h"             /* for sabridge_new_dbr_from_dbr */
+#include "acl.h"
 
 dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db *d,
                                            const char *name, long *p_prin_id)
@@ -633,4 +635,70 @@ dav_error *dbms_set_user_login_to_all_domains(apr_pool_t *pool,
     }
     dbms_query_destroy(q);
     return err;
+}
+
+int dbms_get_principal_type_from_name(apr_pool_t *pool, const dav_repos_db *db,
+                                      const char *name)
+{
+    dav_repos_query *q = NULL;
+    int prin_type = 0;
+
+    TRACE();
+
+    q = dbms_prepare(pool, db->db,
+                     "SELECT type FROM principals "
+                     " INNER JOIN resources ON resource_id = id "
+                     "WHERE name = ?");
+    dbms_set_string(q, 1, name);
+    if (dbms_execute(q) == 0 && dbms_next(q) == 1)
+        prin_type = dav_repos_get_type_id(dbms_get_string(q, 1));
+
+    dbms_query_destroy(q);
+    return prin_type;
+}
+
+dav_error *dbms_get_group_members(const dav_repos_db *db,
+                                  const dav_repos_resource *group_dbr, 
+                                  dav_repos_resource **members)
+{
+    apr_pool_t *pool = group_dbr->p;
+    dav_repos_query *q = NULL;
+    dav_repos_resource *dummy_head, *presult_link_tail;
+    
+    TRACE();
+
+    q = dbms_prepare(pool, db->db,
+                     "SELECT resource_id, name, type "
+                     "FROM principals "
+                     "      INNER JOIN group_members ON resource_id = member_id "
+                     "      INNER JOIN resources ON resource_id = resources.id "
+                     "WHERE group_id = ? ");
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+        return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
+                             "Can't get group members");
+    }
+
+    dummy_head = apr_pcalloc(pool, sizeof(*dummy_head));
+    presult_link_tail = dummy_head;
+
+    while (dbms_next(q)) {
+        dav_repos_resource *member;
+        const char *name = NULL;
+        sabridge_new_dbr_from_dbr(group_dbr, &member);
+        presult_link_tail->next = member;
+        presult_link_tail = member;
+
+        member->serialno = dbms_get_int(q, 1);
+        name = dbms_get_string(q, 2);
+        member->resourcetype = dav_repos_get_type_id(dbms_get_string(q, 3));
+
+        if (member->resourcetype == dav_repos_GROUP)
+            member->uri = apr_pstrcat(pool, PRINCIPAL_GROUP_PREFIX, name);
+        else if (member->resourcetype == dav_repos_USER)
+            member->uri = apr_pstrcat(pool, PRINCIPAL_USER_PREFIX, name);
+    }
+    *members = dummy_head->next;
+    dbms_query_destroy(q);
+    return NULL;
 }

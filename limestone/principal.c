@@ -152,3 +152,24 @@ dav_error *dav_repos_create_group(const dav_resource *resource,
 
     return err;
 }
+
+char *get_group_member_set(const dav_resource *group)
+{
+    apr_pool_t *pool = group->pool;
+    request_rec *r = group->info->rec;
+    dav_repos_db *db = group->info->db;
+    dav_repos_resource *group_dbr = (dav_repos_resource *) group->info->db_r;
+    dav_repos_resource *members = NULL, *iter = NULL;
+    char *member_set = "";
+
+    TRACE();
+
+    dbms_get_group_members(db, group_dbr, &members);
+    for (iter = members; iter; iter = iter->next) {
+        const char *prin_uri = apr_pstrcat(pool, principal_href_prefix(r),
+                                           iter->uri, NULL);
+        prin_uri = dav_repos_mk_href(pool, prin_uri);
+        member_set = apr_pstrcat(r->pool, member_set, prin_uri, NULL);
+    }
+    return member_set;
+}

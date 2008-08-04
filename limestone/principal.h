@@ -20,15 +20,20 @@
 #define __PRINCIPAL__H
 
 #include <mod_dav.h>
-
 #include "root_path.h"
 
 #define USER_PATH       PREPEND_ROOT_PATH("/users")
 #define GROUP_PATH      PREPEND_ROOT_PATH("/groups")
 
 dav_error *dav_repos_create_user(dav_resource *resource, const char* passwd);
-dav_error *dav_repos_update_password(const dav_resource *resource, const char *passwd);
-dav_error *dav_repos_create_group(const dav_resource *resource, const char *created);
+
+dav_error *dav_repos_update_password(const dav_resource *resource,
+                                     const char *passwd);
+
+dav_error *dav_repos_create_group(const dav_resource *resource,
+                                  const char *created);
+
+char *get_group_member_set(const dav_resource *group);
 
 #endif  /* #ifndef __PRINCIPAL__H */
 

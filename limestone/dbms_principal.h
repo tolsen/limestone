@@ -79,4 +79,11 @@ dav_error *dbms_set_user_login_to_all_domains(apr_pool_t *pool,
                                               long principal_id,
                                               int login_to_all_domains);
 
+int dbms_get_principal_type_from_name(apr_pool_t *pool, const dav_repos_db *db,
+                                      const char *name);
+
+dav_error *dbms_get_group_members(const dav_repos_db *db,
+                                  const dav_repos_resource *group_dbr, 
+                                  dav_repos_resource **members);
+
 #endif /* DBMS_PRINCIPAL_H */

@@ -31,7 +31,8 @@
 /* TODO: generate URI prefix from root_path, 
  * or make it configurable via httpd.conf */
 #include "root_path.h"
-#define PRINCIPAL_URI_PREFIX           PREPEND_ROOT_PATH("/users/")
+#define PRINCIPAL_USER_PREFIX           PREPEND_ROOT_PATH("/users/")
+#define PRINCIPAL_GROUP_PREFIX          PREPEND_ROOT_PATH("/groups/")
 
 dav_principal *dav_repos_get_prin_by_name(request_rec *r, const char *username);
 

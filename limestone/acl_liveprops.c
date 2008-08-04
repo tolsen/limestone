@@ -18,6 +18,7 @@
 
 #include "liveprops.h"
 #include "acl.h"
+#include "principal.h"
 
 #include <apr_strings.h>
 
@@ -78,6 +79,11 @@ static const dav_liveprop_spec dav_acl_props[] = {
      "principal-collection-set",
      DAV_PROPID_principal_collection_set,
      0},
+    {
+     dav_repos_URI_DAV,
+     "group-member-set",
+     DAV_PROPID_group_member_set,
+     1},
 
     {0}				/* sentinel */
 };
@@ -151,7 +157,14 @@ static dav_prop_insert dav_acl_insert_prop(const dav_resource * resource,
         val = acl_inherited_acl_set(resource);
         break;
     case DAV_PROPID_principal_collection_set:
-        val = apr_psprintf(pool, "<D:href>%s</D:href>", principal_href_prefix(r));
+        if (db_r->resourcetype != dav_repos_GROUP)
+            return DAV_PROP_INSERT_NOTSUPP;
+        val = apr_pstrcat(pool, "<D:href>%s%s</D:href><D:href>%s%s</D:href>",
+                          principal_href_prefix(r), PRINCIPAL_USER_PREFIX,
+                          principal_href_prefix(r), PRINCIPAL_GROUP_PREFIX,NULL);
+        break;
+    case DAV_PROPID_group_member_set:
+        val = get_group_member_set(resource);
         break;
     }
     s = apr_psprintf(pool, "<D:%s>%s</D:%s>", name, val, name);

@@ -45,12 +45,16 @@ dav_principal *dav_repos_get_prin_by_name(request_rec *r, const char *name)
         principal->type = PRINCIPAL_AUTHENTICATED;
     else if(!strcmp(name, "unauthenticated"))
         principal->type = PRINCIPAL_UNAUTHENTICATED;
-    else 
-        /* assuming that principal-url = <PRINCIPAL_URI_PREFIX>username */
-        /* TODO: what about groups ? */
-        principal = dav_principal_make_from_url(r, 
-                        apr_pstrcat(r->pool, principal_href_prefix(r), name, NULL));
-
+    else {
+        int resource_type = dbms_get_principal_type_from_name
+          (r->pool, dav_repos_get_db(r), name);
+            
+        principal = dav_principal_make_from_url
+          (r, apr_pstrcat(r->pool, principal_href_prefix(r), 
+                          resource_type == dav_repos_GROUP ?
+                          PRINCIPAL_GROUP_PREFIX : PRINCIPAL_USER_PREFIX,
+                          name, NULL));
+    }
     return principal;
 }
 
@@ -91,10 +95,9 @@ const char *dav_repos_principal_to_s(const dav_principal *principal)
             return "unauthenticated";
 
         case PRINCIPAL_HREF:
-            /* assuming that principal-url = <PRINCIPAL_URI_PREFIX>username */
             r = resource->info->rec;
             return apr_pstrcat(resource->pool, principal_href_prefix(r),
-                               basename(resource->uri), NULL);
+                               resource->uri, NULL);
 
         default:
             break;
@@ -345,7 +348,8 @@ char *acl_build_propfind_output(const dav_resource * resource)
                                            "<D:%s>", ace_property->name,
                                            ace_property->ns, grant_deny);
             } 
-            else if(strstr(principal_url, PRINCIPAL_URI_PREFIX)) {
+            else if(strstr(principal_url, PRINCIPAL_USER_PREFIX) ||
+                    strstr(principal_url, PRINCIPAL_GROUP_PREFIX)) {
                 str_acehead = apr_psprintf(db_r->p, "<D:ace>" DEBUG_CR
 				           "<D:principal>" DEBUG_CR
 				           "<D:href>%s</D:href>" DEBUG_CR
@@ -914,8 +918,7 @@ const char *principal_href_prefix(request_rec *r)
     if (port != 80) {
         server_name = apr_psprintf(r->pool, "%s:%d", server_name, port);
     } 
-    return apr_pstrcat(r->pool, "http://", server_name, 
-                       PRINCIPAL_URI_PREFIX, NULL);
+    return apr_pstrcat(r->pool, "http://", server_name, NULL);
 }
 
 /* 

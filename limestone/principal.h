@@ -35,5 +35,12 @@ dav_error *dav_repos_create_group(const dav_resource *resource,
 
 char *get_group_member_set(const dav_resource *group);
 
-#endif  /* #ifndef __PRINCIPAL__H */
+dav_error *sabridge_add_prin_to_grp(apr_pool_t *pool,
+                                    const dav_repos_db *db,
+                                    long grp_id, long prin_id);
 
+dav_error *sabridge_rem_prin_frm_grp(apr_pool_t *pool,
+                                     const dav_repos_db *db,
+                                     long grp_id, long prin_id);
+
+#endif  /* #ifndef __PRINCIPAL__H */

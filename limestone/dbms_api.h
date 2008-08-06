@@ -137,7 +137,8 @@ int dbms_set_string(dav_repos_query * query, const int num,
  * @param string - String that you want to escape
  * @return The escaped string
  */
-const char *dbms_escape(apr_pool_t *pool, dav_repos_dbms *db, const char *string);
+const char *dbms_escape(apr_pool_t *pool, const dav_repos_dbms *db,
+                        const char *string);
 
 /**
  * Executes the query.

@@ -141,7 +141,8 @@ int dbms_set_string(dav_repos_query * query, const int num,
     return 0;
 }
 
-const char *dbms_escape(apr_pool_t *pool, dav_repos_dbms *db, const char *string) 
+const char *dbms_escape(apr_pool_t *pool, const dav_repos_dbms *db,
+                        const char *string) 
 {
     return apr_dbd_escape(db->ap_dbd_dbms->driver, pool, 
                           string, db->ap_dbd_dbms->handle);

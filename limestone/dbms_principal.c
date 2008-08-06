@@ -702,3 +702,80 @@ dav_error *dbms_get_group_members(const dav_repos_db *db,
     dbms_query_destroy(q);
     return NULL;
 }
+
+dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
+                                        const dav_repos_resource *group_dbr,
+                                        apr_hash_t *new_members,
+                                        apr_array_header_t **p_members_to_remove)
+{
+    apr_pool_t *pool = group_dbr->p;
+    dav_repos_query *q = NULL;
+    apr_hash_index_t *iter = NULL;
+    const char *new_members_table = "";
+    dav_error *err = NULL;
+    apr_array_header_t *prins_to_remove =
+      apr_array_make(pool, 10, sizeof(*group_dbr));
+    
+    TRACE();
+
+    iter = apr_hash_first(pool, new_members);
+    while (iter) {
+        const char *member_name;
+        apr_hash_this(iter, (void*)&member_name, NULL, NULL);
+        new_members_table = apr_pstrcat
+          (pool, new_members_table, *new_members_table ? " UNION " : "",
+           " SELECT '", dbms_escape(pool, db->db, member_name), "' ", 
+           *new_members_table ? " AS new_member " : "",NULL);
+        iter = apr_hash_next(iter);
+    }
+
+    const char *query = apr_pstrcat
+      (pool, 
+       "SELECT new_members.name, resources.type, resources.id, "
+       "       principals.resource_id=cur_members.member_id "
+       "FROM principals "
+       "    RIGHT OUTER JOIN (", new_members_table, ") new_members ",
+       "                ON principals.name = new_members.name ",
+       "    FULL OUTER JOIN "
+       "       (SELECT * FROM group_members WHERE group_id = ?) cur_members "
+       "                ON principals.resource_id = cur_members.member_id "
+       "    LEFT OUTER JOIN resources ON principals.resource_id = resources.id "
+       "                      OR cur_members.member_id=resources.id ", NULL);
+    q = dbms_prepare(pool, db->db, query);
+    dbms_set_int(q, 1, group_dbr->serialno);
+    if (dbms_execute(q))
+        err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
+                            "Can't calculate group changes");
+
+    while (!err && dbms_next(q) == 1) {
+        const char *name = dbms_get_string(q, 1);
+        const char *type = dbms_get_string(q, 2);
+        const long member_id = dbms_get_int(q, 3);
+        const int is_already_a_member = (*(dbms_get_string(q, 4)) == 't');
+
+        if (member_id == 0) {
+            err = dav_new_error(pool, HTTP_CONFLICT, 0,
+                                "New member does not exist");
+            break;
+        }
+        
+        if (is_already_a_member) {
+            apr_hash_set(new_members, name, APR_HASH_KEY_STRING, NULL);
+            continue;
+        }
+        dav_repos_resource *prin = NULL;
+        if (*name == '\0')
+            prin = apr_array_push(prins_to_remove);
+        else {
+            sabridge_new_dbr_from_dbr(group_dbr, &prin);
+            apr_hash_set(new_members, name, APR_HASH_KEY_STRING, prin);
+        }
+
+        prin->serialno = member_id;
+        prin->resourcetype = dav_repos_get_type_id(type);
+    }
+    if (!apr_is_empty_array(prins_to_remove))
+        *p_members_to_remove = prins_to_remove;
+    dbms_query_destroy(q);
+    return err;
+}

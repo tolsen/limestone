@@ -19,6 +19,7 @@
 #include "liveprops.h"
 #include "acl.h"
 #include "principal.h"
+#include "dbms_principal.h"
 
 #include <apr_strings.h>
 
@@ -190,13 +191,123 @@ static int dav_acl_is_writable(const dav_resource * resource, int propid)
     return 0;
 }
 
+const char *get_name_from_principal_URL(request_rec *rec,
+                                        const char *principal_URL)
+{
+    const char *name = NULL;
+    const char *prin_href_pref = principal_href_prefix(rec);
+
+    TRACE();
+
+    if (principal_URL == NULL)
+        return NULL;
+
+    if (principal_URL != strstr(principal_URL, prin_href_pref))
+        return NULL;
+
+    principal_URL = principal_URL + strlen(prin_href_pref);
+
+    if(strstr(principal_URL, PRINCIPAL_USER_PREFIX))
+        name = principal_URL + strlen(PRINCIPAL_USER_PREFIX);
+    else if(strstr(principal_URL, PRINCIPAL_GROUP_PREFIX))
+        name = principal_URL + strlen(PRINCIPAL_GROUP_PREFIX);
+    return name;
+}
+
+static dav_error *dav_acl_patch_validate(const dav_resource * resource,
+                                         const apr_xml_elem * elem,
+                                         int operation,
+                                         void **context,
+                                         int *defer_to_dead)
+{
+    apr_pool_t *pool = resource->pool;
+    dav_repos_resource *db_r = resource->info->db_r;
+    dav_repos_db *db = resource->info->db;
+    request_rec *rec = resource->info->rec;
+    dav_elem_private *priv = elem->priv;
+    dav_error *err = NULL;
+
+    TRACE();
+
+    if (priv->propid == DAV_PROPID_group_member_set) {
+	*defer_to_dead = 0;
+        if (db_r->resourcetype!=dav_repos_GROUP || operation!=DAV_PROP_OP_SET)
+            return dav_new_error(pool, HTTP_FORBIDDEN, 0,
+                                 "Not a set operation on a group");
+            
+        apr_xml_elem *href_elem = dav_find_child(elem, "href");
+        apr_hash_t *new_members = apr_hash_make(pool);
+        apr_array_header_t *to_remove;
+        while (href_elem && !err) {
+            const char *prin_uri = dav_xml_get_cdata(href_elem, pool, 1);
+            const char *prin_name = get_name_from_principal_URL(rec, prin_uri);
+            if (prin_name == NULL)
+                err = dav_new_error
+                  (pool, HTTP_CONFLICT, 0, "Not a DAV:principal-URL");
+            else
+                apr_hash_set(new_members, prin_name, APR_HASH_KEY_STRING, "");
+            href_elem = href_elem->next;
+        }
+        if (err) return err;
+        err = dbms_calculate_group_changes(db, db_r, new_members, &to_remove);
+        if (err) return err;
+        apr_hash_set(new_members, "-to-remove-", APR_HASH_KEY_STRING, to_remove);
+        *context = new_members;
+    }
+    return err;
+}
+
+static dav_error *dav_acl_patch_exec(const dav_resource * resource,
+                                     const apr_xml_elem * elem,
+                                     int operation,
+                                     void *context,
+                                     dav_liveprop_rollback **rollback_ctx)
+{
+    dav_repos_resource *db_r = resource->info->db_r;
+    const dav_repos_db *db = resource->info->db;
+    dav_elem_private *priv = elem->priv;
+    dav_error *err = NULL;
+
+    if (priv->propid == DAV_PROPID_group_member_set) {
+        apr_hash_t *new_members = (apr_hash_t*)context;
+        apr_array_header_t *to_remove = (apr_array_header_t *)apr_hash_get
+          (new_members, "-to-remove-", APR_HASH_KEY_STRING);
+        dav_repos_resource *prin = NULL;
+        int i = 0;
+        for (i = 0; to_remove && i < to_remove->nelts; i++) {
+            prin = ((dav_repos_resource **)to_remove->elts)[i];
+            err = sabridge_rem_prin_frm_grp
+              (db_r->p, db, db_r->serialno, prin->serialno);
+            if (err) return err;
+        }
+        
+        apr_hash_index_t *iter = apr_hash_first(db_r->p, new_members);
+        while (iter) {
+            apr_hash_this(iter, NULL, NULL, (void *)&prin);
+            err = sabridge_add_prin_to_grp
+              (db_r->p, db, db_r->serialno, prin->serialno);
+            if (err) return err;
+            iter = apr_hash_next(iter);
+        }
+    }
+    return NULL;
+}
+
+static void dav_acl_patch_commit(const dav_resource * resource,
+                                 int operation,
+                                 void *context,
+                                 dav_liveprop_rollback *rollback_ctx)
+{
+
+}
+
 static const dav_hooks_liveprop dav_hooks_acl_liveprop = {
     dav_acl_insert_prop,
     dav_acl_is_writable,
     dav_acl_namespace_uris,
-    NULL,
-    NULL,
-    NULL,
+    dav_acl_patch_validate,
+    dav_acl_patch_exec,
+    dav_acl_patch_commit,
     NULL
 };
 

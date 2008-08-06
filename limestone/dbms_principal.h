@@ -20,6 +20,7 @@
 #define DBMS_PRINCIPAL_H
 
 #include "dbms.h"
+#include <apr_tables.h>
 
 /* Principal Functions */
 dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db *d,
@@ -85,5 +86,10 @@ int dbms_get_principal_type_from_name(apr_pool_t *pool, const dav_repos_db *db,
 dav_error *dbms_get_group_members(const dav_repos_db *db,
                                   const dav_repos_resource *group_dbr, 
                                   dav_repos_resource **members);
+
+dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
+                                        const dav_repos_resource *group_dbr,
+                                        apr_hash_t *new_members,
+                                        apr_array_header_t **members_to_remove);
 
 #endif /* DBMS_PRINCIPAL_H */

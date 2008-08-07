@@ -272,6 +272,7 @@ static dav_error *dav_acl_patch_exec(const dav_resource * resource,
         apr_hash_t *new_members = (apr_hash_t*)context;
         apr_array_header_t *to_remove = (apr_array_header_t *)apr_hash_get
           (new_members, "-to-remove-", APR_HASH_KEY_STRING);
+        apr_hash_set(new_members, "-to-remove-", APR_HASH_KEY_STRING, NULL);
         dav_repos_resource *prin = NULL;
         int i = 0;
         for (i = 0; to_remove && i < to_remove->nelts; i++) {

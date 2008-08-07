@@ -64,11 +64,11 @@ dav_error *sabridge_add_prin_to_grp(apr_pool_t *pool,
 
     /* check if prin is already in group */
     if (0 != dbms_is_prin_in_grp(pool, db, grp_id, prin_id))
-        return dav_new_error(pool, HTTP_PRECONDITION_FAILED, 0,
+        return dav_new_error(pool, HTTP_CONFLICT, 0,
                              "Principal already in group");
     /* check if addition will cause a loop */
     if (0 != dbms_will_loop_prin_add_grp(pool, db, grp_id, prin_id))
-        return dav_new_error(pool, HTTP_PRECONDITION_FAILED, 0,
+        return dav_new_error(pool, HTTP_CONFLICT, 0,
                              "Can't add principal to group");
 
     err = dbms_add_prin_to_group(pool, db, grp_id, prin_id);
@@ -168,8 +168,8 @@ char *get_group_member_set(const dav_resource *group)
     for (iter = members; iter; iter = iter->next) {
         const char *prin_uri = apr_pstrcat(pool, principal_href_prefix(r),
                                            iter->uri, NULL);
-        prin_uri = dav_repos_mk_href(pool, prin_uri);
-        member_set = apr_pstrcat(r->pool, member_set, prin_uri, NULL);
+        member_set = apr_pstrcat
+          (r->pool, member_set, dav_repos_mk_href(pool, prin_uri), NULL);
     }
     return member_set;
 }

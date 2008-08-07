@@ -673,6 +673,7 @@ dav_error *dbms_get_group_members(const dav_repos_db *db,
                      "      INNER JOIN group_members ON resource_id = member_id "
                      "      INNER JOIN resources ON resource_id = resources.id "
                      "WHERE group_id = ? ");
+    dbms_set_int(q, 1, group_dbr->serialno);
     if (dbms_execute(q)) {
         dbms_query_destroy(q);
         return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
@@ -682,7 +683,7 @@ dav_error *dbms_get_group_members(const dav_repos_db *db,
     dummy_head = apr_pcalloc(pool, sizeof(*dummy_head));
     presult_link_tail = dummy_head;
 
-    while (dbms_next(q)) {
+    while (dbms_next(q) == 1) {
         dav_repos_resource *member;
         const char *name = NULL;
         sabridge_new_dbr_from_dbr(group_dbr, &member);
@@ -694,9 +695,9 @@ dav_error *dbms_get_group_members(const dav_repos_db *db,
         member->resourcetype = dav_repos_get_type_id(dbms_get_string(q, 3));
 
         if (member->resourcetype == dav_repos_GROUP)
-            member->uri = apr_pstrcat(pool, PRINCIPAL_GROUP_PREFIX, name);
+            member->uri = apr_pstrcat(pool, PRINCIPAL_GROUP_PREFIX, name, NULL);
         else if (member->resourcetype == dav_repos_USER)
-            member->uri = apr_pstrcat(pool, PRINCIPAL_USER_PREFIX, name);
+            member->uri = apr_pstrcat(pool, PRINCIPAL_USER_PREFIX, name, NULL);
     }
     *members = dummy_head->next;
     dbms_query_destroy(q);
@@ -724,8 +725,8 @@ dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
         apr_hash_this(iter, (void*)&member_name, NULL, NULL);
         new_members_table = apr_pstrcat
           (pool, new_members_table, *new_members_table ? " UNION " : "",
-           " SELECT '", dbms_escape(pool, db->db, member_name), "' ", 
-           *new_members_table ? " AS new_member " : "",NULL);
+           " SELECT text('", dbms_escape(pool, db->db, member_name), "') ", 
+           *new_members_table ? "" : " AS name ", NULL);
         iter = apr_hash_next(iter);
     }
 

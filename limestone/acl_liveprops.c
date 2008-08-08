@@ -237,7 +237,8 @@ static dav_error *dav_acl_patch_validate(const dav_resource * resource,
             
         apr_xml_elem *href_elem = dav_find_child(elem, "href");
         apr_hash_t *new_members = apr_hash_make(pool);
-        apr_array_header_t *to_remove;
+        apr_array_header_t *to_remove = NULL;
+
         while (href_elem && !err) {
             const char *prin_uri = dav_xml_get_cdata(href_elem, pool, 1);
             const char *prin_name = get_name_from_principal_URL(rec, prin_uri);
@@ -249,7 +250,10 @@ static dav_error *dav_acl_patch_validate(const dav_resource * resource,
             href_elem = href_elem->next;
         }
         if (err) return err;
-        err = dbms_calculate_group_changes(db, db_r, new_members, &to_remove);
+        if (apr_hash_count(new_members))
+            err = dbms_calculate_group_changes(db, db_r, new_members,&to_remove);
+        else
+            err = dbms_get_group_members(db, db_r, &to_remove);
         if (err) return err;
         apr_hash_set(new_members, "-to-remove-", APR_HASH_KEY_STRING, to_remove);
         *context = new_members;
@@ -276,7 +280,7 @@ static dav_error *dav_acl_patch_exec(const dav_resource * resource,
         dav_repos_resource *prin = NULL;
         int i = 0;
         for (i = 0; to_remove && i < to_remove->nelts; i++) {
-            prin = ((dav_repos_resource **)to_remove->elts)[i];
+            prin = &APR_ARRAY_IDX(to_remove, i, dav_repos_resource);
             err = sabridge_rem_prin_frm_grp
               (db_r->p, db, db_r->serialno, prin->serialno);
             if (err) return err;

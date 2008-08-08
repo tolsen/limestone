@@ -186,7 +186,7 @@ static dav_error *dav_repos_checkout(dav_resource * resource,
     dav_error *err = NULL;
     dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
-    dav_repos_resource *vhr;
+    dav_repos_resource *vhr = NULL;
 
     TRACE();
 
@@ -235,7 +235,7 @@ static dav_error *dav_repos_uncheckout(dav_resource * resource)
     dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
     dav_repos_resource *db_r_version = NULL;
-    dav_repos_resource *vhr;
+    dav_repos_resource *vhr = NULL;
 
     TRACE();
 
@@ -278,8 +278,8 @@ static dav_error *dav_repos_checkin(dav_resource * resource,
     dav_error *err = NULL;
     dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
-    dav_repos_resource *new_version;
-    dav_repos_resource *vhr;
+    dav_repos_resource *new_version = NULL;
+    dav_repos_resource *vhr = NULL;
 
     TRACE();
 
@@ -420,7 +420,7 @@ static dav_error *dav_repos_deliver_version_tree_report(request_rec * r,
     dav_repos_report_elem *report_elem;
     dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
-    dav_repos_resource *vhr;
+    dav_repos_resource *vhr = NULL;
 
     TRACE();
 

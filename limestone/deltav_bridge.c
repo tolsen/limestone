@@ -98,7 +98,7 @@ dav_error *sabridge_mk_versions_collection(const dav_repos_db *db,
                                            dav_repos_resource *vhr)
 {
     apr_pool_t *pool = vhr->p;
-    dav_repos_resource *vrs_coll;
+    dav_repos_resource *vrs_coll = NULL;
     dav_error *err = NULL;
 
     TRACE();
@@ -127,8 +127,7 @@ dav_error *sabridge_mk_vhr(const dav_repos_db *db,
                            dav_repos_resource **p_vhr)
 {
     apr_pool_t *pool = vcr->p;
-    dav_repos_resource *vhr;
-    dav_repos_resource *vhr_parent;
+    dav_repos_resource *vhr = NULL, *vhr_parent = NULL;
     dav_error *err = NULL;
     request_rec *rec = vcr->resource->info->rec;
 
@@ -177,7 +176,7 @@ dav_error *sabridge_mk_new_version(const dav_repos_db *db,
                                    dav_repos_resource **new_vr)
 {
     apr_pool_t *pool = vcr->p;
-    dav_repos_resource *new_version;
+    dav_repos_resource *new_version = NULL;
     dav_error *err = NULL;
 
     TRACE();
@@ -217,7 +216,7 @@ void sabridge_build_vcr_pr_hash(dav_repos_db *db, dav_repos_resource *db_r)
     char *vr_uri;
     const char *href;
     char *buff;
-    dav_repos_resource *vhr;
+    dav_repos_resource *vhr = NULL;
 
     if(db_r->resourcetype != dav_repos_VERSIONED &&
        db_r->resourcetype != dav_repos_VERSIONED_COLLECTION)
@@ -288,7 +287,7 @@ void sabridge_build_vr_pr_hash(dav_repos_db *db, dav_repos_resource *db_r)
     char *vname;
     const char *predecessor_set = "";
     const char *successor_set = "";
-    dav_repos_resource *vcr_resource, *vhr_resource;
+    dav_repos_resource *vcr_resource = NULL, *vhr_resource = NULL;
 
     if (db_r->resourcetype != dav_repos_VERSION &&
         db_r->resourcetype != dav_repos_COLLECTION_VERSION)

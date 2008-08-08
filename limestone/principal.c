@@ -31,7 +31,7 @@ dav_error *sabridge_create_home_folder(const dav_repos_db *d,
                                        dav_repos_resource **phome_folder)
 {
     apr_pool_t *pool = r->p;
-    dav_repos_resource *hf;
+    dav_repos_resource *hf = NULL;
     const dav_principal *owner;
     request_rec *rec = r->resource->info->rec;
     const dav_hooks_acl *acl_hooks = dav_get_acl_hooks(rec);
@@ -159,15 +159,17 @@ char *get_group_member_set(const dav_resource *group)
     request_rec *r = group->info->rec;
     dav_repos_db *db = group->info->db;
     dav_repos_resource *group_dbr = (dav_repos_resource *) group->info->db_r;
-    dav_repos_resource *members = NULL, *iter = NULL;
+    apr_array_header_t *members = NULL;
+    int i = 0;
     char *member_set = "";
 
     TRACE();
 
     dbms_get_group_members(db, group_dbr, &members);
-    for (iter = members; iter; iter = iter->next) {
+    for (i = 0; members && i < members->nelts; i++) {
+        dav_repos_resource *mem = &APR_ARRAY_IDX(members, i, dav_repos_resource);
         const char *prin_uri = apr_pstrcat(pool, principal_href_prefix(r),
-                                           iter->uri, NULL);
+                                           mem->uri, NULL);
         member_set = apr_pstrcat
           (r->pool, member_set, dav_repos_mk_href(pool, prin_uri), NULL);
     }

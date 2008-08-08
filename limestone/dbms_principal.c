@@ -419,14 +419,14 @@ dav_error *dbms_add_prin_to_grp_xitively(apr_pool_t *pool,
       /* UPDATE query */                                                \
       /* number of paths from parent of g to g */                       \
       SUBS "((SELECT t.transitive_count "                               \
-      "          FROM (SELECT * FROM transitive_group_members) AS t"    \
+      "          FROM transitive_group_members AS t"                    \
       "          WHERE t.transitive_group_id = transitive_group_id "    \
       "                AND t.transitive_member_id=?), 1) "              \
       /* multiplied by */                                               \
       "    *   "                                                        \
       /* number of paths from prin to its child */                      \
       SUBS "((SELECT t.transitive_count "                               \
-      "          FROM (SELECT * FROM transitive_group_members) AS t"    \
+      "          FROM transitive_group_members AS t"                    \
       "          WHERE t.transitive_group_id = ? "                      \
       "                AND t.transitive_member_id = transitive_member_id), 1)" \
       "WHERE (transitive_group_id, transitive_member_id) IN "           \
@@ -529,23 +529,25 @@ dav_error *dbms_rem_prin_frm_grp_xitively(apr_pool_t *pool,
        /* the count values returned are ones that aren't modified in this 
           UPDATE query */
        /* number of paths from parent of g to g */
-       "  (SELECT t.transitive_count "
-       "   FROM (SELECT * FROM transitive_group_members) AS t"
-       "   WHERE t.transitive_group_id = transitive_group_id "
-       "         AND t.transitive_member_id=?) "
+       "  COALESCE ((SELECT t.transitive_count "
+       "             FROM transitive_group_members AS t"
+       "             WHERE t.transitive_group_id = transitive_group_id "
+       "                   AND t.transitive_member_id=? )"
+       "           , 1) "
        /* multiplied by */
        "    *   "
        /* number of paths from prin to its child */
-       "  (SELECT t.transitive_count "
-       "   FROM (SELECT * FROM transitive_group_members) AS t"
-       "   WHERE t.transitive_group_id = ? "
-       "         AND t.transitive_member_id = transitive_member_id) "
+       "  COALESCE ((SELECT t.transitive_count "
+       "             FROM transitive_group_members AS t"
+       "             WHERE t.transitive_group_id = ? "
+       "                   AND t.transitive_member_id = transitive_member_id ) "
+       "           , 1) "
        "WHERE (transitive_group_id, transitive_member_id) IN "
        "   (SELECT g.transitive_group_id, m.transitive_member_id "
        "    FROM ( SELECT transitive_group_id FROM transitive_group_members "
        "           WHERE transitive_member_id=? "
        "          UNION SELECT ?) g " /* grp and its parents */
-       "                   JOIN "
+       "        CROSS JOIN "
        "         ( SELECT transitive_member_id FROM transitive_group_members "
        "           WHERE transitive_group_id=? "
        "          UNION SELECT ?) m) " /* prin and its members */
@@ -571,7 +573,7 @@ dav_error *dbms_rem_prin_frm_grp_xitively(apr_pool_t *pool,
        "    FROM ( SELECT transitive_group_id FROM transitive_group_members "
        "           WHERE transitive_member_id=? "
        "          UNION SELECT ?) g " /* grp and its parents */
-       "                JOIN "
+       "               CROSS JOIN "
        "         ( SELECT transitive_member_id FROM transitive_group_members "
        "           WHERE transitive_group_id=? "
        "          UNION SELECT ?) m) " /* prin and its members */
@@ -659,11 +661,11 @@ int dbms_get_principal_type_from_name(apr_pool_t *pool, const dav_repos_db *db,
 
 dav_error *dbms_get_group_members(const dav_repos_db *db,
                                   const dav_repos_resource *group_dbr, 
-                                  dav_repos_resource **members)
+                                  apr_array_header_t **p_members)
 {
     apr_pool_t *pool = group_dbr->p;
     dav_repos_query *q = NULL;
-    dav_repos_resource *dummy_head, *presult_link_tail;
+    apr_array_header_t *members = NULL;
     
     TRACE();
 
@@ -680,15 +682,12 @@ dav_error *dbms_get_group_members(const dav_repos_db *db,
                              "Can't get group members");
     }
 
-    dummy_head = apr_pcalloc(pool, sizeof(*dummy_head));
-    presult_link_tail = dummy_head;
+    members = apr_array_make(pool, dbms_results_count(q)+1, sizeof(*group_dbr));
 
     while (dbms_next(q) == 1) {
-        dav_repos_resource *member;
+        dav_repos_resource *member = apr_array_push(members);
         const char *name = NULL;
         sabridge_new_dbr_from_dbr(group_dbr, &member);
-        presult_link_tail->next = member;
-        presult_link_tail = member;
 
         member->serialno = dbms_get_int(q, 1);
         name = dbms_get_string(q, 2);
@@ -699,8 +698,9 @@ dav_error *dbms_get_group_members(const dav_repos_db *db,
         else if (member->resourcetype == dav_repos_USER)
             member->uri = apr_pstrcat(pool, PRINCIPAL_USER_PREFIX, name, NULL);
     }
-    *members = dummy_head->next;
     dbms_query_destroy(q);
+    if (!apr_is_empty_array(members))
+        *p_members = members;
     return NULL;
 }
 
@@ -765,9 +765,10 @@ dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
             continue;
         }
         dav_repos_resource *prin = NULL;
-        if (*name == '\0')
+        if (*name == '\0') {
             prin = apr_array_push(prins_to_remove);
-        else {
+            sabridge_new_dbr_from_dbr(group_dbr, &prin);
+        } else {
             sabridge_new_dbr_from_dbr(group_dbr, &prin);
             apr_hash_set(new_members, name, APR_HASH_KEY_STRING, prin);
         }

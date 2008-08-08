@@ -331,7 +331,7 @@ static dav_error *dav_repos_refresh_locks(dav_lockdb *lockdb,
     if (new_time == 1) {
         dav_lock *lock;
         for (lock = locks; lock; lock = lock->next) {
-            dav_repos_resource *lockroot_dbr;
+            dav_repos_resource *lockroot_dbr = NULL;
             dbms_bind_list *bind_list;
             int level;
 

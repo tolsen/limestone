@@ -105,17 +105,19 @@ dav_error *sabridge_deliver(dav_repos_db * db, dav_repos_resource * db_r,
 void sabridge_new_dbr_from_dbr(const dav_repos_resource *db_r,
                                 dav_repos_resource **res_p)
 {
+    if (*res_p != NULL) {
+        apr_pool_t *pool = db_r->p;
+        dav_repos_resource *new_dbr = *res_p;
+        new_dbr->p = pool;
+        new_dbr->root_path = db_r->root_path;
+        return;
+    }
+
     if (db_r->resource && db_r->resource->info) {
         dav_resource *new_resource = NULL;
         dav_repos_new_resource(db_r->resource->info->rec, db_r->root_path,
                                &new_resource);
         *res_p = new_resource->info->db_r;
-    } else {
-        apr_pool_t *pool = db_r->p;
-        dav_repos_resource *new_dbr;
-        new_dbr = apr_pcalloc(pool, sizeof(*db_r));
-        new_dbr->p = pool;
-        new_dbr->root_path = db_r->root_path;
     }
 }
 
@@ -413,7 +415,7 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
 
     if (create_dest) {
         if (dest_prev_id) {
-            dav_repos_resource *prev_dst;
+            dav_repos_resource *prev_dst = NULL;
             sabridge_new_dbr_from_dbr(r_dst, &prev_dst);
             prev_dst->serialno = dest_prev_id;
             prev_dst->uri = r_dst->uri;
@@ -532,7 +534,7 @@ dav_error *sabridge_depth_inf_copy_coll(const dav_repos_db *d,
         if (iter->bind)
             copy_res = apr_hash_get(copy_map, iter->bind->uri, AHKS);
         else if (apr_hash_get(dst_in_use, &parent_copy->serialno, sizeof(parent_copy->serialno))){
-            dav_repos_resource *corr_child;
+            dav_repos_resource *corr_child = NULL;
             sabridge_new_dbr_from_dbr(r_dst, &corr_child);
             corr_child->uri = apr_psprintf(pool, "%s%s", r_dst->uri,
                                            iter->uri + strlen(r_src->uri));

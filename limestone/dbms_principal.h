@@ -85,7 +85,7 @@ int dbms_get_principal_type_from_name(apr_pool_t *pool, const dav_repos_db *db,
 
 dav_error *dbms_get_group_members(const dav_repos_db *db,
                                   const dav_repos_resource *group_dbr, 
-                                  dav_repos_resource **members);
+                                  apr_array_header_t **p_members);
 
 dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
                                         const dav_repos_resource *group_dbr,

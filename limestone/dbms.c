@@ -889,6 +889,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
 
         /*fetch every row */
         /*Malloc a new structure */
+        pnew_link_item = NULL;
         sabridge_new_dbr_from_dbr(db_r, &pnew_link_item);
         presult_link_tail->next = pnew_link_item;
         presult_link_tail = pnew_link_item;

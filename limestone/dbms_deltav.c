@@ -696,6 +696,7 @@ dav_error *dbms_get_vhr_versions(const dav_repos_db *d,
     link_tail = dummy_link_head;
 
     while (1 == (ierrno = dbms_next(q))) {
+        new_link_item = NULL;
         sabridge_new_dbr_from_dbr(vhr, &new_link_item);
         link_tail->next = new_link_item;
         link_tail = new_link_item;

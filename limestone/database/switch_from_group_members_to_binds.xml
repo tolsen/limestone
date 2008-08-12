@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="chetan" id="1">
+    <comment> Add initial group_members rows to binds </comment>
+    <insert tableName="binds">
+        <column name="collection_id" value="3"/>
+        <column name="resource_id" value="4"/>
+        <column name="name" value="authenticated"/>
+    </insert>
+    <insert tableName="binds">
+        <column name="collection_id" value="3"/>
+        <column name="resource_id" value="5"/>
+        <column name="name" value="unauthenticated"/>
+    </insert>
+  </changeSet>
+  <changeSet author="chetan" id="2">
+    <comment> Delete group_members </comment>
+    <dropTable tableName="group_members"/>
+  </changeSet>
+</databaseChangeLog>

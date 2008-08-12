@@ -9,4 +9,5 @@
   <include file="add_auth_user_cookies.xml"/>
   <include file="add_bits_pw_reset.xml"/>
   <include file="add_property_values_quota_rules.xml"/>
+  <include file="switch_from_group_members_to_binds.xml"/>
 </databaseChangeLog>

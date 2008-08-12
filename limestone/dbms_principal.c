@@ -321,11 +321,10 @@ dav_error *dbms_add_prin_to_group(apr_pool_t *pool, const dav_repos_db *d,
     TRACE();
 
     q = dbms_prepare(pool, d->db, 
-                     "INSERT INTO binds(collection_id, resource_id, name) "
-                     " SELECT ?, ?, name FROM principals WHERE resource_id=? ");
+                     "INSERT INTO group_members(group_id, member_id) "
+                     "VALUES (?, ?)");
     dbms_set_int(q, 1, group_id);
     dbms_set_int(q, 2, principal_id);
-    dbms_set_int(q, 3, principal_id);
 
     if (dbms_execute(q))
         err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
@@ -343,8 +342,8 @@ int dbms_is_prin_in_grp(apr_pool_t *pool, const dav_repos_db *d,
     TRACE();
 
     q = dbms_prepare (pool, d->db,
-                      "SELECT resource_id FROM binds "
-                      "WHERE collection_id=? AND resource_id=? ");
+                      "SELECT member_id FROM group_members "
+                      "WHERE group_id=? AND member_id=? ");
     dbms_set_int(q, 1, grp_id);
     dbms_set_int(q, 2, prin_id);
 
@@ -495,8 +494,8 @@ dav_error *dbms_rem_prin_frm_grp(apr_pool_t *pool, const dav_repos_db *d,
     TRACE();
 
     q = dbms_prepare(pool, d->db, 
-                     "DELETE FROM binds "
-                     "WHERE collection_id=? AND resource_id=?");
+                     "DELETE FROM group_members "
+                     "WHERE group_id=? AND member_id=?");
     dbms_set_int(q, 1, grp_id);
     dbms_set_int(q, 2, prin_id);
 
@@ -670,13 +669,12 @@ dav_error *dbms_get_group_members(const dav_repos_db *db,
     
     TRACE();
 
-    q = dbms_prepare
-      (pool, db->db,
-       "SELECT principals.resource_id, principals.name, type "
-       "FROM principals "
-       "      INNER JOIN binds ON principals.resource_id = binds.resource_id "
-       "      INNER JOIN resources ON principals.resource_id = resources.id "
-       "WHERE collection_id = ? ");
+    q = dbms_prepare(pool, db->db,
+                     "SELECT resource_id, name, type "
+                     "FROM principals "
+                     "      INNER JOIN group_members ON resource_id = member_id "
+                     "      INNER JOIN resources ON resource_id = resources.id "
+                     "WHERE group_id = ? ");
     dbms_set_int(q, 1, group_dbr->serialno);
     if (dbms_execute(q)) {
         dbms_query_destroy(q);
@@ -740,7 +738,7 @@ dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
        "    RIGHT OUTER JOIN (", new_members_table, ") new_members ",
        "                ON principals.name = new_members.name ",
        "    FULL OUTER JOIN "
-       "       (SELECT resource_id AS member_id FROM binds WHERE collection_id = ?) cur_members "
+       "       (SELECT * FROM group_members WHERE group_id = ?) cur_members "
        "                ON principals.resource_id = cur_members.member_id "
        "    LEFT OUTER JOIN resources ON principals.resource_id = resources.id "
        "                      OR cur_members.member_id=resources.id ", NULL);

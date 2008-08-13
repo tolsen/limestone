@@ -160,12 +160,16 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
         if (err) goto error;
     }
 
-    if (r->resourcetype == dav_repos_USER) {
+    if (r->resourcetype == dav_repos_USER
+        || r->resourcetype == dav_repos_GROUP) {
         err = dbms_insert_principal(d, r);
         if (err) goto error;
-        r->owner_id = r->serialno;
+    }
+
+    if (r->resourcetype == dav_repos_USER) {
         err = dbms_insert_quota(pool, d, r->serialno, d->quota);
         if (err) goto error;
+        r->owner_id = r->serialno;
         err = dbms_set_property(d, r);
         if (err) goto error;
     }

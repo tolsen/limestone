@@ -450,16 +450,15 @@ static dav_error *dav_repos_open_stream(const dav_resource * resource,
         ds->content_type = apr_pstrdup(ds->p, rec->content_type);
 
     if (db_r->serialno == 0) {
-        int insert_flags = SABRIDGE_DELAY_ACL;
+        int insert_flags = 0;
         /* no autoversioning at this layer */
-        if(strncmp(resource->uri, USER_PATH, strlen(USER_PATH)) == 0)              
+        if(strncmp(resource->uri, USER_PATH, strlen(USER_PATH)) == 0) {
+            insert_flags = SABRIDGE_DELAY_ACL;
             db_r->resourcetype = dav_repos_USER;
-        else if(strncmp(resource->uri, GROUP_PATH, strlen(GROUP_PATH)) == 0) 
+        } else if(strncmp(resource->uri, GROUP_PATH, strlen(GROUP_PATH)) == 0) 
             db_r->resourcetype = dav_repos_GROUP;
-        else {
+        else
             db_r->resourcetype = dav_repos_RESOURCE;
-            insert_flags = 0;
-        }
         
         if((err = sabridge_insert_resource(db, db_r, rec, insert_flags)))
             return err;
@@ -1099,23 +1098,13 @@ const char *dav_repos_response_href_transform(request_rec *r, const char *uri)
 
 dav_error *dav_repos_set_collection_type(dav_resource *resource, int resType)
 {
-    dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
-    dav_error *err = NULL;
+    dav_error *err = dav_new_error(db_r->p, HTTP_FORBIDDEN, 0,
+                                   "This collection type not supported");
 
     TRACE();
 
-    if (resType == DAV_RESOURCE_TYPE_PRINCIPAL) {
-        if (strncmp(GROUP_PATH, db_r->uri, strlen(GROUP_PATH)))
-            return dav_new_error(db_r->p, HTTP_FORBIDDEN, 0,
-                                 "Can't create a group here ");
-        err = dbms_update_resource_type(db, db_r, dav_repos_GROUP);
-        if (err) return err;
-        resource->type = DAV_RESOURCE_TYPE_PRINCIPAL;
-        err = dbms_insert_principal(db, db_r);
-        if (err) return err;
-    }
-    return NULL;
+    return err;
 }
 
 const dav_hooks_repository dav_repos_hooks_repos = {

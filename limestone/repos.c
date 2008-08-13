@@ -514,7 +514,8 @@ static dav_error *dav_repos_close_stream(dav_stream * stream, int commit)
         if (db_r->resourcetype == dav_repos_LOCKNULL)
             db_r->resourcetype = dav_repos_RESOURCE;
 
-        if(db_r->resourcetype == dav_repos_RESOURCE) {
+        if(db_r->resourcetype == dav_repos_RESOURCE ||
+           db_r->resourcetype == dav_repos_VERSIONED) {
             if (is_content_type_good(stream->path, r->content_type)) {
                 /* if we were supplied a Content-Type by the client, use it */
                 db_r->getcontenttype = r->content_type;

@@ -405,6 +405,40 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
     return err;
 }               /*End of dbms_get_property */
 
+dav_error *dbms_get_resource_id_from_uuid(const dav_repos_db *d,
+                                          dav_repos_resource *r)
+{
+    apr_pool_t *pool = r->p;
+    dav_repos_query *q = NULL;
+    int ierrno = 0;
+    dav_error *err = NULL;
+     
+    /* get Content-Length and Content-Type */
+    q = dbms_prepare(pool, d->db,
+                     "SELECT id FROM resources WHERE uuid = ?");
+    dbms_set_string(q, 1, r->uuid);
+
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+        return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                             "dbms_execute error");
+    }
+
+    if ((ierrno = dbms_next(q)) < 0) {
+        dbms_query_destroy(q);
+        return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,
+                             "dbms_next error");
+    }
+    if (ierrno == 0) {
+        dbms_query_destroy(q);
+        return err;
+    }
+
+    r->serialno = dbms_get_int(q, 1);
+    dbms_query_destroy(q);
+    return err;
+}
+
 dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
 {
     dav_repos_query *q = NULL;
@@ -436,7 +470,8 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
         return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0, 
                              "DBMS error during insert to 'resources'");
     
-    r->serialno = dbms_insert_id(d->db, "resources", pool);
+    /*    r->serialno = dbms_insert_id(d->db, "resources", pool); */
+    err = dbms_get_resource_id_from_uuid(d, r);
     return err;
 }
 

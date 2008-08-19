@@ -276,9 +276,9 @@ long dbms_insert_id(const dav_repos_dbms * db, const char *table,
 {
     dav_repos_query *q;
     long id;
-    char *max_id_query = apr_psprintf(pool, "SELECT MAX(id) FROM %s", table);
+    char *id_query = apr_psprintf(pool, "SELECT CURRVAL('%s_id_seq')", table);
     
-    q = dbms_prepare(pool, db, max_id_query);
+    q = dbms_prepare(pool, db, id_query);
     dbms_execute(q);
     dbms_next(q);
     id = dbms_get_int(q, 1);

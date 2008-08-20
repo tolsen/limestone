@@ -542,7 +542,8 @@ static dav_error *dav_repos_close_stream(dav_stream * stream, int commit)
             if((err = dbms_set_property(db, db_r)))
                 return err;
 
-            dbms_update_media_props(db, db_r);
+            if ((err = dbms_update_media_props(db, db_r)))
+                return err;
             sabridge_put_resource_file(db, db_r, stream->path);
         }
         else if(db_r->resourcetype == dav_repos_USER) {

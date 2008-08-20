@@ -48,7 +48,17 @@
 #define DBG1(A,B) printf(A,B)
 #define DBG2(A,B,C) printf(A,B,C)
 #define DBG3(A,B,C,D) printf(A,B,C,D)
-
+/*
+#include <http_log.h>
+#define DBG0(f)          ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+                                      ("%s %d "f), APLOG_MARK)
+#define DBG1(f,a1)       ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+                                      "%s %d "f, APLOG_MARK, a1)
+#define DBG2(f,a1,a2)    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+                                      "%s %d "f, APLOG_MARK, a1, a2)
+#define DBG3(f,a1,a2,a3) ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+                                      "%s %d "f, APLOG_MARK, a1, a2, a3)
+*/
 /** Collection Id of the root directory */
 #define ROOT_COLLECTION_ID  2
 /** Updated_at for the root directory */

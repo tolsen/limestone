@@ -192,7 +192,8 @@ int dbms_execute(dav_repos_query * query)
 			   query->db->ap_dbd_dbms->handle, &(query->results),
 			   escquery, 1);
 	if (error) {
-	    DBG1("\nError Code returned:%d in apr_dbd_select\n", error);
+	    DBG2("Error Code %d returned in apr_dbd_select: %s", error,
+                 dbms_error(query->pool, query->db));
 	    query->state = DAV_REPOS_STATE_ERROR;
 	    return error;
 	}
@@ -205,7 +206,8 @@ int dbms_execute(dav_repos_query * query)
                           query->db->ap_dbd_dbms->handle,
 			  &(query->nrows), escquery);
 	if (error) {
-	    DBG1("\nError Code returned:%d in apr_dbd_query\n", error);
+	    DBG2("Error Code %d returned in apr_dbd_query: %s", error,
+                 dbms_error(query->pool, query->db));
 	    query->state = DAV_REPOS_STATE_ERROR;
 	    return error;
 	}

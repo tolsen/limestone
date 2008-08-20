@@ -843,8 +843,7 @@ static dav_error *dav_repos_copy_resource(const dav_resource * src,
     TRACE();
 
     /* If it's a version resource */
-    if (src->type == DAV_RESOURCE_TYPE_VERSION ||
-	src->type == DAV_RESOURCE_TYPE_HISTORY ||
+    if (src->type == DAV_RESOURCE_TYPE_HISTORY ||
 	dst->type == DAV_RESOURCE_TYPE_VERSION ||
 	dst->type == DAV_RESOURCE_TYPE_HISTORY) {
 	return dav_new_error(db_r_src->p, HTTP_METHOD_NOT_ALLOWED , 0,

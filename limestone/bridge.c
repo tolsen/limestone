@@ -194,7 +194,7 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     return NULL;
 
  error:
-    dbms_delete_resource(d, r->p, r);
+    /* we don't need to delete the resource because we use transactions */
     return err;
 }				/*End of sabridge_insert_resource */
 

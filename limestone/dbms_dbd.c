@@ -32,6 +32,7 @@ dav_repos_dbms *dbms_api_opendb(apr_pool_t *pool, void *p)
     dav_repos_dbms *db = apr_pcalloc(pool, sizeof(dav_repos_dbms));
     request_rec *r = p;
     db->ap_dbd_dbms = ap_dbd_acquire(r);
+    db->rec = r;
     if (db->ap_dbd_dbms) return db;
     else return NULL;
 }
@@ -192,8 +193,11 @@ int dbms_execute(dav_repos_query * query)
 			   query->db->ap_dbd_dbms->handle, &(query->results),
 			   escquery, 1);
 	if (error) {
-	    DBG2("Error Code %d returned in apr_dbd_select: %s", error,
-                 dbms_error(query->pool, query->db));
+            const char *message = dbms_error(query->pool, query->db);
+	    DBG2("Error Code %d returned in apr_dbd_select: %s", error, message);
+            if (query->db->rec && strstr(message, "could not serialize access"))
+                apr_table_setn(query->db->rec->notes, "xaction_error", "1");
+
 	    query->state = DAV_REPOS_STATE_ERROR;
 	    return error;
 	}
@@ -206,8 +210,11 @@ int dbms_execute(dav_repos_query * query)
                           query->db->ap_dbd_dbms->handle,
 			  &(query->nrows), escquery);
 	if (error) {
-	    DBG2("Error Code %d returned in apr_dbd_query: %s", error,
-                 dbms_error(query->pool, query->db));
+            const char *message = dbms_error(query->pool, query->db);
+	    DBG2("Error Code %d returned in apr_dbd_query: %s", error, message);
+            if (query->db->rec && strstr(message, "could not serialize access"))
+                apr_table_setn(query->db->rec->notes, "xaction_error", "1");
+
 	    query->state = DAV_REPOS_STATE_ERROR;
 	    return error;
 	}

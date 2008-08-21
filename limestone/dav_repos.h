@@ -50,13 +50,13 @@
 #define DBG3(A,B,C,D) printf(A,B,C,D)
 /*
 #include <http_log.h>
-#define DBG0(f)          ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+#define DBG0(f)          ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL,\
                                       ("%s %d "f), APLOG_MARK)
-#define DBG1(f,a1)       ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+#define DBG1(f,a1)       ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL,\
                                       "%s %d "f, APLOG_MARK, a1)
-#define DBG2(f,a1,a2)    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+#define DBG2(f,a1,a2)    ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL,\
                                       "%s %d "f, APLOG_MARK, a1, a2)
-#define DBG3(f,a1,a2,a3) ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, NULL,\
+#define DBG3(f,a1,a2,a3) ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL,\
                                       "%s %d "f, APLOG_MARK, a1, a2, a3)
 */
 /** Collection Id of the root directory */

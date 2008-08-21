@@ -38,6 +38,7 @@
 
 struct dav_repos_dbms {
     ap_dbd_t *ap_dbd_dbms;
+    request_rec *rec;
     int apr_dbd;
 };
 

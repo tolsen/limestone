@@ -94,6 +94,10 @@ static const char *domain_map_to_xml(apr_pool_t *pool, apr_hash_t *domain_map)
     void *domain;
     const char *xmlstr = NULL;
 
+    if(NULL == domain_map) {
+        return NULL;
+    }
+
     for(hi = apr_hash_first(pool, domain_map); hi;
         hi = apr_hash_next(hi)) {
 

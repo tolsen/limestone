@@ -334,7 +334,7 @@ $(LS_MODULE): $(LS_MAKEFILE) $(wildcard limestone/*.[ch])
 	touch $@
 
 limestone-install-config: $(LS_INSTALLED_CONFIG)
-$(LS_INSTALLED_CONFIG): $(LS_MODULE)
+$(LS_INSTALLED_CONFIG): $(LS_MODULE) install-config
 	-rm -f $(HAMMOCK_INSTALLED_MODULE)
 	./install-config @INSTALL_CONF_FLAGS@
 

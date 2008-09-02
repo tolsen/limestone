@@ -934,7 +934,7 @@ long sabridge_get_used_bytes(const dav_repos_db *d, dav_repos_resource *r,
         user_id = dav_repos_get_principal_id(principal);
     }
 
-    if (r->resourcetype != dav_repos_COLLECTION)
+    if (r->resourcetype != dav_repos_COLLECTION && r->owner_id == user_id)
         return r->getcontentlength;
     else
         sabridge_get_collection_children(d, r, DAV_INFINITY, "read",

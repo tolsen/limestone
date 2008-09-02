@@ -252,6 +252,7 @@ $(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
 	   --enable-rewrite \
 	   --enable-ssl \
 	   --enable-headers \
+	   --enable-deflate \
 	   @WITH_DB_FLAG@ @PROFILE@
 
 APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')

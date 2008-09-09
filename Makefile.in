@@ -505,7 +505,7 @@ endef
 
 $(foreach vhost, @VHOSTS@, $(eval $(call database-dependent-targets-template,$(vhost))))
 
-tests: database-reset-and-limestone-start litmus-tests rubydav-tests
+tests: limestone-install database-reset-and-limestone-start litmus-tests rubydav-tests
 	$(stop-apache)
 	$(test-garbage)
 	$(reset-database)

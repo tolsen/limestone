@@ -6,7 +6,8 @@ PWD := $(shell pwd)
 APROOT := $(PWD)/aproot
 APXS=$(APROOT)/bin/apxs
 WITH_APXS=--with-apxs=$(APXS)
-LIQUIBASE_SCRIPT = $(abspath ../liquibase/liquibase)
+LIQUIBASE=$(abspath ../liquibase/liquibase)
+LIQUIBASE_PGSQL=$(LIQUIBASE) --classpath="@PGSQL_JDBC_JAR@" --driver="org.postgresql.Driver" --url="jdbc:postgresql://$(LIMESTONE_PGSQL_DB_HOST):$(LIMESTONE_PGSQL_DB_PORT)/$(LIMESTONE_PGSQL_DB_NAME)" --username=$(LIMESTONE_PGSQL_DB_USER) --password=$(LIMESTONE_PGSQL_DB_PASS) --defaultSchemaName=$(LIMESTONE_PGSQL_DB_USER) --changeLogFile=main.xml
 #mysql_vhost=
 #pgsql_vhost=@PGSQL_VHOST@
 TEST_USER1=test1
@@ -394,14 +395,32 @@ $(PRESTAN_MAKEFILE):
 prestan-build: $(PRESTAN_MAKEFILE)
 	cd $(PRESTAN_DIR) && $(MAKE)
 
-define start-apache
+
+define force-start-apache
 $(APROOT)/bin/apachectl start
 touch stamps/apache-start
 endef
 
+define status-database
+cd limestone/database && $(LIQUIBASE_PGSQL) status
+endef
+
+ifeq ($(wordlist 1, 3, $(shell $(status-database))),0 change sets)
+start-apache=$(force-start-apache)
+else
+define start-apache
+@echo Refusing to start limestone with outdated database
+@echo Run "make database-migrate" to upgrade database
+@echo  or "make force-apache-start" to start anyway
+endef
+endif
+
 apache-start: stamps/apache-start
 stamps/apache-start: stamps/stampdir
 	$(start-apache)
+
+force-apache-start:
+	$(force-start-apache)
 
 ifeq ($(strip $(wildcard stamps/apache-start)),)
 stop-apache=
@@ -413,7 +432,7 @@ endef
 endif
 
 define migrate-database-pgsql
-cd limestone/database && $(LIQUIBASE_SCRIPT) --classpath="@PGSQL_JDBC_JAR@" --driver="org.postgresql.Driver" --url="jdbc:postgresql://$(LIMESTONE_PGSQL_DB_HOST):$(LIMESTONE_PGSQL_DB_PORT)/$(LIMESTONE_PGSQL_DB_NAME)" --username=$(LIMESTONE_PGSQL_DB_USER) --password=$(LIMESTONE_PGSQL_DB_PASS) --defaultSchemaName=$(LIMESTONE_PGSQL_DB_USER) --changeLogFile=main.xml migrate
+cd limestone/database && $(LIQUIBASE_PGSQL) migrate
 endef
 
 define migrate-database
@@ -438,6 +457,9 @@ database-reset: limestone-stop
 
 database-migrate: limestone-stop
 	$(migrate-database)
+
+database-status:
+	$(status-database)	
 
 database-reset-and-limestone-start: database-reset stamps/stampdir
 	sleep 1

@@ -1,0 +1,40 @@
+#!/usr/bin/ruby
+
+
+def detect_vcs
+  dir = File.dirname(__FILE__)
+
+  return [:svn, :git, :hg].detect { |vcs| File.directory? "#{dir}/.#{vcs}" }
+end
+
+case detect_vcs
+when :svn
+  
+  URL_PREFIX = 'https://soho.limewire.com/svn/limespot/limestone/'
+
+  our_repo_url = "$URL$"
+  branch_info = our_repo_url.sub(/^\$URL: #{URL_PREFIX}(.+)\/[^\/]+ \$$/, '\1')
+
+  raise "cannot determine version" if branch_info == our_repo_url
+
+
+  main_version = case branch_info
+                 when /^branches\/(.+)$/:
+                     "#{$1} Branch"
+                 when /^tags\/(.+)$/:
+                     $1
+                 when /^trunk$/:
+                     "Trunk"
+                 else
+                   raise "cannot determine version.  not branches, tags, or trunk: #{branch_info}"
+                 end
+
+  svn_version = `svnversion -n`
+
+  print "#{main_version} (r#{svn_version})"
+  
+else
+  print "unknown"
+end
+
+puts unless ARGV[0] == '-n'

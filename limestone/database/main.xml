@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <include file="add_private_properties.xml"/>
+  <include file="add_lb_email_property.xml"/>
+  <include file="consolidate_resource_types.xml"/>
+  <include file="remove_resource_types_table.xml"/>
+  <include file="change_acl_inheritance_to_materialized_path.xml"/>
+  <include file="add_user_domains.xml"/>
+  <include file="add_auth_user_cookies.xml"/>
+  <include file="add_bits_pw_reset.xml"/>
+  <include file="add_property_values_quota_rules.xml"/>
+</databaseChangeLog>

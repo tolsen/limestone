@@ -1,0 +1,28 @@
+// dot 2.20.2 on Linux 2.6.25-2-amd64
+digraph "databasechangeloglock" {
+  graph [
+    rankdir="RL"
+    bgcolor="#f7f7f7"
+  ];
+  node [
+    fontname="Helvetica"
+    fontsize="11"
+    shape="plaintext"
+  ];
+  edge [
+    arrowsize="0.8"
+  ];
+  "databasechangeloglock" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="databasechangeloglock.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">databasechangeloglock</TD></TR>
+      <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
+      <TR><TD PORT="locked" COLSPAN="3" ALIGN="LEFT">locked</TD></TR>
+      <TR><TD PORT="lockgranted" COLSPAN="3" ALIGN="LEFT">lockgranted</TD></TR>
+      <TR><TD PORT="lockedby" COLSPAN="3" ALIGN="LEFT">lockedby</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">  </TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">1 row</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="tables/databasechangeloglock.html#"
+    tooltip="databasechangeloglock"
+  ];
+}

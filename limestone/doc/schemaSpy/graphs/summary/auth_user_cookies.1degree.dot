@@ -1,0 +1,29 @@
+// dot 2.20.2 on Linux 2.6.25-2-amd64
+digraph "auth_user_cookies" {
+  graph [
+    rankdir="RL"
+    bgcolor="#f7f7f7"
+  ];
+  node [
+    fontname="Helvetica"
+    fontsize="11"
+    shape="plaintext"
+  ];
+  edge [
+    arrowsize="0.8"
+  ];
+  "auth_user_cookies" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="auth_user_cookies.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">auth_user_cookies</TD></TR>
+      <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
+      <TR><TD PORT="principal_id" COLSPAN="3" ALIGN="LEFT">principal_id</TD></TR>
+      <TR><TD PORT="domain" COLSPAN="3" ALIGN="LEFT">domain</TD></TR>
+      <TR><TD PORT="auth_cookie" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">auth_cookie</TD></TR>
+      <TR><TD PORT="auth_root" COLSPAN="3" ALIGN="LEFT">auth_root</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">  </TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="tables/auth_user_cookies.html#"
+    tooltip="auth_user_cookies"
+  ];
+}

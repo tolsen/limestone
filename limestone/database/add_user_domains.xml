@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment>Create user_domains table</comment>
+    <createTable tableName="user_domains">
+        <column name="id" type="integer" autoIncrement="true">
+           <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="principal_id" type="bigint"/>
+        <column name="domain" type="varchar(255)"/>
+        <column name="path" type="varchar(255)"/>
+    </createTable>
+
+    <comment>Add FK check on user_domains.principal_id to principals.resource_id</comment>
+    <addForeignKeyConstraint 
+        constraintName="fk_user_domains_principals" 
+        baseTableName="user_domains" 
+        baseColumnNames="principal_id" 
+        referencedTableName="principals" 
+        referencedColumnNames="resource_id"
+        deferrable="true"
+        deleteCascade="true" 
+    />
+
+    <comment>Add "unique" constraint on (principal_id, domain) for user_domains table</comment>
+    <addUniqueConstraint tableName="user_domains" columnNames="principal_id, domain" constraintName="uk_principal_id_domain"/>
+
+  </changeSet>
+</databaseChangeLog>

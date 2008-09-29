@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database name="limestone" schema="tolsen" type="PostgreSQL - 8.3.3">
+   <tables>
+      <table name="aces" numRows="8" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('aces_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="ace_id" foreignKey="dav_aces_privileges_ace_id_fkey" implied="false" onDeleteCascade="false" table="dav_aces_privileges"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="grantdeny" nullable="false" remarks="" size="1" type="bpchar"/>
+         <column autoUpdated="false" defaultValue="'f'::bpchar" digits="0" id="2" name="protected" nullable="false" remarks="" size="1" type="bpchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="aces_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="4" name="principal_id" nullable="false" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="5" name="property_namespace_id" nullable="true" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="6" name="property_name" nullable="true" remarks="" size="4096" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="aces_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="acl_inheritance" numRows="4" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="fk_acl_inheritance_resources" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="path" nullable="true" remarks="" size="255" type="varchar"/>
+         <primaryKey column="resource_id" sequenceNumberInPK="1"/>
+         <index name="pk_acl_inheritance" unique="true">
+            <column ascending="true" name="resource_id"/>
+         </index>
+         <index name="idx_acl_inheritance_path" unique="false">
+            <column ascending="true" name="path"/>
+         </index>
+      </table>
+      <table name="acl_privileges" numRows="12" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('acl_privileges_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="privilege_id" foreignKey="dav_aces_privileges_privilege_id_fkey" implied="false" onDeleteCascade="false" table="dav_aces_privileges"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="name" nullable="true" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" defaultValue="'f'::bpchar" digits="0" id="2" name="abstract" nullable="false" remarks="" size="1" type="bpchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="parent_id" nullable="true" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="4" name="lft" nullable="true" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="5" name="rgt" nullable="true" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="6" name="priv_namespace_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="fk_privilege_namespace" implied="false" onDeleteCascade="false" table="namespaces"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="acl_privileges_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="auth_user_cookies" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('auth_user_cookies_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="principal_id" nullable="true" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="2" name="domain" nullable="false" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="auth_cookie" nullable="true" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="4" name="auth_root" nullable="true" remarks="" size="255" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="pk_auth_user_cookies" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="uk_auth_cookie" unique="true">
+            <column ascending="true" name="auth_cookie"/>
+         </index>
+      </table>
+      <table name="autoversion_types" numRows="5" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('autoversion_types_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="name" nullable="false" remarks="" size="255" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="autoversion_types_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="binds" numRows="4" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('binds_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="bind_id" foreignKey="binds_locks_bind_id_fkey" implied="false" onDeleteCascade="false" table="binds_locks"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="name" nullable="false" remarks="" size="767" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="collection_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="binds_collection_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="binds_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="6" id="4" name="updated_at" nullable="true" remarks="" size="29" type="timestamp"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="binds_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="binds_collection_id_key" unique="true">
+            <column ascending="true" name="collection_id"/>
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="binds_locks" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="lock_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="binds_locks_lock_id_fkey" implied="false" onDeleteCascade="false" table="locks"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="bind_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="binds_locks_bind_id_fkey" implied="false" onDeleteCascade="false" table="binds"/>
+         </column>
+      </table>
+      <table name="bits_pw_reset" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="principal_id" nullable="true" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="1" name="reset_token" nullable="true" remarks="" size="255" type="varchar"/>
+      </table>
+      <table name="cleanup" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('cleanup_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="cleanup_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cleanup_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="databasechangelog" numRows="17" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="63" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="1" name="author" nullable="false" remarks="" size="63" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="filename" nullable="false" remarks="" size="200" type="varchar"/>
+         <column autoUpdated="false" digits="6" id="3" name="dateexecuted" nullable="false" remarks="" size="35" type="timestamptz"/>
+         <column autoUpdated="false" digits="0" id="4" name="md5sum" nullable="true" remarks="" size="32" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="5" name="description" nullable="true" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="6" name="comments" nullable="true" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="7" name="tag" nullable="true" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="8" name="liquibase" nullable="true" remarks="" size="10" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="author" sequenceNumberInPK="2"/>
+         <primaryKey column="filename" sequenceNumberInPK="3"/>
+         <index name="pk_databasechangelog" unique="true">
+            <column ascending="true" name="id"/>
+            <column ascending="true" name="author"/>
+            <column ascending="true" name="filename"/>
+         </index>
+      </table>
+      <table name="databasechangeloglock" numRows="1" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="1" name="locked" nullable="false" remarks="" size="1" type="bool"/>
+         <column autoUpdated="false" digits="6" id="2" name="lockgranted" nullable="true" remarks="" size="35" type="timestamptz"/>
+         <column autoUpdated="false" digits="0" id="3" name="lockedby" nullable="true" remarks="" size="255" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="pk_databasechangeloglock" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="dav_aces_privileges" numRows="8" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="ace_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="dav_aces_privileges_ace_id_fkey" implied="false" onDeleteCascade="false" table="aces"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="privilege_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="dav_aces_privileges_privilege_id_fkey" implied="false" onDeleteCascade="false" table="acl_privileges"/>
+         </column>
+         <primaryKey column="ace_id" sequenceNumberInPK="1"/>
+         <primaryKey column="privilege_id" sequenceNumberInPK="2"/>
+         <index name="dav_aces_privileges_pkey" unique="true">
+            <column ascending="true" name="ace_id"/>
+            <column ascending="true" name="privilege_id"/>
+         </index>
+      </table>
+      <table name="group_members" numRows="2" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('group_members_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="group_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="group_members_group_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="member_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="group_members_member_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="group_members_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="locks" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('locks_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="lock_id" foreignKey="binds_locks_lock_id_fkey" implied="false" onDeleteCascade="false" table="binds_locks"/>
+            <child column="lock_id" foreignKey="locks_resources_lock_id_fkey" implied="false" onDeleteCascade="false" table="locks_resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="uuid" nullable="false" remarks="" size="32" type="bpchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="locks_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="owner_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="principal_id" foreignKey="locks_owner_id_fkey" implied="false" onDeleteCascade="false" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="'X'::bpchar" digits="0" id="4" name="form" nullable="false" remarks="" size="1" type="bpchar"/>
+         <column autoUpdated="false" defaultValue="(0)::bigint" digits="0" id="5" name="depth" nullable="false" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="6" id="6" name="expires_at" nullable="false" remarks="" size="29" type="timestamp"/>
+         <column autoUpdated="false" digits="0" id="7" name="owner_info" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="8" name="lockroot" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="locks_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="locks_resources" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="lock_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="locks_resources_lock_id_fkey" implied="false" onDeleteCascade="false" table="locks"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="locks_resources_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <primaryKey column="lock_id" sequenceNumberInPK="1"/>
+         <primaryKey column="resource_id" sequenceNumberInPK="2"/>
+         <index name="locks_resources_pkey" unique="true">
+            <column ascending="true" name="lock_id"/>
+            <column ascending="true" name="resource_id"/>
+         </index>
+      </table>
+      <table name="media" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="media_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="size" nullable="false" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="2" name="mimetype" nullable="true" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="sha1" nullable="false" remarks="" size="40" type="bpchar"/>
+         <column autoUpdated="false" digits="6" id="4" name="updated_at" nullable="false" remarks="" size="29" type="timestamp"/>
+      </table>
+      <table name="namespaces" numRows="2" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('namespaces_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="priv_namespace_id" foreignKey="fk_privilege_namespace" implied="false" onDeleteCascade="false" table="acl_privileges"/>
+            <child column="namespace_id" foreignKey="properties_namespace_id_fkey" implied="false" onDeleteCascade="false" table="properties"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="name" nullable="false" remarks="" size="4096" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="namespaces_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="principals" numRows="4" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <child column="group_id" foreignKey="group_members_group_id_fkey" implied="false" onDeleteCascade="false" table="group_members"/>
+            <child column="member_id" foreignKey="group_members_member_id_fkey" implied="false" onDeleteCascade="false" table="group_members"/>
+            <child column="principal_id" foreignKey="fk_quota_pp_resource" implied="false" onDeleteCascade="false" table="quota"/>
+            <child column="creator_id" foreignKey="resources_creator_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+            <child column="owner_id" foreignKey="resources_owner_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+            <child column="transitive_group_id" foreignKey="transitive_group_members_transitive_group_id_fkey" implied="false" onDeleteCascade="false" table="transitive_group_members"/>
+            <child column="transitive_member_id" foreignKey="transitive_group_members_transitive_member_id_fkey" implied="false" onDeleteCascade="false" table="transitive_group_members"/>
+            <child column="principal_id" foreignKey="fk_user_domains_principals" implied="false" onDeleteCascade="false" table="user_domains"/>
+            <child column="principal_id" foreignKey="users_principal_id_fkey" implied="false" onDeleteCascade="false" table="users"/>
+            <parent column="id" foreignKey="principals_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="name" nullable="false" remarks="" size="1024" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="email" nullable="true" remarks="" size="255" type="varchar"/>
+         <index name="fk_pp_resource" unique="true">
+            <column ascending="true" name="resource_id"/>
+         </index>
+      </table>
+      <table name="properties" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('properties_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="namespace_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="properties_namespace_id_fkey" implied="false" onDeleteCascade="false" table="namespaces"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="false" remarks="" size="4096" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="id" foreignKey="properties_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="4" name="xmlinfo" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="5" name="value" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="properties_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="quota" numRows="4" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="principal_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="fk_quota_pp_resource" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" defaultValue="(0)::bigint" digits="0" id="1" name="used_quota" nullable="false" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" defaultValue="(0)::bigint" digits="0" id="2" name="total_quota" nullable="false" remarks="" size="19" type="int8"/>
+         <index name="pk_quota_principal" unique="true">
+            <column ascending="true" name="principal_id"/>
+         </index>
+      </table>
+      <table name="resources" numRows="8" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('resources_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="resource_id" foreignKey="aces_resource_id_fkey" implied="false" onDeleteCascade="false" table="aces"/>
+            <child column="resource_id" foreignKey="fk_acl_inheritance_resources" implied="false" onDeleteCascade="false" table="acl_inheritance"/>
+            <child column="collection_id" foreignKey="binds_collection_id_fkey" implied="false" onDeleteCascade="false" table="binds"/>
+            <child column="resource_id" foreignKey="binds_resource_id_fkey" implied="false" onDeleteCascade="false" table="binds"/>
+            <child column="resource_id" foreignKey="cleanup_resource_id_fkey" implied="false" onDeleteCascade="false" table="cleanup"/>
+            <child column="resource_id" foreignKey="locks_resource_id_fkey" implied="false" onDeleteCascade="false" table="locks"/>
+            <child column="resource_id" foreignKey="locks_resources_resource_id_fkey" implied="false" onDeleteCascade="false" table="locks_resources"/>
+            <child column="resource_id" foreignKey="media_resource_id_fkey" implied="false" onDeleteCascade="false" table="media"/>
+            <child column="resource_id" foreignKey="principals_resource_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+            <child column="resource_id" foreignKey="properties_resource_id_fkey" implied="false" onDeleteCascade="false" table="properties"/>
+            <child column="resource_id" foreignKey="vcrs_resource_id_fkey" implied="false" onDeleteCascade="false" table="vcrs"/>
+            <child column="resource_id" foreignKey="versions_resource_id_fkey" implied="false" onDeleteCascade="false" table="versions"/>
+            <child column="resource_id" foreignKey="vhrs_resource_id_fkey" implied="false" onDeleteCascade="false" table="vhrs"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="uuid" nullable="false" remarks="" size="32" type="bpchar"/>
+         <column autoUpdated="false" digits="6" id="2" name="created_at" nullable="false" remarks="" size="29" type="timestamp"/>
+         <column autoUpdated="false" digits="0" id="3" name="displayname" nullable="true" remarks="" size="1024" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="4" name="contentlanguage" nullable="false" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="5" name="comment" nullable="true" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="7" name="owner_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="resources_owner_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="8" name="creator_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="resources_creator_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="9" name="type" nullable="true" remarks="" size="2147483647" type="resourcetype"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="resources_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="transitive_group_members" numRows="2" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="transitive_group_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="transitive_group_members_transitive_group_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="transitive_member_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="transitive_group_members_transitive_member_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="transitive_count" nullable="false" remarks="" size="19" type="int8"/>
+      </table>
+      <table name="user_domains" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('user_domains_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="principal_id" nullable="true" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="fk_user_domains_principals" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="domain" nullable="true" remarks="" size="255" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="path" nullable="true" remarks="" size="255" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="pk_user_domains" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="uk_principal_id_domain" unique="true">
+            <column ascending="true" name="principal_id"/>
+            <column ascending="true" name="domain"/>
+         </index>
+      </table>
+      <table name="users" numRows="2" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="principal_id" nullable="false" remarks="" size="19" type="int8">
+            <child column="owner_id" foreignKey="locks_owner_id_fkey" implied="false" onDeleteCascade="false" table="locks"/>
+            <parent column="resource_id" foreignKey="users_principal_id_fkey" implied="false" onDeleteCascade="false" table="principals"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="pwhash" nullable="false" remarks="" size="32" type="bpchar"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="2" name="login_to_all_domains" nullable="true" remarks="" size="1" type="bool"/>
+         <index name="fk_us_principal" unique="true">
+            <column ascending="true" name="principal_id"/>
+         </index>
+      </table>
+      <table name="vcrs" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <child column="vcr_id" foreignKey="fk_ve_vc_resource" implied="false" onDeleteCascade="false" table="versions"/>
+            <parent column="id" foreignKey="vcrs_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="checked_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="vcrs_checked_id_fkey" implied="false" onDeleteCascade="false" table="versions"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="vhr_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="vcrs_vhr_id_fkey" implied="false" onDeleteCascade="false" table="vhrs"/>
+         </column>
+         <column autoUpdated="false" defaultValue="'I'::bpchar" digits="0" id="3" name="checked_state" nullable="false" remarks="" size="1" type="bpchar"/>
+         <column autoUpdated="false" defaultValue="(1)::bigint" digits="0" id="4" name="version_type" nullable="false" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" defaultValue="(0)::bigint" digits="0" id="5" name="checkin_on_unlock" nullable="false" remarks="" size="19" type="int8"/>
+         <index name="fk_vc_resource" unique="true">
+            <column ascending="true" name="resource_id"/>
+         </index>
+      </table>
+      <table name="versions" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <child column="checked_id" foreignKey="vcrs_checked_id_fkey" implied="false" onDeleteCascade="false" table="vcrs"/>
+            <child column="root_version_id" foreignKey="fk_vh_root_version" implied="false" onDeleteCascade="false" table="vhrs"/>
+            <parent column="id" foreignKey="versions_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="number" nullable="false" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="2" name="vcr_id" nullable="true" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="fk_ve_vc_resource" implied="false" onDeleteCascade="false" table="vcrs"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="vhr_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="versions_vhr_id_fkey" implied="false" onDeleteCascade="false" table="vhrs"/>
+         </column>
+         <index name="fk_ve_resource" unique="true">
+            <column ascending="true" name="resource_id"/>
+         </index>
+      </table>
+      <table name="vhrs" numRows="0" remarks="" schema="tolsen" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="resource_id" nullable="false" remarks="" size="19" type="int8">
+            <child column="vhr_id" foreignKey="vcrs_vhr_id_fkey" implied="false" onDeleteCascade="false" table="vcrs"/>
+            <child column="vhr_id" foreignKey="versions_vhr_id_fkey" implied="false" onDeleteCascade="false" table="versions"/>
+            <parent column="id" foreignKey="vhrs_resource_id_fkey" implied="false" onDeleteCascade="false" table="resources"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="root_version_id" nullable="false" remarks="" size="19" type="int8">
+            <parent column="resource_id" foreignKey="fk_vh_root_version" implied="false" onDeleteCascade="false" table="versions"/>
+         </column>
+         <index name="fk_vh_resource" unique="true">
+            <column ascending="true" name="resource_id"/>
+         </index>
+      </table>
+   </tables>
+</database>

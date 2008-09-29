@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment>Add rules to charge user's quota for property vales</comment>
+    <sql>CREATE RULE update_quota_properties_insert AS ON INSERT TO properties DO UPDATE quota SET used_quota = used_quota + octet_length(NEW.value) WHERE principal_id = (SELECT owner_id FROM resources WHERE id = NEW.resource_id)</sql>
+    <sql>CREATE RULE update_quota_properties_update AS ON UPDATE TO properties DO UPDATE quota SET used_quota = used_quota + octet_length(NEW.value) - octet_length(OLD.value) WHERE principal_id = (SELECT owner_id FROM resources WHERE id = NEW.resource_id)</sql>
+    <sql>CREATE RULE update_quota_properties_delete AS ON DELETE TO properties DO UPDATE quota SET used_quota = used_quota - octet_length(OLD.value) WHERE principal_id = (SELECT owner_id FROM resources WHERE id = OLD.resource_id)</sql>
+  </changeSet>
+
+  <changeSet author="paritosh" id="2">
+    <comment>Update quota for already existing resource properties</comment>
+    <executeCommand executable="./add_property_values_to_quota.rb"/>
+  </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="chetan" id="1">
+    <comment>Create auth_user_cookies table</comment>
+    <createTable tableName="auth_user_cookies">
+        <column name="id" type="integer" autoIncrement="true">
+           <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="principal_id" type="bigint"/>
+        <column name="domain" type="varchar(255)">
+          <constraints nullable="false"/>
+        </column>
+        <column name="auth_cookie" type="varchar(255)"/>
+        <column name="auth_root" type="varchar(255)"/>
+    </createTable>
+<!--
+    <comment>Add FK check on user_domains.principal_id to principals.resource_id</comment>
+    <addForeignKeyConstraint 
+        constraintName="fk_auth_user_cookies_principals" 
+        baseTableName="auth_user_cookies" 
+        baseColumnNames="principal_id" 
+        referencedTableName="principals"
+        referencedColumnNames="resource_id"
+        deferrable="true"
+        deleteCascade="true" 
+    />
+    <comment>Add "unique" constraint on (principal_id, domain) for auth_user_cookies table</comment>
+    <addUniqueConstraint tableName="auth_user_cookies" columnNames="principal_id, domain" constraintName="uk_principal_id_domain"/>
+
+-->
+    <comment>Add "unique" constraint on auth_cookie for auth_user_cookies table</comment>
+    <addUniqueConstraint tableName="auth_user_cookies" columnNames="auth_cookie" constraintName="uk_auth_cookie"/>
+
+  </changeSet>
+
+  <changeSet author="chetan" id="2">
+    <comment>Add column to users table</comment>
+    <addColumn tableName="users">
+      <column name="login_to_all_domains" type="boolean" value="f"/>
+    </addColumn>
+    <addDefaultValue tableName="users" columnName="login_to_all_domains" 
+                     defaultValue="f"/>
+  </changeSet>
+
+</databaseChangeLog>

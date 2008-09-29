@@ -1,0 +1,95 @@
+# -*- Makefile -*-
+
+# ====================================================================
+# Copyright 2007 Lime Spot LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ====================================================================
+
+#* ====================================================================
+#* Copyright (c) 2002, The Regents of the University of California.
+#*
+#* The Regents of the University of California MAKE NO REPRESENTATIONS OR
+#* WARRANTIES ABOUT THE SUITABILITY OF THE SOFTWARE, EITHER EXPRESS OR
+#* IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF
+#* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+#* NON-INFRINGEMENT. The Regents of the University of California SHALL
+#* NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF
+#* USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+#* ====================================================================
+
+VERSION = @PACKAGE_VERSION@
+APXS = @APXS@
+
+CC = @CC@
+
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
+NEON_LIBS = @NEON_LIBS@
+
+SHELL = @SHELL@
+
+#DEFINES
+DEFS=-DVERSION='"\"$(VERSION)\""' @DEBUG@ @MAGIC@
+
+HEADFILES =  dav_repos.h dbms.h dbms_deltav.h util.h search.h lock.h liveprops.h dbms_api.h dbms_dbd.h version.h bind.h acl.h deltav_bridge.h lock_bridge.h dbms_bind.h bridge.h deltav_util.h dbms_locks.h dbms_quota.h props.h dbms_transaction.h transaction.h dbms_principal.h principal.h gc.h root_path.h
+
+all: apache-mod-dav-dbms adduser
+
+apache-mod-dav-dbms: libmod_dav_repos.la
+
+libmod_dav_repos_DEPS = mod_dav_repos.c repos.c props.c search.c dbms.c util.c deltav_bridge.c lock.c version.c bind.c dbms_dbd.c dbms_deltav.c dbms_acl.c acl.c liveprops.c deltav_liveprops.c quota_liveprops.c acl_liveprops.c binds_liveprops.c support_liveprops.c search_liveprops.c limebits_liveprops.c dbms_bind.c bridge.c lock_bridge.c deltav_util.c dbms_locks.c dbms_quota.c transaction.c dbms_transaction.c dbms_principal.c principal.c gc.c 
+
+libmod_dav_repos.la: $(libmod_dav_repos_DEPS)
+	$(APXS) $(DEFS) -Wc,-Werror -o $@ -c $(libmod_dav_repos_DEPS)
+
+adduser: adduser.o
+	$(CC) $(LDFLAGS) -o $@ $< $(NEON_LIBS)
+
+adduser.o: adduser.c
+	$(CC) $(CFLAGS) -O0 -c -o $@ $<
+
+install: libmod_dav_repos.la
+	$(APXS) -i -a -n dav_repos libmod_dav_repos.la
+
+clean:
+	-rm -rf *.la *.o *.lo *.slo .libs test adduser
+
+init: clean
+	-rm -rf Makefile config.log config.status *~ Makefile.in autom4te.cache configure config7.m4 aclocal.m4 drop_and_create_populated_database
+
+DISTS =	buildconf.sh Makefile.in.so Makefile.in.static\
+	config7.m4.in \
+	config.h.in \
+    README configure  data.sql dbms.c dbms_dbd.c \
+	util.c mod_dav_repos.c  repos.c   table.sql\
+	configure.in  props.c  search.c lock.c TODO \
+	version.c version.h bind.c bind.h acl.c $(HEADFILES)
+
+# should not work now because VERSION is now PACKAGE_VERSION
+# and PACKAGE_VERSION can have spaces
+# dist:
+# 	mkdir limestone-$(VERSION)
+# 	cp -rf $(DISTS)  limestone-$(VERSION)
+# 	tar cvfz limestone-$(VERSION).tar.gz limestone-$(VERSION)
+# 	rm -rf  limestone-$(VERSION)
+
+Makefile: Makefile.in config.status
+	./config.status Makefile
+
+config.status: configure
+	./config.status --recheck
+
+gindent:
+	gindent -i4 -npsl -di0 -br -nce -d0 -cli0 -npcs -nfc1 *.[ch]

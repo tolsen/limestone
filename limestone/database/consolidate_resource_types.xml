@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment> Update resource types of existing resources </comment>
+    <update tableName="resources">
+        <column name="type_id" value="1"/>
+        <where>type_id=7</where>
+    </update>
+    <executeCommand executable="./consolidate_resource_types.rb"/>
+  </changeSet>
+
+  <changeSet author="paritosh" id="2">
+    <update tableName="resource_types">
+        <column name="name" value="Version"/>
+        <where>id=7</where>
+    </update>
+
+    <update tableName="resource_types">
+        <column name="name" value="VersionControlled"/>
+        <where>id=8</where>
+    </update>
+
+    <update tableName="resource_types">
+        <column name="name" value="VersionHistory"/>
+        <where>id=9</where>
+    </update>
+
+    <update tableName="resource_types">
+        <column name="name" value="VersionedCollection"/>
+        <where>id=10</where>
+    </update>
+
+    <update tableName="resource_types">
+        <column name="name" value="CollectionVersion"/>
+        <where>id=11</where>
+    </update>
+
+    <update tableName="resource_types">
+        <column name="name" value="LockNull"/>
+        <where>id=12</where>
+    </update>
+
+    <delete tableName="resource_types">
+        <where>id=13</where>
+    </delete>
+  </changeSet>
+</databaseChangeLog>

@@ -837,7 +837,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
         query_str = apr_psprintf
           (pool, 
            "SELECT id, "
-           "       created_at, children.name, updated_at, "
+           "       created_at, children.name, children.updated_at, "
            "       contentlanguage, owner_id, comment, "
            "       creator_id, type, size, "
            "       mimetype, sha1, vcrs.checked_state, "
@@ -848,7 +848,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
            "FROM resources "
            "      INNER JOIN "
            "           ( SELECT binds.id as bind_id, resource_id, name, "
-           "                     binds.collection_id as parent_id"
+           "                    updated_at, binds.collection_id as parent_id"
            "              FROM binds "
            "              WHERE collection_id IN (%s)) "
            "          children "

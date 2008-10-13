@@ -401,17 +401,17 @@ $(APROOT)/bin/apachectl start
 touch stamps/apache-start
 endef
 
-database-status-result=$(shell cd limestone/database && $(LIQUIBASE_PGSQL) status)
+database-status=$(shell cd limestone/database && $(LIQUIBASE_PGSQL) status)
 
-ifeq ($(wordlist 1, 3, $(database-status-result)),0 change sets)
-start-apache=$(force-start-apache)
-else
+ifeq (,$(findstring 0 change sets,$(database-status)))
 define start-apache
-@echo $(database-status-result)
+@echo '$(database-status)'
 @echo Refusing to start limestone with outdated database
 @echo Run "make database-migrate" to upgrade database
 @echo  or "make force-apache-start" to start anyway
 endef
+else
+start-apache=$(force-start-apache)
 endif
 
 apache-start: stamps/apache-start
@@ -458,7 +458,7 @@ database-migrate: limestone-stop
 	$(migrate-database)
 
 database-status:
-	@echo $(database-status-result)
+	@echo '$(database-status)'
 
 database-reset-and-limestone-start: database-reset stamps/stampdir
 	sleep 1

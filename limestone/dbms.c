@@ -73,14 +73,36 @@ void db_error_message(apr_pool_t * pool, const dav_repos_dbms * db,
                  db_error_message_str, dbms_error(pool, db));
 }
 
+dav_error *dbms_select_unique_id(apr_pool_t *pool, const dav_repos_db *d,
+                                 const char *unique_id)
+{
+    dav_repos_query *q = NULL;
+    dav_error *err = NULL;
+
+    TRACE();
+
+    q = dbms_prepare(pool, d->db, "SELECT ?");
+    dbms_set_string(q, 1, apr_pstrcat(pool, "UNIQUE_ID ", unique_id, NULL));
+
+    if (dbms_execute(q))
+        err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                            "couldn't SELECT UNIQUE_ID");
+    dbms_query_destroy(q);
+    return err;
+}
+
 int dbms_opendb(dav_repos_db * d, apr_pool_t *p, request_rec * r,
                 const char *db_driver, const char *db_params)
 {
     TRACE();
 
-    if (r)
+    if (r) {
+        const char *unique_id = apr_table_get(r->subprocess_env, "UNIQUE_ID");
         d->db = dbms_api_opendb(p, r);
-    else d->db = dbms_api_opendb_params(p, db_driver, db_params);
+        if (unique_id)
+            dbms_select_unique_id(p, d, unique_id);
+    } else
+        d->db = dbms_api_opendb_params(p, db_driver, db_params);
 
     if (d->db == NULL)
         return -1;

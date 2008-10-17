@@ -19,7 +19,6 @@ LIMESTONE_PGSQL_DB_PORT = 5432
 endif
 
 APACHE_DIR=../apache
-HAMMOCK_DIR=../hammock
 RUBYDAV_DIR=../rubydav
 
 apacheextracleantargets= \
@@ -337,38 +336,13 @@ $(LS_MODULE): $(LS_MAKEFILE) $(wildcard limestone/*.[ch])
 
 limestone-install-config: $(LS_INSTALLED_CONFIG)
 $(LS_INSTALLED_CONFIG): $(LS_MODULE) install-config
-	-rm -f $(HAMMOCK_INSTALLED_MODULE)
 	./install-config @INSTALL_CONF_FLAGS@
 
 limestone-install-modules: $(LS_INSTALLED_MODULE)
 $(LS_INSTALLED_MODULE): $(LS_MODULE)
 	cd limestone && $(MAKE) install
 
-limestone-install: limestone-install-config limestone-install-modules hammock-install
-
-# Hammock
-
-HAMMOCK_CONFIGURE = $(HAMMOCK_DIR)/configure
-HAMMOCK_MAKEFILE = $(HAMMOCK_DIR)/Makefile
-HAMMOCK_MODULE = $(HAMMOCK_DIR)/libmod_hammock.la
-HAMMOCK_INSTALLED_MODULE = aproot/modules/libmod_hammock.so
-
-hammock-buildconf: $(HAMMOCK_CONFIGURE)
-$(HAMMOCK_CONFIGURE):
-	cd $(HAMMOCK_DIR) && ./buildconf.sh
-
-hammock-configure: $(HAMMOCK_MAKEFILE)
-$(HAMMOCK_MAKEFILE): $(HAMMOCK_CONFIGURE) $(APXS)
-	cd $(HAMMOCK_DIR) && ./configure $(WITH_APXS)
-
-hammock-build: $(HAMMOCK_MODULE) 
-$(HAMMOCK_MODULE): $(HAMMOCK_MAKEFILE) $(wildcard $(HAMMOCK_DIR)/*.[ch])
-	cd $(HAMMOCK_DIR) && $(MAKE)
-	touch $@
-
-hammock-install: $(HAMMOCK_INSTALLED_MODULE)
-$(HAMMOCK_INSTALLED_MODULE): $(HAMMOCK_MODULE)
-	cd $(HAMMOCK_DIR) && $(MAKE) install
+limestone-install: limestone-install-config limestone-install-modules
 
 # Litmus
 
@@ -516,7 +490,6 @@ distclean: clean
 	-cd $(LITMUS_DIR) && $(MAKE) distclean
 	-cd limestone && $(MAKE) init
 	-cd $(APACHE_DIR) && $(MAKE) distclean
-	-cd $(HAMMOCK_DIR) && $(MAKE) distclean
 	-rm -f $(apacheextracleantargets)
 	-rm -rf stamps
 	-rm -rf $(APACHE_DIR)/modules/dav/limestone
@@ -528,7 +501,6 @@ clean:
 	-cd $(LITMUS_DIR) && $(MAKE) clean
 	-cd $(PRESTAN_DIR) && $(MAKE) clean
 	-cd limestone && $(MAKE) clean
-	-cd $(HAMMOCK_DIR) && $(MAKE) clean
 	-cd $(APACHE_DIR) && $(MAKE) clean
 	-rm -rf $(APROOT) files tmp
 	-rm -f stamps/*-build stamps/*-install*
@@ -553,10 +525,6 @@ reinstall: clean-for-reinstall limestone-install
         database-reset \
         database-reset-keep-limestone-running \
         distclean \
-		hammock-buildconf \
-		hammock-configure \
-		hammock-build \
-		hammock-install \
         limestone-build \
         limestone-buildconf \
         limestone-configure \

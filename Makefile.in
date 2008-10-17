@@ -254,6 +254,7 @@ $(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
 	   --enable-ssl \
 	   --enable-headers \
 	   --enable-deflate \
+       --enable-unique-id \
 	   @WITH_DB_FLAG@ @PROFILE@
 
 APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')
@@ -401,18 +402,17 @@ $(APROOT)/bin/apachectl start
 touch stamps/apache-start
 endef
 
-define status-database
-cd limestone/database && $(LIQUIBASE_PGSQL) status
-endef
+database-status=$(shell cd limestone/database && $(LIQUIBASE_PGSQL) status)
 
-ifeq ($(wordlist 1, 3, $(shell $(status-database))),0 change sets)
-start-apache=$(force-start-apache)
-else
+ifeq (,$(findstring 0 change sets,$(database-status)))
 define start-apache
+@echo '$(database-status)'
 @echo Refusing to start limestone with outdated database
 @echo Run "make database-migrate" to upgrade database
 @echo  or "make force-apache-start" to start anyway
 endef
+else
+start-apache=$(force-start-apache)
 endif
 
 apache-start: stamps/apache-start
@@ -459,7 +459,7 @@ database-migrate: limestone-stop
 	$(migrate-database)
 
 database-status:
-	$(status-database)	
+	@echo '$(database-status)'
 
 database-reset-and-limestone-start: database-reset stamps/stampdir
 	sleep 1

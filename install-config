@@ -54,7 +54,15 @@ sub print_dav_vhost_config ($$$$$$$$$) {
   }
   ;
 
+print NEWCONFIG '';
+print NEWCONFIG "\n";
+print NEWCONFIG '';
+
   print $config_fh <<EOF
+
+LogFormat "%h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
+CustomLog "logs/access_log" limestone
+
 DAVLimestoneIndexCSS  http://$host_domain${port_part_of_host}/css/style.css
 DAVDBMSTmpDir $TMPDIR
 DAVDBMSFileDir $FILEDIR
@@ -162,13 +170,11 @@ open(NEWCONFIG, '>', $NEWCONFIG) or die("couldn't open $NEWCONFIG");
 
 while (<ORIG_CONFIG>) {
   s/^Listen 80$/#Listen 80/;
-
-  s|(LogFormat "%h) %l (.* combined)$|$1 %{Host}i $2|;
   s|(CustomLog "logs/access_log" common$)|#$1|;
-  s|#(CustomLog "logs/access_log" combined$)|$1|;
   print NEWCONFIG;
 }
 print NEWCONFIG "\nInclude conf/limestone.conf\n";
+
 
 close(ORIG_CONFIG) or die("couldn't close $ORIG_CONFIG");
 close(NEWCONFIG) or die("couldn't close $NEWCONFIG");

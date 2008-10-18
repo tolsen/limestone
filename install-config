@@ -68,7 +68,6 @@ DAVDBMSTmpDir $TMPDIR
 DAVDBMSFileDir $FILEDIR
 # To allow depth: infinity PROPFINDs required by some clients.
 DAVDepthInfinity on
-SetInputFilter hammock-filter
 
 <Location ${ROOT_PATH}>
   DAV repos

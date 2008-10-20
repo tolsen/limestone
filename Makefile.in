@@ -502,7 +502,7 @@ clean:
 	-cd $(PRESTAN_DIR) && $(MAKE) clean
 	-cd limestone && $(MAKE) clean
 	-cd $(APACHE_DIR) && $(MAKE) clean
-	-rm -rf $(APROOT) files tmp
+	-rm -rf $(APROOT) tmp
 	-rm -f stamps/*-build stamps/*-install*
 
 clean-for-reinstall:

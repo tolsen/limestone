@@ -90,8 +90,8 @@ static int is_allow_read_private_properties(const dav_resource *resource) {
 static const char *domain_map_to_xml(apr_pool_t *pool, apr_hash_t *domain_map)
 {
     apr_hash_index_t *hi;
-    const void *path;
-    void *domain;
+    void *path;
+    const void *domain;
     const char *xmlstr = NULL;
 
     if(NULL == domain_map) {
@@ -101,7 +101,7 @@ static const char *domain_map_to_xml(apr_pool_t *pool, apr_hash_t *domain_map)
     for(hi = apr_hash_first(pool, domain_map); hi;
         hi = apr_hash_next(hi)) {
 
-        apr_hash_this(hi, &path, NULL, &domain);
+        apr_hash_this(hi, &domain, NULL, &path);
         xmlstr = apr_pstrcat(pool, xmlstr ? xmlstr : " ", 
                              "<lb:domain-map-entry>", 
                              "<lb:domain>", (char *)domain, "</lb:domain>", 
@@ -254,7 +254,7 @@ static apr_hash_t *domain_map_elem_to_hash(apr_pool_t *pool,
             domain_map = apr_hash_make(pool);
         }
 
-        apr_hash_set(domain_map, pathstr, APR_HASH_KEY_STRING, domainstr);
+        apr_hash_set(domain_map, domainstr, APR_HASH_KEY_STRING, pathstr);
     }
 
     return domain_map;

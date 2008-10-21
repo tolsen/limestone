@@ -266,9 +266,8 @@ static char *generate_id_from_uri_query(dav_repos_dbms *db, apr_pool_t *pool, ch
         
         /* Add max updated_at of child binds */
         tmp = apr_psprintf(pool, " LEFT JOIN ( SELECT collection_id, "
-                           "resource_id, MAX(updated_at) "
-                           "AS child_max_updated_at FROM binds "
-                           "GROUP BY resource_id, collection_id ) children "
+                           "MAX(updated_at) AS child_max_updated_at FROM binds "
+                           "GROUP BY collection_id ) children "
                            "ON children.collection_id = binding1.resource_id");
         binds_query = apr_pstrcat(pool, binds_query, tmp, ") ", NULL);
 

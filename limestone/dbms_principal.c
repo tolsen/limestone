@@ -124,7 +124,7 @@ apr_hash_t *dbms_get_domain_map(apr_pool_t *pool, const dav_repos_db *d,
 
     TRACE();
 
-    q = dbms_prepare(pool, d->db, "SELECT path, domain FROM user_domains "
+    q = dbms_prepare(pool, d->db, "SELECT domain, path FROM user_domains "
                                   "WHERE principal_id = ?");
     dbms_set_int(q, 1, principal_id);
 
@@ -157,12 +157,12 @@ apr_hash_t *dbms_get_domain_map(apr_pool_t *pool, const dav_repos_db *d,
 static const char *domain_map_to_values(apr_pool_t *pool, apr_hash_t *domain_map, long principal_id)
 {
     apr_hash_index_t *hi;
-    void *domain;
-    const void *path;
+    const void *domain;
+    void *path;
     const char *values = NULL;
 
     for(hi = apr_hash_first(pool, domain_map); hi; hi = apr_hash_next(hi)) {
-        apr_hash_this(hi, &path, NULL, &domain);
+        apr_hash_this(hi, &domain, NULL, &path);
         const char *value = apr_psprintf(pool, "(%ld, '%s', '%s')", principal_id,
                                          (char *)domain, (char *)path);
 
@@ -204,7 +204,7 @@ dav_error *dbms_set_domain_map(apr_pool_t *pool, const dav_repos_db *d,
                      apr_psprintf(pool, "INSERT INTO user_domains"
                                         " (principal_id, domain, path) VALUES %s ", 
                                   domain_map_to_values(pool, domain_map, principal_id)));
-    dbms_set_string(q, 1, domain_map_to_values(pool, domain_map, principal_id));
+
     if (dbms_execute(q)) {
         dbms_query_destroy(q);
         db_error_message(pool, d->db, "dbms_execute error");

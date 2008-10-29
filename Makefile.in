@@ -7,7 +7,7 @@ APROOT := $(PWD)/aproot
 APXS=$(APROOT)/bin/apxs
 WITH_APXS=--with-apxs=$(APXS)
 LIQUIBASE=$(abspath ../liquibase/liquibase)
-LIQUIBASE_PGSQL=$(LIQUIBASE) --classpath="@PGSQL_JDBC_JAR@" --driver="org.postgresql.Driver" --url="jdbc:postgresql://$(LIMESTONE_PGSQL_DB_HOST):$(LIMESTONE_PGSQL_DB_PORT)/$(LIMESTONE_PGSQL_DB_NAME)" --username=$(LIMESTONE_PGSQL_DB_USER) --password=$(LIMESTONE_PGSQL_DB_PASS) --defaultSchemaName=$(LIMESTONE_PGSQL_DB_USER) --changeLogFile=main.xml
+LIQUIBASE_PGSQL=$(LIQUIBASE) --classpath="@PGSQL_JDBC_JAR@" --driver="org.postgresql.Driver" --url="jdbc:postgresql://$(LIMESTONE_PGSQL_DB_HOST):$(LIMESTONE_PGSQL_DB_PORT)/$(LIMESTONE_PGSQL_DB_NAME)" --username="$(LIMESTONE_PGSQL_DB_USER)" --password="$(LIMESTONE_PGSQL_DB_PASS)" --defaultSchemaName="$(LIMESTONE_PGSQL_DB_USER)" --changeLogFile=main.xml
 #mysql_vhost=
 #pgsql_vhost=@PGSQL_VHOST@
 TEST_USER1=test1

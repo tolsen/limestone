@@ -9,4 +9,5 @@
   <include file="add_auth_user_cookies.xml"/>
   <include file="add_bits_pw_reset.xml"/>
   <include file="add_property_values_quota_rules.xml"/>
+  <include file="add_database_indices.xml"/>
 </databaseChangeLog>

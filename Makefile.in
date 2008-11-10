@@ -240,21 +240,19 @@ $(APACHE_BUILDCONF_OUT): $(APACHE_BUILDCONF_DEPS)
 apache-configure: $(APACHE_CONFIGURE_OUT)
 $(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
 	cd $(APACHE_DIR) && ./configure \
-	   --prefix=$(APROOT) \
-	   --with-mpm=worker \
-	   --with-included-apr \
-	   --with-devrandom=/dev/urandom \
-	   --enable-auth-digest \
-	   --enable-so \
-	   --enable-dav \
-	   --enable-dbd \
-	   --enable-authn-dbd \
-	   --enable-rewrite \
-	   --enable-ssl \
-	   --enable-headers \
-	   --enable-deflate \
+       --prefix=$(APROOT) \
+       --with-included-apr \
+       --with-devrandom=/dev/urandom \
+       --enable-auth-digest \
+       --enable-dav \
+       --enable-dbd \
+       --enable-authn-dbd \
+       --enable-rewrite \
+       --enable-ssl \
+       --enable-headers \
+       --enable-deflate \
        --enable-unique-id \
-	   @WITH_DB_FLAG@ @PROFILE@
+       @APACHE_CONF_FLAGS@
 
 APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')
 

@@ -27,7 +27,7 @@ INSTALL_CONF_FLAGS=""
 VHOSTS=""
 PGSQL_JDBC_JAR=""
 DROP_AND_CREATE=limestone/drop_and_create_populated_database
-PROFILE=""
+APACHE_CONF_FLAGS=""
 
 rm -f $DROP_AND_CREATE
 
@@ -124,10 +124,14 @@ AC_ARG_ENABLE(profile,
               [AS_HELP_STRING([--enable-profile], [enabling static profile build])],
               [
                   AC_MSG_RESULT([static profile build enabled])
-                  PROFILE=--enable-profile
-                  cp -rf limestone apache/modules/dav
+                  APACHE_CONF_FLAGS="--enable-profile --with-mpm=prefork"
+                  cp -rf limestone ../apache/modules/dav
               ],
-              AC_MSG_RESULT(no))
+              [
+                  AC_MSG_RESULT(no)
+                  APACHE_CONF_FLAGS="--enable-so --with-mpm=worker"
+              ]
+             )
         
 if test "$PGSQL_VHOST" = "yes"
 then
@@ -154,7 +158,7 @@ AC_SUBST(INSTALL_CONF_FLAGS)
 AC_SUBST(VHOSTS)
 AC_SUBST(PGSQL_JDBC_JAR)
 AC_SUBST(WITH_DB_FLAG)
-AC_SUBST(PROFILE)
+AC_SUBST(APACHE_CONF_FLAGS)
 
 dnl Output files
 AC_OUTPUT(Makefile)

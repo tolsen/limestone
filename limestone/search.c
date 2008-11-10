@@ -419,6 +419,8 @@ apr_hash_t *get_liveprop_map(apr_pool_t *pool)
                      APR_HASH_KEY_STRING, "locks.uuid");
         apr_hash_set(liveprop_map, "resourcetype", 
                      APR_HASH_KEY_STRING, "type");
+        apr_hash_set(liveprop_map, "resource-id", 
+                     APR_HASH_KEY_STRING, "resources.uuid");
     }
 
     return liveprop_map;
@@ -990,12 +992,14 @@ dav_response *search_mkresponse(apr_pool_t *pool,
             dav_repos_format_strtime(DAV_STYLE_ISO8601, propval, date);
             propval = date;
         }
-
-        if(strcmp(prop->name, "getlastmodified") == 0) {
+        else if(strcmp(prop->name, "getlastmodified") == 0) {
             char *date = 
                 apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
             dav_repos_format_strtime(DAV_STYLE_RFC822, propval, date);
             propval = date;
+        }
+        else if(strcmp(prop->name, "resource-id") == 0) {
+            propval = add_hyphens_to_uuid(pool, propval);
         }
 
         s = apr_psprintf(pool, "<%s xmlns=\"%s\">%s</%s>" DEBUG_CR, 

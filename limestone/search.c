@@ -999,7 +999,8 @@ dav_response *search_mkresponse(apr_pool_t *pool,
             propval = date;
         }
         else if(strcmp(prop->name, "resource-id") == 0) {
-            propval = add_hyphens_to_uuid(pool, propval);
+            propval = apr_psprintf(pool, "<D:href>urn:uuid:%s</D:href>",
+                                   add_hyphens_to_uuid(pool, propval));
         }
 
         s = apr_psprintf(pool, "<%s xmlns=\"%s\">%s</%s>" DEBUG_CR, 

@@ -18,7 +18,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 
-AC_INIT(LimeStone, patsubst(esyscmd([./version -n]), ['\n'], []))
+AC_INIT(LimeStone, patsubst(esyscmd([./limestone/version -n]), ['\n'], []))
 
 dnl Define the default database here.
 WITH_DB_FLAG=""

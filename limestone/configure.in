@@ -17,7 +17,7 @@
 
 dnl Process this file with autoconf to produce a configure script.
 
-define([LIME_VERSION],esyscmd([../version -n]))dnl
+define([LIME_VERSION],esyscmd([./version -n]))dnl
 AC_INIT(LimeStone, LIME_VERSION)
 
 dnl Checks for programs.

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="chetan" id="1">
+    <comment>Create indices on various tables</comment>
+    <createIndex tableName="aces" indexName="idx_aces_resource_id">
+      <column name="resource_id"/>
+    </createIndex>
+    <createIndex tableName="media" indexName="idx_media_resource_id">
+      <column name="resource_id"/>
+    </createIndex>
+    <createIndex tableName="resources" indexName="idx_resources_owner_id">
+      <column name="owner_id"/>
+    </createIndex>
+    <createIndex tableName="transitive_group_members" indexName="idx_transitive_group_members_transitive_member_id">
+      <column name="transitive_member_id"/>
+    </createIndex>
+    <createIndex tableName="group_members" indexName="idx_group_members_member_id">
+      <column name="member_id"/>
+    </createIndex>
+    <createIndex tableName="locks_resources" indexName="idx_locks_resources_resource_id">
+      <column name="resource_id"/>
+    </createIndex>
+    <createIndex tableName="locks" indexName="idx_locks_resource_id">
+      <column name="resource_id"/>
+    </createIndex>
+    <createIndex tableName="locks"  indexName="idx_locks_expires_at">
+      <column name="expires_at"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="chetan" id="2">
+    <comment>Add unique contraints</comment>
+    <addUniqueConstraint tableName="locks" columnNames="uuid" constraintName="sk_locks_uuid"/>
+    <addUniqueConstraint tableName="resources" columnNames="uuid" constraintName="sk_resources_uuid"/>
+    <addUniqueConstraint tableName="principals" columnNames="name" constraintName="sk_principals_name"/>
+    <addUniqueConstraint tableName="namespaces" columnNames="name" constraintName="sk_namespaces_name"/>
+    <addUniqueConstraint tableName="properties" columnNames="resource_id,namespace_id,name" constraintName="sk_properties_resource_id_namespace_id_name"/>
+    <addUniqueConstraint tableName="group_members" columnNames="group_id,member_id" constraintName="sk_group_members_group_id_member_id"/>
+    <addUniqueConstraint tableName="transitive_group_members" columnNames="transitive_group_id,transitive_member_id" constraintName="sk_transitive_group_members_transitive_group_id_transitive_member_id"/>
+    <addUniqueConstraint tableName="binds_locks" columnNames="bind_id,lock_id" constraintName="sk_binds_locks_bind_id_lock_id"/>
+  </changeSet>
+</databaseChangeLog>

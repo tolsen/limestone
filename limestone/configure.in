@@ -136,7 +136,6 @@ AC_CHECK_HEADERS(magic.h, MAGIC="-DUSE_LIBMAGIC -lmagic", AC_MSG_RESULT(no))
 # We are not pushing PACKAGE_VERSION to a config.h because it's already
 # defined in an apache config file.  We'll let our Makefile rename it
 # to a different macro
-AC_SUBST(PACKAGE_VERSION)
 AC_SUBST(DEBUG)
 AC_SUBST(MAGIC)
 AC_OUTPUT(Makefile config7.m4)

@@ -66,8 +66,8 @@
 
 #define TRACE() DBG1("\n- TRACE : %s\n",  __func__ )
 
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION "$URL$ $Rev$ Static Build"
+#ifndef VERSION
+#define VERSION "Unknown Static Build"
 #endif
 
 #ifdef __CYGWIN__

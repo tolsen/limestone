@@ -179,8 +179,6 @@ APACHE_CONFIGURE_OUT = \
 	$(APACHE_DIR)/docs/conf/extra/httpd-multilang-errordoc.conf \
 	$(APACHE_DIR)/docs/conf/httpd.conf \
 	$(APACHE_DIR)/server/mpm/Makefile \
-	$(APACHE_DIR)/server/mpm/worker/Makefile \
-	$(APACHE_DIR)/server/mpm/worker/.deps \
 	$(APACHE_DIR)/server/Makefile \
 	$(APACHE_DIR)/include/ap_config_auto.h \
 	$(APACHE_DIR)/include/ap_config_layout.h \
@@ -312,10 +310,34 @@ $(ORIGINAL_HTTPD_CONF) $(APXS): $(APACHE_BUILD_OUT) $(APACHE_INSTALL_DEPS)
 
 # LimeStone
 
+LS_INSTALLED_CONFIG = aproot/conf/limestone.conf
+LS_INSTALLED_MIME_TYPES = aproot/conf/mime.types
+
+ifeq (@ENABLE_PROFILE@,yes)
+LS_DIR=$(APACHE_DIR)/modules/dav/limestone
+
+$(LS_DIR)/configure.in $(LS_DIR)/config7.m4.in: $(wildcard limestone/*)
+	cp -rf limestone $(APACHE_DIR)/modules/dav
+
+limestone-buildconf: $(LS_DIR)/configure
+$(LS_DIR)/configure: $(LS_DIR)/configure.in $(LS_DIR)/config7.m4.in
+	cd $(LS_DIR) && ./buildconf.sh
+
+limestone-configure: $(LS_DIR)/Makefile
+$(LS_DIR)/Makefile: $(LS_DIR)/configure
+	cd $(LS_DIR) && ./configure --with-debug --with-static
+
+limestone-install-config: $(LS_INSTALLED_CONFIG)
+$(LS_INSTALLED_CONFIG): $(LS_INSTALLED_MIME_TYPES) install-config
+	./install-config @INSTALL_CONF_FLAGS@
+
+limestone-install: limestone-configure apache-install limestone-install-config 
+
+else
+
 LS_CONFIGURE = limestone/configure
 LS_MAKEFILE = limestone/Makefile
 LS_MODULE = limestone/libmod_dav_repos.la
-LS_INSTALLED_CONFIG = aproot/conf/limestone.conf
 LS_INSTALLED_MODULE = aproot/modules/libmod_dav_repos.so
 
 limestone-buildconf: $(LS_CONFIGURE)
@@ -341,6 +363,8 @@ $(LS_INSTALLED_MODULE): $(LS_MODULE)
 	cd limestone && $(MAKE) install
 
 limestone-install: limestone-install-config limestone-install-modules
+
+endif
 
 # Litmus
 

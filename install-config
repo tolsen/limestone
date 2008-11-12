@@ -54,10 +54,6 @@ sub print_dav_vhost_config ($$$$$$$$$) {
   }
   ;
 
-print NEWCONFIG '';
-print NEWCONFIG "\n";
-print NEWCONFIG '';
-
   print $config_fh <<EOF
 
 LogFormat "%h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone

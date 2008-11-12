@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
   <changeSet author="paritosh" id="1">
     <comment>Add rules to charge user's quota for property vales</comment>
     <sql>CREATE RULE update_quota_properties_insert AS ON INSERT TO properties DO UPDATE quota SET used_quota = used_quota + octet_length(NEW.value) WHERE principal_id = (SELECT owner_id FROM resources WHERE id = NEW.resource_id)</sql>

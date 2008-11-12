@@ -1,6 +1,7 @@
 # -*- Makefile -*-
 
 # ====================================================================
+# Copyright 2008 Lime Labs LLC
 # Copyright 2007 Lime Spot LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +46,7 @@ DEFS=-DVERSION='"\"$(VERSION)\""' @DEBUG@ @MAGIC@
 
 HEADFILES =  dav_repos.h dbms.h dbms_deltav.h util.h search.h lock.h liveprops.h dbms_api.h dbms_dbd.h version.h bind.h acl.h deltav_bridge.h lock_bridge.h dbms_bind.h bridge.h deltav_util.h dbms_locks.h dbms_quota.h props.h dbms_transaction.h transaction.h dbms_principal.h principal.h gc.h root_path.h
 
-all: apache-mod-dav-dbms adduser
+all: apache-mod-dav-dbms
 
 apache-mod-dav-dbms: libmod_dav_repos.la
 
@@ -54,17 +55,11 @@ libmod_dav_repos_DEPS = mod_dav_repos.c repos.c props.c search.c dbms.c util.c d
 libmod_dav_repos.la: $(libmod_dav_repos_DEPS)
 	$(APXS) $(DEFS) -Wc,-Werror -o $@ -c $(libmod_dav_repos_DEPS)
 
-adduser: adduser.o
-	$(CC) $(LDFLAGS) -o $@ $< $(NEON_LIBS)
-
-adduser.o: adduser.c
-	$(CC) $(CFLAGS) -O0 -c -o $@ $<
-
 install: libmod_dav_repos.la
 	$(APXS) -i -a -n dav_repos libmod_dav_repos.la
 
 clean:
-	-rm -rf *.la *.o *.lo *.slo .libs test adduser
+	-rm -rf *.la *.o *.lo *.slo .libs test
 
 init: clean
 	-rm -rf Makefile config.log config.status *~ Makefile.in autom4te.cache configure config7.m4 aclocal.m4 drop_and_create_populated_database

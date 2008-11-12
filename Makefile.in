@@ -3,6 +3,8 @@
 
 LIMESTONE_PREFIX := 
 PWD := $(shell pwd)
+ADDUSER_DIR := adduser
+ADDUSER := $(ADDUSER_DIR)/adduser
 APROOT := $(PWD)/aproot
 APXS=$(APROOT)/bin/apxs
 WITH_APXS=--with-apxs=$(APXS)
@@ -437,6 +439,11 @@ database-reset-and-limestone-start: database-reset stamps/stampdir
 	sleep 1
 	$(start-apache)
 
+$(ADDUSER): $(ADDUSER_DIR)/adduser.c
+	cd $(ADDUSER_DIR) && ./buildconf.sh
+	cd $(ADDUSER_DIR) && ./configure
+	cd $(ADDUSER_DIR) && $(MAKE)
+
 define test-garbage-on-vhost
 	cd limestone && ruby check_garbage_collection.rb -d $($(1)_DBI) -n $(LIMESTONE_$(1)_DB_HOST) -P $(LIMESTONE_$(1)_DB_PORT) -u $(LIMESTONE_$(1)_DB_USER) -p $(LIMESTONE_$(1)_DB_PASS) -l $(LIMESTONE_$(1)_DB_NAME)
 endef
@@ -450,9 +457,9 @@ endef
 define database-dependent-targets-template
 create-test-users: create-test-users-$(1)
 create-test-users-$(1): stamps/create-test-users-$(1)
-stamps/create-test-users-$(1): stamps/stampdir
-	./limestone/adduser -P $$(LIMESTONE_$(1)_VHOST_PORT) -d$(TEST_USER1) -p$(TEST_USER1) $(TEST_USER1)
-	./limestone/adduser -P $$(LIMESTONE_$(1)_VHOST_PORT) -d$(TEST_USER2) -p$(TEST_USER2) $(TEST_USER2)
+stamps/create-test-users-$(1): stamps/stampdir $(ADDUSER)
+	$(ADDUSER) -P $$(LIMESTONE_$(1)_VHOST_PORT) -d$(TEST_USER1) -p$(TEST_USER1) $(TEST_USER1)
+	$(ADDUSER) -P $$(LIMESTONE_$(1)_VHOST_PORT) -d$(TEST_USER2) -p$(TEST_USER2) $(TEST_USER2)
 	touch $$@
 
 litmus-tests: litmus-tests-$(1)
@@ -488,6 +495,7 @@ distclean: clean
 	-cd $(LITMUS_DIR) && $(MAKE) distclean
 	-cd limestone && $(MAKE) init
 	-cd $(APACHE_DIR) && $(MAKE) distclean
+	-cd $(ADDUSER_DIR) && $(MAKE) distclean
 	-rm -f $(apacheextracleantargets)
 	-rm -rf stamps
 	-rm -rf $(APACHE_DIR)/modules/dav/limestone
@@ -500,6 +508,7 @@ clean:
 	-cd $(PRESTAN_DIR) && $(MAKE) clean
 	-cd limestone && $(MAKE) clean
 	-cd $(APACHE_DIR) && $(MAKE) clean
+	-cd $(ADDUSER_DIR) && $(MAKE) clean
 	-rm -rf $(APROOT) tmp
 	-rm -f stamps/*-build stamps/*-install*
 

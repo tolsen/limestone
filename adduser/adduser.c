@@ -35,7 +35,7 @@
 #define LT_ESCAPED "&lt;"
 #define GT_ESCAPED "&gt;"
 
-#include "root_path.h"
+#include "../limestone/root_path.h"
 #define USER_PATH PREPEND_ROOT_PATH("/users/")
 
 /* converts string to non-negative integer. returns -1 if there's an

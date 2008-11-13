@@ -515,6 +515,7 @@ tests: limestone-install database-reset-and-limestone-start litmus-tests rubydav
 
 
 distclean: clean
+	-rm -rf files
 	-$(reset-database)
 	-cd $(LITMUS_DIR) && $(MAKE) distclean
 	-cd limestone && $(MAKE) init

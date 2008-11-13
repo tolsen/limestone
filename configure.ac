@@ -21,7 +21,6 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(LimeStone, patsubst(esyscmd([./limestone/version -n]), ['\n'], []))
 
 dnl Define the default database here.
-WITH_DB_FLAG=""
 WITH_DB_FLAG_PROVIDED="no"
 INSTALL_CONF_FLAGS=""
 VHOSTS=""
@@ -46,7 +45,7 @@ AC_ARG_WITH(pgsql,
                 WITH_DB_FLAG_PROVIDED="yes"
                 
                 dnl set db flag
-                WITH_DB_FLAG=$WITH_DB_FLAG"--with-pgsql=$withval "
+                APACHE_CONF_FLAGS=$APACHE_CONF_FLAGS"--with-pgsql=$withval "
                 PGSQL_VHOST="yes"
                 VHOSTS=$VHOSTS" PGSQL"
 
@@ -103,7 +102,7 @@ AC_ARG_WITH(mysql,
                 WITH_DB_FLAG_PROVIDED="yes"
             
                 dnl set db flag
-                WITH_DB_FLAG=$WITH_DB_FLAG"--with-mysql=$withval " 
+                APACHE_CONF_FLAGS=$APACHE_CONF_FLAGS"--with-mysql=$withval " 
                 VHOSTS=$VHOSTS" MYSQL"
 
                 INSTALL_CONF_FLAGS=$INSTALL_CONF_FLAGS" mysql"
@@ -125,13 +124,12 @@ AC_ARG_ENABLE(profile,
               [AS_HELP_STRING([--enable-profile], [enabling static profile build])],
               [
                   AC_MSG_RESULT([static profile build enabled])
-                  APACHE_CONF_FLAGS="--enable-profile --with-mpm=prefork"
+                  APACHE_CONF_FLAGS=$APACHE_CONF_FLAGS" --enable-profile --with-mpm=prefork"
                   ENABLE_PROFILE="yes"
-dnl                  cp -rf limestone ../apache/modules/dav
               ],
               [
                   AC_MSG_RESULT(no)
-                  APACHE_CONF_FLAGS="--enable-so --with-mpm=worker"
+                  APACHE_CONF_FLAGS=$APACHE_CONF_FLAGS" --enable-so --with-mpm=worker"
               ]
              )
         
@@ -159,7 +157,6 @@ dnl Output variables
 AC_SUBST(INSTALL_CONF_FLAGS)
 AC_SUBST(VHOSTS)
 AC_SUBST(PGSQL_JDBC_JAR)
-AC_SUBST(WITH_DB_FLAG)
 AC_SUBST(APACHE_CONF_FLAGS)
 AC_SUBST(ENABLE_PROFILE)
 

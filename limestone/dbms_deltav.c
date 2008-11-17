@@ -22,6 +22,37 @@
 #include "deltav_util.h"        /* for mk_version_uri */
 #include "bridge.h"             /* for sabridge_new_dbr_from_dbr */
 
+static dav_error *dbms_get_creator_displayname(const dav_repos_db *d, 
+                                               dav_repos_resource *r)
+{
+    int ierrno = 0;
+    apr_pool_t *pool = r->p;
+    dav_repos_query *q = NULL;
+
+    TRACE();
+
+    q = dbms_prepare(pool, d->db, "SELECT name FROM principals "
+                     "WHERE resource_id = ?");
+
+    dbms_set_int(q, 1, r->creator_id);
+    if(dbms_execute(q)) {
+        dbms_query_destroy(q);
+        return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                             "dbms_execute error");
+    }
+
+    if ((ierrno = dbms_next(q)) <= 0) {
+        dbms_query_destroy(q);
+        r->creator_displayname = NULL;
+    }
+
+    r->creator_displayname = dbms_get_string(q, 1);
+
+    dbms_query_destroy(q);
+
+    return NULL;
+}
+
 /** 
  * Retrieve all properties of the resource defined by the DeltaV spec
  * @param d handle to the database
@@ -42,6 +73,9 @@ dav_error *dbms_get_deltav_props(const dav_repos_db *d, dav_repos_resource *r)
     case dav_repos_VERSION:
     case dav_repos_COLLECTION_VERSION:
         err = dbms_get_version_resource_props(d, r);
+        if((err = dbms_get_creator_displayname(d, r))) {
+            return err;
+        }
         break;
     case dav_repos_VERSIONHISTORY:
         err = dbms_get_vhr_props(d, r);

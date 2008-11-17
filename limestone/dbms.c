@@ -194,172 +194,93 @@ dav_error *dbms_get_media_props(const dav_repos_db *d, dav_repos_resource *r)
         
     return err;
 }
-/**
- * Generate the query that gives (resource_id, updated_at) from URI, 
- * by traversing the binds table
- */
 
-static char *generate_id_from_uri_query(dav_repos_dbms *db, apr_pool_t *pool, char *uri)
-{
-    char *last = NULL;
-    const char *next;
-    int i = 0;
-    char *tmp;
-    int count = 0;
-    char *query = NULL;
-    char *binds_query;
-    char *max_updated_at_query;
-    char *max_query = NULL;
-    
-    if (uri[0] == '/') count ++;
-    for (i = 1; i < strlen(uri); i++)
-        if (uri[i] == '/' && uri[i-1] != '/')
-            count++;
+/* compact consecutive '/'s into a single '/' */
+static char *compact_uri(apr_pool_t *pool, char *u) {
+    int i, j = 0;
+    char *v = apr_pcalloc(pool, (strlen(u) + 1) * sizeof(char));
 
-    next = apr_strtok(uri, "/", &last);
-
-    if(1 == count) 
-        max_updated_at_query = 
-          apr_psprintf(pool, 
-                       "(SELECT binding1.resource_id, binding1.id AS bind_id, "
-                       "child_max_updated_at, binding1.updated_at AS uri_max_updated_at, "
-                       "greatest(binding1.updated_at, child_max_updated_at) "
-                       "AS updated_at FROM ");
-    else {       
-        max_updated_at_query = 
-          apr_psprintf(pool, "(SELECT binding1.resource_id, binding1.id AS bind_id, ");
-
-        max_query =
-          apr_psprintf(pool, "greatest(binding%d.updated_at", count);
-        
+    v[j] = u[j];
+    for(i = 1; i < strlen(u); i++) {
+        if(v[j] != '/' || u[i] != '/') {
+            j = j + 1;
+            v[j] = u[i];
+        }
     }
-    
-    if (next != NULL) {
-        next = dbms_escape(pool, db, next);
-        tmp = apr_psprintf(pool,
-                           "( SELECT * FROM binds WHERE name='%s' "
-                           "AND collection_id=%d ) binding%d ", 
-                           next, ROOT_COLLECTION_ID, count);
 
-        binds_query = apr_pstrdup(pool, tmp);
-
-        next = apr_strtok(NULL, "/", &last);
-
-        while (next != NULL) {
-            next = dbms_escape(pool, db, next);
-            count--;
-
-            tmp = apr_psprintf(pool,
-                               " INNER JOIN ( SELECT * FROM binds "
-                               "WHERE name = '%s') binding%d "
-                               "ON binding%d.resource_id = "
-                               "binding%d.collection_id ",
-                               next, count, count + 1, count);
-
-            binds_query = apr_pstrcat(pool, binds_query, tmp, NULL);
-            
-            tmp = apr_psprintf(pool, ", binding%d.updated_at", count);
-            max_query = apr_pstrcat(pool, max_query, tmp, NULL);
-            
-            next = apr_strtok(NULL, "/", &last);
-        }
-        
-        /* Add max updated_at of child binds */
-        tmp = apr_psprintf(pool, " LEFT JOIN ( SELECT collection_id, "
-                           "MAX(updated_at) AS child_max_updated_at FROM binds "
-                           "GROUP BY collection_id ) children "
-                           "ON children.collection_id = binding1.resource_id");
-        binds_query = apr_pstrcat(pool, binds_query, tmp, ") ", NULL);
-
-        if(max_query) {
-            tmp = apr_pstrcat(pool, max_query, ", child_max_updated_at", NULL);
-            max_updated_at_query = 
-              apr_pstrcat(pool, max_updated_at_query, max_query, 
-                          ") AS uri_max_updated_at, child_max_updated_at, ", 
-                          tmp, ") AS updated_at FROM ", NULL);
-        }
-
-        query = apr_pstrcat(pool, max_updated_at_query, binds_query, NULL);
-        
-    } 
-    else
-        /* Handle the root collection URI '/' */
-        query = apr_psprintf(pool, 
-                             "SELECT %d as resource_id, bind_id, "
-                             "'%s' AS uri_max_updated_at, child_max_updated_at, "
-                             "greatest('%s', child_max_updated_at) "
-                             "AS updated_at FROM ( SELECT resource_id, "
-                             "MAX(updated_at) AS child_max_updated_at, "
-                             "id AS bind_id "
-                             "FROM binds WHERE collection_id = %d "
-                             "GROUP BY binds.resource_id, collection_id, binds.id) children", 
-                             ROOT_COLLECTION_ID, ROOT_UPDATED_AT, 
-                             ROOT_UPDATED_AT, ROOT_COLLECTION_ID);
-    
-    return query;
+    return v;
 }
 
 dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
 {
-    dav_repos_query *q = NULL;
     int ierrno = 0;
     dav_error *err = NULL;
-    char *uri = NULL;
     apr_pool_t *pool = r->p;
-    char *query;
-    char *tmp;
     struct tm *temp = apr_pcalloc(pool, sizeof(*temp));
+    char *uri, *query = NULL;
+    int use_resource_id = 0;
 
     TRACE();
-    query =
-      apr_psprintf(pool,
-                   "SELECT id, created_at, displayname, "
-                   "contentlanguage, owner_id, comment,creator_id, type, "
-                   "uuid, principals.name, updated_at, uri_max_updated_at, "
-                   "child_max_updated_at, bind_id FROM resources"
-                   " INNER JOIN principals"
-                   " ON resources.creator_id = principals.resource_id"
-                   " INNER JOIN (");
+
+    char *select = apr_psprintf(pool, "SELECT r.id, r.created_at, "
+    "r.displayname, r.contentlanguage, r.owner_id, r.comment, r.creator_id, "
+    "r.type, r.uuid, ");
+
 
     if (r->uri && r->root_path && strstr(r->uri, r->root_path)) {
         /* Strip the root path from URI */
         uri = apr_pstrdup(pool, r->uri + strlen(r->root_path));
+        uri = compact_uri(pool, uri);
 
-        query = apr_pstrcat(pool, query, 
-                generate_id_from_uri_query(d->db, pool, uri), NULL);
+        int i = 0;
+        char *last = NULL;
+        const char *next = apr_strtok(uri, "/", &last);
+        char *from, *where;
 
-    } else {
-        /* URI or root_path not set, use serialno instead */
-        /* @NOTE: The query returns MAX(updated_at) to be 
-         * NULL if collection is empty */
-        tmp = NULL;
-        switch(r->resourcetype) {
-            case dav_repos_COLLECTION:
-                tmp = apr_psprintf(pool, "(SELECT resource_id, MAX(updated_at)"
-                        " AS updated_at, NULL as uri_max_updated_at,"
-                        " MAX(updated_at) AS child_max_updated_at,"
-                        " 0 AS bind_id"
-                        " FROM binds WHERE collection_id = %ld "
-                        "GROUP BY resource_id, collection_id)", 
-                        r->serialno);
-                break;
-            case dav_repos_RESOURCE:
-                tmp = apr_psprintf(pool, "(SELECT resource_id, updated_at, "
-                        "NULL as uri_max_updated_at, "
-                        "NULL as child_max_updated_at, 0 AS bind_id "
-                        " FROM media WHERE resource_id = %ld)", r->serialno);
-                break;
-            default:
-                tmp = apr_psprintf(pool, "(SELECT %ld as resource_id, "
-                        "NULL as updated_at, NULL AS child_max_updated_at,"
-                        " NULL AS uri_max_updated_at, 0 AS bind_id ) ", r->serialno);
+        if(!next) {
+            use_resource_id = ROOT_COLLECTION_ID;
         }
-        query = apr_pstrcat(pool, query, tmp, NULL);
+        else {
+            i = i + 1;
+            select = apr_pstrcat(pool, select, "greatest(b1.updated_at", NULL);
+            from = apr_psprintf(pool, "FROM binds b1 ");
+            where = apr_psprintf(pool, "WHERE b1.collection_id = %d "
+                                 "AND b1.name = '%s' ", ROOT_COLLECTION_ID,
+                                 dbms_escape(pool, d->db, next));
+
+            next = apr_strtok(NULL, "/", &last);
+        }
+            
+        while(next) {
+            i = i + 1;
+            select = apr_psprintf(pool, "%s, b%d.updated_at", select, i);
+            from = apr_psprintf(pool, "%sINNER JOIN binds b%d "
+                                "ON b%d.resource_id = b%d.collection_id ", 
+                                from, i, i-1, i);
+            where = apr_psprintf(pool, "%sAND b%d.name = '%s' ", where,
+                                 i, dbms_escape(pool, d->db, next));
+            next = apr_strtok(NULL, "/", &last);
+        }
+
+        if(!use_resource_id) {
+            select = apr_psprintf(pool, "%s) AS uri_max_updated_at, b%d.id ",
+                                  select, i);
+            from = apr_psprintf(pool, "%sINNER JOIN resources r "
+                                "ON r.id = b%d.resource_id ", from, i);
+            query = apr_pstrcat(pool, select, from, where, NULL);
+        }
+    }
+    else {
+        use_resource_id = r->serialno;
     }
 
-    query = apr_pstrcat(pool, query, ") ids ON resources.id = ids.resource_id", NULL);
+    if(use_resource_id) {
+            query = apr_psprintf(pool, "%s'%s' AS uri_max_updated_at, 0 "
+                                "FROM resources r WHERE r.id = %d", select,
+                                ROOT_UPDATED_AT, use_resource_id);
+    }
 
-    q = dbms_prepare(pool, d->db, query);
+    dav_repos_query *q = dbms_prepare(pool, d->db, query);
 
     if (dbms_execute(q)) {
         dbms_query_destroy(q);
@@ -372,6 +293,7 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
         return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,
                              "dbms_next error");
     }
+
     if (ierrno == 0) {
         dbms_query_destroy(q);
         return err;
@@ -381,9 +303,7 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
     /*Fetch every column of the row */
     r->serialno = dbms_get_int(q, 1);
     r->created_at = dbms_get_string(q, 2);
-
     r->displayname = dbms_get_string(q, 3);
-    
     r->getcontentlanguage = dbms_get_string(q, 4);
     r->owner_id = dbms_get_int(q, 5);
     r->comment = dbms_get_string(q, 6);
@@ -392,31 +312,41 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
 
     DBG1("ResourceType: %d\n", r->resourcetype);
     
-    /* Principals MUST have a DAV:displayname */
-    if (r->resourcetype == dav_repos_PRINCIPAL ||
-        r->resourcetype == dav_repos_USER ||
-        r->resourcetype == dav_repos_GROUP) {
-        r->displayname = dbms_get_string(q, 3);
-    }               
+    r->next = NULL;
+    r->uuid = dbms_get_string(q, 9);
+    r->uuid[32] = '\0';
+
+    r->updated_at = dbms_get_string(q, 10);
+    r->bind_id = dbms_get_int(q, 11);
+
+    dbms_query_destroy(q);
+
 
     if (r->resourcetype == dav_repos_COLLECTION
         || r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
         /* collection contenttype hack */
         r->getcontenttype = apr_pstrdup(r->p, DIR_MAGIC_TYPE);
+
+        /* get child_max_updated_at for collections */
+        query = apr_psprintf(pool, "SELECT greatest('%s', MAX(updated_at)) "
+        "FROM binds WHERE collection_id = %ld", r->updated_at, r->serialno);
+
+        q = dbms_prepare(pool, d->db, query);
+
+        if (dbms_execute(q)) {
+            dbms_query_destroy(q);
+        }
+
+        if ((ierrno = dbms_next(q)) <= 0)  {
+            dbms_query_destroy(q);
+        }
+
+        r->updated_at = dbms_get_string(q, 1);
+
+        dbms_query_destroy(q);
+
     }
-    r->next = NULL;
-    r->uuid = dbms_get_string(q, 9);
-    r->uuid[32] = '\0';
 
-    r->creator_displayname = dbms_get_string(q, 10);
-    r->updated_at = dbms_get_string(q, 11);
-    if(!r->updated_at)
-        r->updated_at = dbms_get_string(q, 12);
-    if(!r->updated_at)
-        r->updated_at = dbms_get_string(q, 13);
-    r->bind_id = dbms_get_int(q, 14);
-
-    dbms_query_destroy(q);
 
     if((err = dbms_get_media_props(d, r)))
         return err;

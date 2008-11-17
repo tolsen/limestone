@@ -720,10 +720,17 @@ dav_error *dav_repos_deliver_principal_match(request_rec * r,
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
     apr_xml_elem *principal_properties;
     char *req_username = r->user;
+    long principal_id;
+    dav_error *err = NULL;
 
     TRACE();
 
     if (!req_username) req_username = "unauthenticated";
+
+    if((err = dbms_get_principal_id_from_name(pool, db, req_username, 
+                                              &principal_id))) {
+        return err;
+    }
 
     principal_properties =
 	dav_find_child(doc->root, "principal-property");
@@ -737,8 +744,9 @@ dav_error *dav_repos_deliver_principal_match(request_rec * r,
 
     while ((db_r = db_r->next)) {
 	// Currently supporting DAV:owner only
-	if ((principal_properties && !strcmp(principal_properties->name, "owner") && 
-            !strcmp(db_r->creator_displayname, req_username)) || 
+	if ((principal_properties && 
+             !strcmp(principal_properties->name, "owner") && 
+             db_r->owner_id == principal_id) || 
             (!principal_properties &&	// Found no principal_properties
              !strcmp(db_r->displayname, req_username)))
 	{

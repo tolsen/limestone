@@ -19,3 +19,5 @@ limestone/adduser
 limestone/drop_and_create_populated_database
 limestone/libmod_dav_repos.la
 tags
+adduser/aclocal.m4
+adduser/adduser

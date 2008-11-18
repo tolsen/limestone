@@ -143,7 +143,9 @@ ${LOGSDIR}/*log {
     notifempty
     sharedscripts
     postrotate
-        ./aproot/bin/apachectl graceful
+        if [ -f stamps/apache-start ]; then
+            ./aproot/bin/apachectl graceful
+        fi
     endscript
 }
 EOF

@@ -10,4 +10,5 @@
   <include file="add_bits_pw_reset.xml"/>
   <include file="add_property_values_quota_rules.xml"/>
   <include file="add_database_indices.xml"/>
+  <include file="create_redirectrefs_table.xml"/>
 </databaseChangeLog>

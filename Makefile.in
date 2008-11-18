@@ -329,8 +329,8 @@ limestone-configure: $(LS_DIR)/Makefile
 $(LS_DIR)/Makefile: $(LS_DIR)/configure
 	cd $(LS_DIR) && ./configure --with-debug --with-static
 
-limestone-install-config: $(LS_INSTALLED_CONFIG)
-$(LS_INSTALLED_CONFIG): $(LS_INSTALLED_MIME_TYPES) install-config
+limestone-install-config: $(LS_INSTALLED_CONFIG) logrotate.conf
+$(LS_INSTALLED_CONFIG) logrotate.conf: $(LS_INSTALLED_MIME_TYPES) install-config
 	./install-config @INSTALL_CONF_FLAGS@
 
 limestone-install: limestone-configure apache-install limestone-install-config 
@@ -356,8 +356,8 @@ $(LS_MODULE): $(LS_MAKEFILE) $(wildcard limestone/*.[ch])
 	cd limestone && $(MAKE)
 	touch $@
 
-limestone-install-config: $(LS_INSTALLED_CONFIG)
-$(LS_INSTALLED_CONFIG): $(LS_MODULE) install-config
+limestone-install-config: $(LS_INSTALLED_CONFIG) logrotate.conf
+$(LS_INSTALLED_CONFIG) logrotate.conf: $(LS_MODULE) install-config
 	./install-config @INSTALL_CONF_FLAGS@
 
 limestone-install-modules: $(LS_INSTALLED_MODULE)
@@ -367,6 +367,7 @@ $(LS_INSTALLED_MODULE): $(LS_MODULE)
 limestone-install: limestone-install-config limestone-install-modules
 
 endif
+
 
 # Litmus
 
@@ -468,6 +469,9 @@ $(ADDUSER): $(ADDUSER_DIR)/adduser.c
 	cd $(ADDUSER_DIR) && ./configure
 	cd $(ADDUSER_DIR) && $(MAKE)
 
+logrotate: logrotate.conf
+	-/usr/sbin/logrotate -f -s logrotate.status logrotate.conf
+
 define test-garbage-on-vhost
 	cd limestone && ruby check_garbage_collection.rb -d $($(1)_DBI) -n $(LIMESTONE_$(1)_DB_HOST) -P $(LIMESTONE_$(1)_DB_PORT) -u $(LIMESTONE_$(1)_DB_USER) -p $(LIMESTONE_$(1)_DB_PASS) -l $(LIMESTONE_$(1)_DB_NAME)
 endef
@@ -568,6 +572,7 @@ reinstall: clean-for-reinstall limestone-install
         litmus-build \
         litmus-configure \
         litmus-tests \
+        logrotate \
 		prestan-configure \
 		prestan-build \
         reinstall \

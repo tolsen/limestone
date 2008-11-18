@@ -10,11 +10,14 @@ my $ORIG_CONFIG = "aproot/conf/original/httpd.conf";
 my $CONFIG = "aproot/conf/httpd.conf";
 my $NEWCONFIG = "aproot/conf/httpd.conf.new";
 my $LIMESTONE_CONFIG = "aproot/conf/limestone.conf";
+my $LOGROTATE_CONFIG = "logrotate.conf";
+my $LOGROTATE_CONFIG_NEW = "logrotate.conf.new";
 
 my $WD = `pwd`;
 chomp $WD;
 my $TMPDIR = "${WD}/tmp";
 my $FILEDIR = "${WD}/files";
+my $LOGSDIR = "${WD}/aproot/logs";
 
 my ($CONF_PGSQL_VHOST, $CONF_MYSQL_VHOST) = ("no", "no");
 
@@ -128,6 +131,31 @@ EOF
 ;
 }
 
+sub print_logrotate_config($) {
+  my ($config_fh) = @_;
+
+  print $config_fh <<EOF
+${LOGSDIR}/*log {
+    weekly
+    missingok
+    compress
+    delaycompress
+    notifempty
+    sharedscripts
+    postrotate
+        ./aproot/bin/apachectl graceful
+    endscript
+}
+EOF
+;
+}
+
+sub rename_or_die($$) {
+  my ($src, $dest) = @_;
+  rename($src, $dest) or
+    die("couldn't rename $src to $dest");
+}
+
 my ($sql1, $sql2) = (shift, shift);
 $CONF_PGSQL_VHOST="yes" if ($sql1 && ($sql1 eq "pgsql") || $sql2 && ($sql2 eq "pgsql"));
 $CONF_MYSQL_VHOST="yes" if ($sql1 && ($sql1 eq "mysql") || $sql2 && ($sql2 eq "mysql"));
@@ -174,8 +202,13 @@ print NEWCONFIG "\nInclude conf/limestone.conf\n";
 close(ORIG_CONFIG) or die("couldn't close $ORIG_CONFIG");
 close(NEWCONFIG) or die("couldn't close $NEWCONFIG");
 
-rename($NEWCONFIG,$CONFIG) or
-  die ("couldn't rename $NEWCONFIG to $CONFIG");
+open(LOGROTATE_CONFIG_NEW, '>', $LOGROTATE_CONFIG_NEW) or
+  die("couldn't open $LOGROTATE_CONFIG_NEW");
+print_logrotate_config(*LOGROTATE_CONFIG_NEW);
+close(LOGROTATE_CONFIG_NEW);
+
+rename_or_die($NEWCONFIG, $CONFIG);
+rename_or_die($LOGROTATE_CONFIG_NEW, $LOGROTATE_CONFIG);
 
 exit 0;
     

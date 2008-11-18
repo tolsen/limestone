@@ -18,6 +18,8 @@ limestone/aclocal.m4
 limestone/adduser
 limestone/drop_and_create_populated_database
 limestone/libmod_dav_repos.la
+logrotate.conf
+logrotate.status
 tags
 adduser/aclocal.m4
 adduser/adduser

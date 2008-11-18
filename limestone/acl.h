@@ -20,8 +20,8 @@
  ** ACL method
  */
 
-#ifndef __DAV_ACL_H__
-#define __DAV_ACL_H__
+#ifndef __ACL_H__
+#define __ACL_H__
 
 #include "dbms_acl.h"
 #include "version.h"

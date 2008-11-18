@@ -44,13 +44,13 @@ SHELL = @SHELL@
 #DEFINES
 DEFS=-DVERSION='"\"$(VERSION)\""' @DEBUG@ @MAGIC@
 
-HEADFILES =  dav_repos.h dbms.h dbms_deltav.h util.h search.h lock.h liveprops.h dbms_api.h dbms_dbd.h version.h bind.h acl.h deltav_bridge.h lock_bridge.h dbms_bind.h bridge.h deltav_util.h dbms_locks.h dbms_quota.h props.h dbms_transaction.h transaction.h dbms_principal.h principal.h gc.h root_path.h
+HEADFILES =  dav_repos.h dbms.h dbms_deltav.h util.h search.h lock.h liveprops.h dbms_api.h dbms_dbd.h version.h bind.h acl.h deltav_bridge.h lock_bridge.h dbms_bind.h bridge.h deltav_util.h dbms_locks.h dbms_quota.h props.h dbms_transaction.h transaction.h dbms_principal.h principal.h gc.h root_path.h dbms_redirect.h redirect.h
 
 all: apache-mod-dav-dbms
 
 apache-mod-dav-dbms: libmod_dav_repos.la
 
-libmod_dav_repos_DEPS = mod_dav_repos.c repos.c props.c search.c dbms.c util.c deltav_bridge.c lock.c version.c bind.c dbms_dbd.c dbms_deltav.c dbms_acl.c acl.c liveprops.c deltav_liveprops.c quota_liveprops.c acl_liveprops.c binds_liveprops.c support_liveprops.c search_liveprops.c limebits_liveprops.c dbms_bind.c bridge.c lock_bridge.c deltav_util.c dbms_locks.c dbms_quota.c transaction.c dbms_transaction.c dbms_principal.c principal.c gc.c 
+libmod_dav_repos_DEPS = mod_dav_repos.c repos.c props.c search.c dbms.c util.c deltav_bridge.c lock.c version.c bind.c dbms_dbd.c dbms_deltav.c dbms_acl.c acl.c liveprops.c deltav_liveprops.c quota_liveprops.c acl_liveprops.c binds_liveprops.c support_liveprops.c search_liveprops.c limebits_liveprops.c dbms_bind.c bridge.c lock_bridge.c deltav_util.c dbms_locks.c dbms_quota.c transaction.c dbms_transaction.c dbms_principal.c principal.c gc.c dbms_redirect.c redirect.c
 
 libmod_dav_repos.la: $(libmod_dav_repos_DEPS)
 	$(APXS) $(DEFS) -Wc,-Werror -o $@ -c $(libmod_dav_repos_DEPS)
@@ -64,14 +64,14 @@ clean:
 init: clean
 	-rm -rf Makefile config.log config.status *~ Makefile.in autom4te.cache configure config7.m4 aclocal.m4 drop_and_create_populated_database
 
-DISTS =	buildconf.sh Makefile.in.so Makefile.in.static\
-	config7.m4.in \
-	config.h.in \
-    README configure  data.sql dbms.c dbms_dbd.c \
-	util.c mod_dav_repos.c  repos.c   table.sql\
-	configure.in  props.c  search.c lock.c TODO \
-	version.c version.h bind.c bind.h acl.c $(HEADFILES)
-
+#DISTS =	buildconf.sh Makefile.in.so Makefile.in.static\
+#	config7.m4.in \
+#	config.h.in \
+#    README configure  data.sql dbms.c dbms_dbd.c \
+#	util.c mod_dav_repos.c  repos.c   table.sql\
+#	configure.in  props.c  search.c lock.c TODO \
+#	version.c version.h bind.c bind.h acl.c $(HEADFILES)
+#
 # should not work now because VERSION is now PACKAGE_VERSION
 # and PACKAGE_VERSION can have spaces
 # dist:

@@ -443,8 +443,7 @@ dav_error *dbms_update_media_props(const dav_repos_db *d,
     dbms_set_int(q, 5, db_r->serialno);
 
     if (dbms_execute(q))
-        err = dav_new_error(pool,
-                            HTTP_INTERNAL_SERVER_ERROR, 0,
+        err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
                             "Couldn't update media entry");
     dbms_query_destroy(q);
     return err;

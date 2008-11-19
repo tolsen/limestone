@@ -95,3 +95,33 @@ dav_error *dbms_update_redirectref(const dav_repos_db *d,
     dbms_query_destroy(q);
     return err;
 }
+
+dav_error *dbms_get_redirect_props(const dav_repos_db *d,
+                                   dav_repos_resource *r)
+{
+    dav_repos_query *q = NULL;
+    dav_error *err = NULL;
+
+    TRACE();
+
+    q = dbms_prepare(r->p, d->db, "SELECT lifetime, reftarget "
+                     "FROM redirectrefs WHERE resource_id = ?");
+    dbms_set_int(q, 1, r->serialno);
+
+    if (dbms_execute(q) || (dbms_next(q) <=0)) {
+        err = dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,
+                            "DBMS error in reftargets lookup.");
+        goto error;
+    }
+
+    if (0 == apr_strnatcmp(dbms_get_string(q, 1), "p")) 
+        r->redirect_lifetime = DAV_REDIRECTREF_PERMANENT;
+    else
+        r->redirect_lifetime = DAV_REDIRECTREF_TEMPORARY;
+
+    r->reftarget = dbms_get_string(q, 2);
+
+    error:
+        dbms_query_destroy(q);
+        return err;
+}

@@ -179,6 +179,12 @@ struct dav_repos_resource {
     dav_acl *acl;
     long parent_id;
 
+    /** redirect lifetime */
+    dav_redirectref_lifetime redirect_lifetime;
+
+    /** redirect reftarget */
+    const char *reftarget;
+
     /* next link in a chain of resources */
     struct dav_repos_resource *next;	
 

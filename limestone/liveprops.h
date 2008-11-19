@@ -80,7 +80,7 @@ void dav_supported_register_liveprops(apr_pool_t *p);
  */
 void dav_binds_register_liveprops(apr_pool_t *p);
 
-/* @brief Registers the SEARCH draft liveprops
+/* @brief Registers the SEARCH RFC liveprops
  * @param p Pool
  */
 void dav_search_register_liveprops(apr_pool_t *p);
@@ -89,5 +89,10 @@ void dav_search_register_liveprops(apr_pool_t *p);
  * @param p Pool
  */
 void dav_limebits_register_liveprops(apr_pool_t *p);
+
+/* @brief Registers the Redirect Reference Resources RFC liveprops
+ * @param p Pool
+ */
+void dav_redirect_register_liveprops(apr_pool_t *p);
 
 #endif /* REPOS_LIVEPROPS_H */

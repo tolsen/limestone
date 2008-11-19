@@ -34,4 +34,7 @@ dav_error *dbms_update_redirectref(const dav_repos_db *db,
                                    const char *reftarget,
                                    dav_redirectref_lifetime t);
 
+dav_error *dbms_get_redirect_props(const dav_repos_db *d,
+                                   dav_repos_resource *r);
+
 #endif /* DBMS_REDIRECT_H */

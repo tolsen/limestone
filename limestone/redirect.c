@@ -47,9 +47,35 @@ dav_error *dav_repos_update_redirectref(dav_resource *resource,
     return dbms_update_redirectref(db, db_r, reftarget, t);
 }
 
+dav_redirectref_lifetime dav_repos_get_lifetime(dav_resource *resource)
+{
+    dav_repos_resource *db_r = resource->info->db_r;
+    dav_repos_db *db = resource->info->db;
+
+    TRACE();
+
+    dbms_get_redirect_props(db, db_r);
+
+    return db_r->redirect_lifetime;
+}
+
+const char *dav_repos_get_reftarget(dav_resource *resource)
+{
+    dav_repos_resource *db_r = resource->info->db_r;
+    dav_repos_db *db = resource->info->db;
+
+    TRACE();
+
+    dbms_get_redirect_props(db, db_r);
+
+    return db_r->reftarget;
+}
+
 /* redirect hooks */
 const dav_hooks_redirect dav_repos_hooks_redirect = {
     dav_repos_create_redirectref,
     dav_repos_update_redirectref,
+    dav_repos_get_reftarget,
+    dav_repos_get_lifetime,
     NULL        // ctx
 };

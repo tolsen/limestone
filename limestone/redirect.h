@@ -30,4 +30,8 @@ dav_error *dav_repos_update_redirectref(dav_resource *resource,
                                         const char *reftarget,
                                         dav_redirectref_lifetime t);
 
+dav_redirectref_lifetime dav_repos_get_lifetime(dav_resource *resource);
+
+const char *dav_repos_get_reftarget(dav_resource *resource);
+
 #endif /* __REDIRECT_H__ */

@@ -104,6 +104,11 @@ dav_error *dbms_get_redirect_props(const dav_repos_db *d,
 
     TRACE();
 
+    /* do nothing if we have already fetched redirect props */
+    if (r->redirect_lifetime && r->reftarget) {
+        return NULL;
+    }
+
     q = dbms_prepare(r->p, d->db, "SELECT lifetime, reftarget "
                      "FROM redirectrefs WHERE resource_id = ?");
     dbms_set_int(q, 1, r->serialno);

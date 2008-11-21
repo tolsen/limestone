@@ -1387,6 +1387,9 @@ void dav_repos_update_dbr_resource(dav_repos_resource *db_r)
         db_r->type = resource->type = DAV_RESOURCE_TYPE_REGULAR;
         resource->exists = 0;
         break;
+    case dav_repos_REDIRECT:
+        db_r->type = resource->type = DAV_RESOURCE_TYPE_REDIRECTREF;
+        break;
     default:
         DBG0("We should never reach here - Repos.c - get_resource");
         break;

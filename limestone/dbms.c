@@ -52,6 +52,7 @@
 #include "bridge.h"             /* for sabridge_new_dbr_from_dbr */
 #include "dbms_api.h"
 #include "acl.h"                /* dav_repos_get_principal_url */
+#include "dbms_redirect.h"      /* dbms_get_redirect_props */
 
 /** 
  * @struct resource_list
@@ -217,35 +218,38 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
     dav_error *err = NULL;
     apr_pool_t *pool = r->p;
     struct tm *temp = apr_pcalloc(pool, sizeof(*temp));
-    char *uri, *query = NULL;
+    char *uri, *uri_prefix, *query = NULL;
     int use_resource_id = 0;
+    int i, j;
 
     TRACE();
-
-    char *select = apr_psprintf(pool, "SELECT r.id, r.created_at, "
-    "r.displayname, r.contentlanguage, r.owner_id, r.comment, r.creator_id, "
-    "r.type, r.uuid, ");
-
 
     if (r->uri && r->root_path && strstr(r->uri, r->root_path)) {
         /* Strip the root path from URI */
         uri = apr_pstrdup(pool, r->uri + strlen(r->root_path));
         uri = compact_uri(pool, uri);
 
-        int i = 0;
+        i = 0;
         char *last = NULL;
         const char *next = apr_strtok(uri, "/", &last);
-        char *from, *where;
+        char *select, *from, *where, *uri_max_updated_at;
+        apr_hash_t *uri_segments;
 
         if(!next) {
             use_resource_id = ROOT_COLLECTION_ID;
         }
         else {
             i = i + 1;
-            select = apr_pstrcat(pool, select, "greatest(b1.updated_at", NULL);
+            uri_segments = apr_hash_make(pool);
+            uri_prefix = apr_psprintf(pool, "/%s", next);
+            apr_hash_set(uri_segments, &i, sizeof(int), uri_prefix);
+
+            select = apr_psprintf(pool, "SELECT b1.resource_id"); 
+            uri_max_updated_at = apr_psprintf(pool, "greatest(b1.updated_at");
             from = apr_psprintf(pool, "FROM binds b1 ");
             where = apr_psprintf(pool, "WHERE b1.collection_id = %d "
-                                 "AND b1.name = '%s' ", ROOT_COLLECTION_ID,
+                                 "AND (b1.name IS NULL OR b1.name = '%s') ", 
+                                 ROOT_COLLECTION_ID,
                                  dbms_escape(pool, d->db, next));
 
             next = apr_strtok(NULL, "/", &last);
@@ -253,45 +257,77 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
             
         while(next) {
             i = i + 1;
-            select = apr_psprintf(pool, "%s, b%d.updated_at", select, i);
+            uri_prefix = apr_pstrcat(pool, uri_prefix, "/", next, NULL);
+            apr_hash_set(uri_segments, &i, sizeof(int), uri_prefix);
+            select = apr_psprintf(pool, "%s, b%d.resource_id", select, i);
+            uri_max_updated_at = apr_psprintf(pool, "%s, b%d.updated_at", 
+                                              uri_max_updated_at, i);
             from = apr_psprintf(pool, "%sINNER JOIN binds b%d "
                                 "ON b%d.resource_id = b%d.collection_id ", 
                                 from, i, i-1, i);
-            where = apr_psprintf(pool, "%sAND b%d.name = '%s' ", where,
-                                 i, dbms_escape(pool, d->db, next));
+            where = apr_psprintf(pool, 
+                                 "%sAND (b%d.name IS NULL OR b%d.name = '%s') ",
+                                 where, i, i, dbms_escape(pool, d->db, next));
             next = apr_strtok(NULL, "/", &last);
         }
 
         if(!use_resource_id) {
-            select = apr_psprintf(pool, "%s) AS uri_max_updated_at, b%d.id ",
-                                  select, i);
-            from = apr_psprintf(pool, "%sINNER JOIN resources r "
-                                "ON r.id = b%d.resource_id ", from, i);
+            uri_max_updated_at = 
+                            apr_psprintf(pool, 
+                                        "%s) AS uri_max_updated_at, b%d.id ", 
+                                        uri_max_updated_at, i);
+
+            select = apr_pstrcat(pool, select, ", ", uri_max_updated_at, NULL);
             query = apr_pstrcat(pool, select, from, where, NULL);
         }
     }
     else {
         use_resource_id = r->serialno;
     }
+    
+    if (!use_resource_id) {
+        dav_repos_query *q = dbms_prepare(pool, d->db, query);
 
-    if(use_resource_id) {
-            query = apr_psprintf(pool, "%s'%s' AS uri_max_updated_at, 0 "
-                                "FROM resources r WHERE r.id = %d", select,
-                                ROOT_UPDATED_AT, use_resource_id);
+        if (dbms_execute(q)) {
+            dbms_query_destroy(q);
+            return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                    "dbms_execute error");
+        }
+
+        if (0 == dbms_results_count(q)) {
+            dbms_query_destroy(q);
+            return err;
+        }
+
+        char **dbrow = dbms_fetch_row(d->db, q, pool);
+        j = 0;
+        while(dbrow[j] && j < i) { j++; }
+        r->serialno = atoi(dbrow[j - 1]);
+        r->updated_at = dbrow[i];
+        r->bind_id = atoi(dbrow[i+1]);
+    }
+    else {
+        r->serialno = use_resource_id;
     }
 
-    dav_repos_query *q = dbms_prepare(pool, d->db, query);
-
+    /* fetch live properties */
+    dav_repos_query *q = dbms_prepare(pool, d->db, 
+                                      "SELECT r.created_at, "
+                                      "r.displayname, r.contentlanguage, "
+                                      "r.owner_id, r.comment, r.creator_id, "
+                                      "r.type, r.uuid FROM resources r "
+                                      "WHERE r.id = ?");
+    dbms_set_int(q, 1, r->serialno);
     if (dbms_execute(q)) {
         dbms_query_destroy(q);
         return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0, 
-                             "dbms_execute error");
+                "dbms_execute error");
     }
 
     if ((ierrno = dbms_next(q)) < 0) {
         dbms_query_destroy(q);
         return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,
-                             "dbms_next error");
+                "dbms_next error");
     }
 
     if (ierrno == 0) {
@@ -299,28 +335,27 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
         return err;
     }
 
-    /*Get the data of every column of this row to a link */
-    /*Fetch every column of the row */
-    r->serialno = dbms_get_int(q, 1);
-    r->created_at = dbms_get_string(q, 2);
-    r->displayname = dbms_get_string(q, 3);
-    r->getcontentlanguage = dbms_get_string(q, 4);
-    r->owner_id = dbms_get_int(q, 5);
-    r->comment = dbms_get_string(q, 6);
-    r->creator_id = dbms_get_int(q, 7);
-    r->resourcetype = dav_repos_get_type_id(dbms_get_string(q, 8));
+    r->created_at = dbms_get_string(q, 1);
+    r->displayname = dbms_get_string(q, 2);
+    r->getcontentlanguage = dbms_get_string(q, 3);
+    r->owner_id = dbms_get_int(q, 4);
+    r->comment = dbms_get_string(q, 5);
+    r->creator_id = dbms_get_int(q, 6);
+    r->resourcetype = dav_repos_get_type_id(dbms_get_string(q, 7));
 
     DBG1("ResourceType: %d\n", r->resourcetype);
     
     r->next = NULL;
-    r->uuid = dbms_get_string(q, 9);
+    r->uuid = dbms_get_string(q, 8);
     r->uuid[32] = '\0';
-
-    r->updated_at = dbms_get_string(q, 10);
-    r->bind_id = dbms_get_int(q, 11);
 
     dbms_query_destroy(q);
 
+    if (r->resourcetype == dav_repos_REDIRECT) {
+        dbms_get_redirect_props(d, r);
+        char *offset = r->uri + strlen(uri_prefix);
+        r->reftarget = apr_pstrcat(pool, r->reftarget, offset, NULL);
+    }
 
     if (r->resourcetype == dav_repos_COLLECTION
         || r->resourcetype == dav_repos_VERSIONED_COLLECTION) {

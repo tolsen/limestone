@@ -305,6 +305,7 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
         r->serialno = atoi(dbrow[j - 1]);
         r->updated_at = dbrow[i];
         r->bind_id = atoi(dbrow[i+1]);
+        dbms_query_destroy(q);
     }
     else {
         r->serialno = use_resource_id;

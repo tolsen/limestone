@@ -135,6 +135,7 @@ extern const dav_hooks_binding 	        dav_repos_hooks_binding;
 extern const dav_hooks_locks            dav_repos_hooks_locks;
 extern const dav_hooks_acl              dav_repos_hooks_acl;
 extern const dav_hooks_transaction      dav_repos_hooks_transaction;
+extern const dav_hooks_redirect         dav_repos_hooks_redirect;
 
 /*
  ** Get DB handler from request_rec

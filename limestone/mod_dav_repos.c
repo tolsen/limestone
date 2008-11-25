@@ -237,6 +237,7 @@ static const dav_provider dav_repos_provider = {
     &dav_repos_hooks_search,	        /* search */
     &dav_repos_hooks_acl,	        /* acl */
     &dav_repos_hooks_transaction,       /* transaction */
+    &dav_repos_hooks_redirect,          /* redirect */
     NULL			        /* context */
 };
 

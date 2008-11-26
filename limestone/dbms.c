@@ -218,9 +218,11 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
     dav_error *err = NULL;
     apr_pool_t *pool = r->p;
     struct tm *temp = apr_pcalloc(pool, sizeof(*temp));
-    char *uri, *uri_prefix, *query = NULL;
+    char *uri, *query = NULL;
     int use_resource_id = 0;
-    int i, j;
+    int i, j, bind_id, check_redirectref = 0;
+    const char *updated_at;
+    long serialno = r->serialno;
 
     TRACE();
 
@@ -233,17 +235,12 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
         char *last = NULL;
         const char *next = apr_strtok(uri, "/", &last);
         char *select, *from, *where, *uri_max_updated_at;
-        apr_hash_t *uri_segments;
 
         if(!next) {
             use_resource_id = ROOT_COLLECTION_ID;
         }
         else {
             i = i + 1;
-            uri_segments = apr_hash_make(pool);
-            uri_prefix = apr_psprintf(pool, "/%s", next);
-            apr_hash_set(uri_segments, &i, sizeof(int), uri_prefix);
-
             select = apr_psprintf(pool, "SELECT b1.resource_id"); 
             uri_max_updated_at = apr_psprintf(pool, "greatest(b1.updated_at");
             from = apr_psprintf(pool, "FROM binds b1 ");
@@ -257,12 +254,10 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
             
         while(next) {
             i = i + 1;
-            uri_prefix = apr_pstrcat(pool, uri_prefix, "/", next, NULL);
-            apr_hash_set(uri_segments, &i, sizeof(int), uri_prefix);
             select = apr_psprintf(pool, "%s, b%d.resource_id", select, i);
             uri_max_updated_at = apr_psprintf(pool, "%s, b%d.updated_at", 
                                               uri_max_updated_at, i);
-            from = apr_psprintf(pool, "%sINNER JOIN binds b%d "
+            from = apr_psprintf(pool, "%sLEFT OUTER JOIN binds b%d "
                                 "ON b%d.resource_id = b%d.collection_id ", 
                                 from, i, i-1, i);
             where = apr_psprintf(pool, 
@@ -301,14 +296,17 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
 
         char **dbrow = dbms_fetch_row(d->db, q, pool);
         j = 0;
-        while(dbrow[j] && j < i) { j++; }
-        r->serialno = atoi(dbrow[j - 1]);
-        r->updated_at = dbrow[i];
-        r->bind_id = atoi(dbrow[i+1]);
+        while(dbrow[j][0] && j < i) { j++; }
+        if (j != i) check_redirectref = 1;
+        j = j - 1;
+        r->serialno = atoi(dbrow[j]);
+        updated_at = dbrow[i];
+        bind_id = atoi(dbrow[i+1]);
         dbms_query_destroy(q);
     }
     else {
         r->serialno = use_resource_id;
+        updated_at = apr_pstrdup(pool, ROOT_UPDATED_AT);
     }
 
     /* fetch live properties */
@@ -336,13 +334,22 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
         return err;
     }
 
+    int resourcetype = dav_repos_get_type_id(dbms_get_string(q, 7));
+    if (check_redirectref && resourcetype != dav_repos_REDIRECT) {
+        r->serialno = serialno;
+        dbms_query_destroy(q);
+        return err;
+    }
+
+    r->bind_id = bind_id;
+    r->updated_at = updated_at;
+    r->resourcetype = resourcetype;
     r->created_at = dbms_get_string(q, 1);
     r->displayname = dbms_get_string(q, 2);
     r->getcontentlanguage = dbms_get_string(q, 3);
     r->owner_id = dbms_get_int(q, 4);
     r->comment = dbms_get_string(q, 5);
     r->creator_id = dbms_get_int(q, 6);
-    r->resourcetype = dav_repos_get_type_id(dbms_get_string(q, 7));
 
     DBG1("ResourceType: %d\n", r->resourcetype);
     
@@ -354,8 +361,16 @@ dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r)
 
     if (r->resourcetype == dav_repos_REDIRECT) {
         dbms_get_redirect_props(d, r);
-        char *offset = r->uri + strlen(uri_prefix);
-        r->reftarget = apr_pstrcat(pool, r->reftarget, offset, NULL);
+        int offset, count = 0;
+        int size = strlen(r->uri);
+        for(offset = 0; offset < size && count < j + 2; offset++) {
+            if(r->uri[offset] == '/') {
+                count++;
+            }
+        }
+        if (count == j + 2) offset--;
+        char *suffix = r->uri + offset;
+        r->reftarget = apr_pstrcat(pool, r->reftarget, suffix, NULL);
     }
 
     if (r->resourcetype == dav_repos_COLLECTION

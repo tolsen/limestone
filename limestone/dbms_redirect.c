@@ -70,7 +70,7 @@ dav_error *dbms_update_redirectref(const dav_repos_db *d,
 
     TRACE();
 
-    const char *query = apr_psprintf(r->p, "UDPATE redirectrefs SET ");
+    const char *query = apr_psprintf(r->p, "UPDATE redirectrefs SET ");
     if (reftarget) {
         query = apr_pstrcat(r->p, query, "reftarget = '", 
                             dbms_escape(r->p, d->db, reftarget), "'", NULL);

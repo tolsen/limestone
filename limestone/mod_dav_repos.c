@@ -338,6 +338,7 @@ static void register_hooks(apr_pool_t * p)
     dav_supported_register_liveprops(p);
     dav_search_register_liveprops(p);
     dav_limebits_register_liveprops(p);
+    dav_redirect_register_liveprops(p);
 
     /* register our provider */
     dav_register_provider(p, DBMS_PROVIDER_NAME, &dav_repos_provider);

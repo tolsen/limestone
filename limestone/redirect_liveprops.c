@@ -90,13 +90,13 @@ static dav_prop_insert dav_redirect_insert_prop(const dav_resource * resource,
 
         switch (propid) {
         case DAV_PROPID_redirect_lifetime:
-            propval = db_r->redirect_lifetime == DAV_REDIRECTREF_PERMANENT ? "permanent" : "temporary";
+            propval = db_r->redirect_lifetime == DAV_REDIRECTREF_PERMANENT ? "<D:permanent/>" : "<D:temporary/>";
             break;
         case DAV_PROPID_reftarget:
-            propval = db_r->reftarget;
+            propval = apr_psprintf(pool, "<D:href>%s</D:href>", db_r->reftarget);
             break;
         }
-        s = apr_psprintf(pool, "<D:%s><D:%s/></D:%s>", name, propval, name);
+        s = apr_psprintf(pool, "<D:%s>%s</D:%s>", name, propval, name);
 
     } else if (what == DAV_PROP_INSERT_SUPPORTED) {
 	s = apr_psprintf(pool,

@@ -10,6 +10,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="lifetime" type="char" defaultValue="t"/>
+            <column name="updated_at" type="datetime"/>
         </createTable>
 
         <comment>Add FK check on redirectrefs.resource_id to resources.id</comment>

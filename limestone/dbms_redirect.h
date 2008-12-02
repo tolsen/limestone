@@ -23,6 +23,7 @@
 #include <mod_dav.h>
 #include "dbms.h"
 #include "dbms_api.h"
+#include "util.h"       /* for time_apr_to_str */
 
 dav_error *dbms_insert_redirectref(const dav_repos_db *db,
                                    dav_repos_resource *db_r,

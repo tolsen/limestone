@@ -43,12 +43,13 @@ dav_error *dbms_insert_redirectref(const dav_repos_db *d,
     dav_error *err = NULL;
     
     q = dbms_prepare(r->p, d->db, "INSERT INTO redirectrefs "
-                     "(resource_id, reftarget, lifetime) "
-                     "VALUES (?, ?, ?)");
+                     "(resource_id, reftarget, lifetime, updated_at) "
+                     "VALUES (?, ?, ?, ?)");
 
     dbms_set_int(q, 1, r->serialno);
     dbms_set_string(q, 2, reftarget);
     dbms_set_string(q, 3, lifetime_to_s(t));
+    dbms_set_string(q, 4, time_apr_to_str(r->p, apr_time_now()));
 
     if (dbms_execute(q))
         err = dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,
@@ -82,11 +83,13 @@ dav_error *dbms_update_redirectref(const dav_repos_db *d,
     else {
         query = apr_pstrcat(r->p, query, "lifetime = '", lifetime, "'", NULL);
     }
-
-    query = apr_pstrcat(r->p, query, " WHERE resource_id = ?", NULL);
+    
+    query = apr_pstrcat(r->p, query, 
+                        ", updated_at = ? WHERE resource_id = ?", NULL);
 
     q = dbms_prepare(r->p, d->db, query);
-    dbms_set_int(q, 1, r->serialno);
+    dbms_set_string(q, 1, time_apr_to_str(r->p, apr_time_now()));
+    dbms_set_int(q, 2, r->serialno);
 
     if (dbms_execute(q))
         err = dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,

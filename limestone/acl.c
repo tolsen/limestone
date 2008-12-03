@@ -299,6 +299,7 @@ char *acl_build_propfind_output(const dav_resource * resource)
     char *str_xml_acl = "";
     dav_acl *current_acl = NULL;
     dav_repos_resource *db_r;
+    request_rec *r = resource->info->rec;
     dav_repos_db *db;
     TRACE();
     if (!resource) {
@@ -392,9 +393,11 @@ char *acl_build_propfind_output(const dav_resource * resource)
 		str_acebody = apr_psprintf(db_r->p, "</D:ace>");
 	    else str_acebody = apr_psprintf(db_r->p,
                                             "<D:inherited>" DEBUG_CR
-                                            "<D:href>%s</D:href>" DEBUG_CR
+                                            "<D:href>%s%s</D:href>" DEBUG_CR
                                             "</D:inherited>" DEBUG_CR
-                                            "</D:ace>", inherited);
+                                            "</D:ace>",
+                                            principal_href_prefix(r), 
+                                            inherited);
 
 	    str_xml_acl =
 		apr_pstrcat(db_r->p, str_xml_acl, str_acehead, str_acepriv,

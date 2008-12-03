@@ -916,8 +916,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
           (dbrow[1] == NULL) ? NULL : apr_pstrdup(db_r->p, dbrow[1]);
 
         presult_link_tail->displayname =
-          (dbrow[24] == NULL) ? apr_pstrdup(db_r->p, dbrow[2]) : 
-          apr_pstrdup(db_r->p, dbrow[24]);
+          (dbrow[24] == NULL) ? "" : apr_pstrdup(db_r->p, dbrow[24]);
 
         presult_link_tail->updated_at =
           (dbrow[3] == NULL) ? NULL : apr_pstrdup(db_r->p, dbrow[3]);

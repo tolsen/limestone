@@ -227,4 +227,6 @@ const char *guess_mime_type(const char *file);
 
 char *get_password_hash(apr_pool_t *pool, const char *user, const char *password);
 
+const char *get_mime_type(const char *uri, const char *path);
+
 #endif

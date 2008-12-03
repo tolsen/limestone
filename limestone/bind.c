@@ -82,6 +82,7 @@ dav_error *dav_repos_rebind_resource(const dav_resource *collection,
     dav_repos_resource *href_dbr = href_res->info->db_r;
     dav_repos_resource *new_bind_dbr = new_bind->info->db_r;
     dav_repos_resource *href_parent_dbr = NULL;
+    char *path;
     
     TRACE();
 
@@ -108,6 +109,13 @@ dav_error *dav_repos_rebind_resource(const dav_resource *collection,
     if (!err) dav_repos_update_dbr_resource(href_dbr);
     if (!err) err = dbms_get_property(db, new_bind_dbr);
     if (!err) dav_repos_update_dbr_resource(new_bind_dbr);
+    if (new_bind_dbr->resourcetype == dav_repos_RESOURCE) {
+        if (!err) err = generate_path(&path, new_bind_dbr->p, db->file_dir, 
+                                      new_bind_dbr->sha1str);
+        if (!err) new_bind_dbr->getcontenttype = 
+                                    get_mime_type(new_bind_dbr->uri, path);
+        if (!err) err = dbms_update_media_props(db, new_bind_dbr);
+    }
     if (!err) err = dbms_change_acl_parent(db, href_dbr, coll_dbr->serialno);
 
     return err;

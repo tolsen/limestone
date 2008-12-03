@@ -520,20 +520,7 @@ static dav_error *dav_repos_close_stream(dav_stream * stream, int commit)
                 db_r->getcontenttype = r->content_type;
             }
             else {
-                const char *filename = basename(db_r->uri);
-                const char *ext = strrchr(filename, '.');
-
-                /* lookup file extension in the mime_type_ext_map */
-                if (ext && ++ext) {
-                    db_r->getcontenttype = 
-                        apr_hash_get(dav_repos_mime_type_ext_map, 
-                                     ext, APR_HASH_KEY_STRING);
-                }
-
-                /* if the mime_type lookup failed, try to guess the mime_type */
-                if(!db_r->getcontenttype) {
-                    db_r->getcontenttype = guess_mime_type(stream->path);
-                }
+                db_r->getcontenttype = get_mime_type(db_r->uri , stream->path);
             }
 
             compute_file_sha1(pool, stream->path, &(db_r->sha1str));

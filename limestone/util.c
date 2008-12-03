@@ -398,3 +398,24 @@ char *get_password_hash(apr_pool_t *pool, const char *user, const char *password
         sprintf(exppwhash + 2*i, "%02x", pwhash[i]);
     return apr_pstrdup(pool, exppwhash);
 }
+
+const char *get_mime_type(const char *uri, const char *path)
+{
+    const char *filename = basename(uri);
+    const char *ext = strrchr(filename, '.');
+    const char *mime_type = NULL;
+
+    /* lookup file extension in the mime_type_ext_map */
+    if (ext && ++ext) {
+        mime_type = apr_hash_get(dav_repos_mime_type_ext_map, ext, 
+                                 APR_HASH_KEY_STRING);
+    }
+
+    /* if the mime_type lookup failed, try to guess the mime_type */
+    if(mime_type == NULL) {
+        mime_type = guess_mime_type(path);
+    }
+
+    return mime_type;
+}
+

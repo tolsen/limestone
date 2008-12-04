@@ -160,6 +160,8 @@ dav_error *dbms_delete_exp_locks(dav_lockdb *lockdb, const char *exp_lock_ids)
           (pool, "DELETE FROM resources WHERE id IN (%s) AND id NOT IN "
            "(SELECT resource_id FROM locks WHERE locks.resource_id IN (%s))",
            exp_locknull_ids, exp_locknull_ids);
+
+        q = dbms_prepare(pool, d->db, query_str);
         if (dbms_execute(q))
             err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
                                 "DBMS Error retrieving locks");

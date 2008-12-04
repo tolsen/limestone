@@ -275,9 +275,11 @@ dav_error *dbms_insert_bind_list(apr_pool_t *pool, const dav_repos_db *d,
     if (array > 0) {
         bind_list[i].bind_name = dbms_escape(pool, d->db, bind_list[i].bind_name);
         bytes_used += sprintf(query_str+bytes_used, 
-                              "INSERT INTO binds(collection_id,name,resource_id,"
-                              "updated_at) VALUES (%ld, '%s', %ld, '%s')",
-                              bind_list[i].parent_id, bind_list[i].bind_name,
+                              "INSERT INTO binds"
+                              "(collection_id,name,resource_id,updated_at)"
+                              " VALUES (%ld, '%s', %ld, '%s')",
+                              bind_list[i].parent_id, 
+                              dbms_escape(pool, d->db, bind_list[i].bind_name),
                               bind_list[i].resource_id, updated_at);
     }
 
@@ -285,7 +287,8 @@ dav_error *dbms_insert_bind_list(apr_pool_t *pool, const dav_repos_db *d,
     for (i = 1; i < array; i++) {
         bind_list[i].bind_name = dbms_escape(pool, d->db, bind_list[i].bind_name);
         bytes_used += sprintf(query_str+bytes_used, ",(%ld, '%s', %ld, '%s')",
-                              bind_list[i].parent_id, bind_list[i].bind_name,
+                              bind_list[i].parent_id, 
+                              dbms_escape(pool, d->db, bind_list[i].bind_name),
                               bind_list[i].resource_id, updated_at);
     }
 

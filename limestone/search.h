@@ -132,8 +132,8 @@ int build_query_limit(request_rec *r, search_ctx *sctx);
 
 int build_query_offset(request_rec *r, search_ctx *sctx);
 
-const char *prop_attr_lookup(apr_pool_t *pool, apr_xml_elem *prop, 
-                             char *prop_key);
+const char *prop_attr_lookup(apr_pool_t *ppool, apr_pool_t *pool, 
+                             apr_xml_elem *prop, char *prop_key);
 
 apr_hash_t *get_liveprop_map(apr_pool_t *pool);
 

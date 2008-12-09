@@ -341,7 +341,7 @@ int parse_props(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
             char *prop_key = 
                 get_prop_key(pool, propi->name, ns_id);
             const char *attr = 
-                prop_attr_lookup(ppool, propi, prop_key);
+                prop_attr_lookup(ppool, pool, propi, prop_key);
             apr_hash_set(sctx->prop_map, prop_key, 
                          APR_HASH_KEY_STRING, attr);
         }
@@ -380,8 +380,8 @@ int parse_props(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
 
 }
 
-const char *prop_attr_lookup(apr_pool_t *ppool, apr_xml_elem *prop,
-                             char *prop_key)
+const char *prop_attr_lookup(apr_pool_t *ppool, apr_pool_t *pool,
+                             apr_xml_elem *prop, char *prop_key)
 {
     char *attr = NULL;
     if(prop->ns == APR_XML_NS_DAV_ID) {
@@ -391,7 +391,7 @@ const char *prop_attr_lookup(apr_pool_t *ppool, apr_xml_elem *prop,
     }
     else {
         /* dead property attribute = prop_key */
-        attr = prop_key;
+        attr = apr_psprintf(pool, "\"%s\"", prop_key);
     }
 
     return attr;
@@ -654,7 +654,7 @@ int parse_comp_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
     long ns_id;
     dbms_get_ns_id(sctx->db, sctx->db_r, ns, &ns_id);
     char *prop_key = get_prop_key(pool, prop->name, ns_id);
-    const char *attr = prop_attr_lookup(ppool, prop, prop_key); 
+    const char *attr = prop_attr_lookup(ppool, pool, prop, prop_key); 
 
     op = apr_hash_get(get_comp_ops_map(ppool), cur_elem->name, 
                       APR_HASH_KEY_STRING);
@@ -758,7 +758,7 @@ int parse_is_defined(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
     long ns_id;
     dbms_get_ns_id(sctx->db, sctx->db_r, ns, &ns_id);
     char *prop_key = get_prop_key(pool, prop->name, ns_id);
-    const char *attr = prop_attr_lookup(ppool, prop, prop_key); 
+    const char *attr = prop_attr_lookup(ppool, pool, prop, prop_key); 
 
     apr_hash_set(sctx->prop_map, prop_key, APR_HASH_KEY_STRING, attr);
 
@@ -835,7 +835,7 @@ int parse_order(request_rec *r, search_ctx *sctx, apr_xml_elem *order_elem)
             dbms_get_ns_id(sctx->db, sctx->db_r, ns, &ns_id);
             char *prop_key = 
                 get_prop_key(r->pool, prop->name, ns_id);
-            attr = prop_attr_lookup(ppool, prop, prop_key); 
+            attr = prop_attr_lookup(ppool, r->pool, prop, prop_key); 
             sctx->orderby = apr_pstrcat(r->pool, sctx->orderby, attr, NULL);
         }
         else
@@ -1077,10 +1077,10 @@ int build_query_from(request_rec *r, search_ctx *sctx)
             char *dead_property_subquery = 
                 apr_psprintf(pool,
                              " LEFT JOIN ("
-                                "SELECT resource_id, value AS %s"
+                                "SELECT resource_id, value AS \"%s\""
                                 " FROM properties"
                                 " WHERE name = '%s' AND namespace_id = %ld"
-                             ") %s_table ON %s_table.resource_id = resources.id ",
+                             ") \"%s_table\" ON \"%s_table\".resource_id = resources.id ",
                              (char *)prop_key, prop->name, prop->ns_id,
                              (char *)prop_key, (char *)prop_key);
             sctx->from = apr_pstrcat(pool, sctx->from, dead_property_subquery, NULL);

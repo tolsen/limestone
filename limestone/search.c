@@ -31,6 +31,7 @@
 
 #include "search.h"
 #include "dav_repos.h"  /* for dav_repos_get_db */
+#include "acl.h"        /* for dav_repos_get_prin_by_name */
 
 /* following are write-once read forever hashes */
 /* use server pool for allocating them */
@@ -421,6 +422,8 @@ apr_hash_t *get_liveprop_map(apr_pool_t *pool)
                      APR_HASH_KEY_STRING, "type");
         apr_hash_set(liveprop_map, "resource-id", 
                      APR_HASH_KEY_STRING, "resources.uuid");
+        apr_hash_set(liveprop_map, "owner",
+                     APR_HASH_KEY_STRING, "principals.name");
     }
 
     return liveprop_map;
@@ -1002,6 +1005,13 @@ dav_response *search_mkresponse(apr_pool_t *pool,
             propval = apr_psprintf(pool, "<D:href>urn:uuid:%s</D:href>",
                                    add_hyphens_to_uuid(pool, propval));
         }
+        else if(strcmp(prop->name, "owner") == 0) {
+            dav_principal *owner = 
+                dav_repos_get_prin_by_name(sctx->db_r->resource->info->rec,
+                                           propval);
+            propval = apr_psprintf(pool, "<D:href>%s</D:href>", 
+                                   dav_repos_principal_to_s(owner));
+        }
 
         s = apr_psprintf(pool, "<%s xmlns=\"%s\">%s</%s>" DEBUG_CR, 
                          prop->name, prop->namespace_name,
@@ -1065,7 +1075,9 @@ int build_query_from(request_rec *r, search_ctx *sctx)
                      " FROM resources "
                      " LEFT JOIN binds ON resources.id = binds.resource_id " 
                      " LEFT JOIN locks ON resources.id = locks.resource_id " 
-                     " LEFT JOIN media ON resources.id = media.resource_id ");
+                     " LEFT JOIN media ON resources.id = media.resource_id "
+                     " LEFT JOIN principals ON "
+                     "principals.resource_id = resources.owner_id ");
 
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
         hi = apr_hash_next(hi)) {

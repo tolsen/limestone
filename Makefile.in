@@ -444,10 +444,15 @@ define reset-database
 $(migrate-database)
 endef
 
+apache-stop-all:
+	-killall httpd
+
 apache-stop:
 	$(stop-apache)
 
 limestone-start: limestone-install apache-start
+
+limestone-stop-all: apache-stop-all
 
 limestone-stop: apache-stop
 
@@ -554,6 +559,7 @@ reinstall: clean-for-reinstall limestone-install
         apache-configure \
         apache-install \
         apache-start \
+				apache-stop-all \
         apache-stop \
         benchmarks \
         clean \
@@ -568,6 +574,7 @@ reinstall: clean-for-reinstall limestone-install
         limestone-install-config \
         limestone-install-modules \
         limestone-start \
+        limestone-stop-all \
         limestone-stop \
         litmus-build \
         litmus-configure \

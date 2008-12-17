@@ -52,8 +52,7 @@ dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db 
 
 /* Create an entry in principals table */ 
 dav_error *dbms_insert_principal(const dav_repos_db *d,
-                                 dav_repos_resource *r,
-                                 const char *name)
+                                 dav_repos_resource *r)
 {
     dav_repos_query *q = NULL;
     apr_pool_t *pool = r->p;
@@ -64,7 +63,7 @@ dav_error *dbms_insert_principal(const dav_repos_db *d,
     q = dbms_prepare(pool, d->db, 
                      "INSERT INTO principals (name, resource_id) "
                      "VALUES(?, ?)");
-    dbms_set_string(q, 1, name);
+    dbms_set_string(q, 1, r->displayname);
     dbms_set_int(q, 2, r->serialno);
 
     if (dbms_execute(q)) {

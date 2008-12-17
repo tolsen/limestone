@@ -25,6 +25,15 @@
 #define SABRIDGE_DELAY_BIND     1
 #define SABRIDGE_DELAY_ACL      2
 
+
+/* @brief Creates an empty body for a medium resource. This includes creating
+ *        a new entry into the media table and an empty file in secondary storage.
+ * @param d The database
+ * @param r The freshly created resource
+ */
+dav_error *sabridge_create_empty_body(const dav_repos_db *d,
+                                      dav_repos_resource *r);
+
 /** 
  * GET response 
  * @param db The DB connection struct

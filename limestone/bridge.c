@@ -28,13 +28,8 @@
 #include <apr_strings.h>
 #include <apr_uuid.h>
 
-/* @brief Creates an empty body for a medium resource. This includes creating
- *        a new entry into the media table and an empty file in secondary storage.
- * @param d The database
- * @param r The freshly created resource
- */
-static dav_error *sabridge_create_empty_body(const dav_repos_db *d,
-                                             dav_repos_resource *r)
+dav_error *sabridge_create_empty_body(const dav_repos_db *d,
+                                      dav_repos_resource *r)
 {
     char *empty_file_path;
     apr_file_t *empty_file;

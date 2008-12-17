@@ -510,8 +510,11 @@ static dav_error *dav_repos_close_stream(dav_stream * stream, int commit)
     }
 
     if (commit) {
-        if (db_r->resourcetype == dav_repos_LOCKNULL)
+        if (db_r->resourcetype == dav_repos_LOCKNULL) {
+            err = sabridge_create_empty_body(db, db_r);
+            if (err) return err;
             db_r->resourcetype = dav_repos_RESOURCE;
+        }
 
         if(db_r->resourcetype == dav_repos_RESOURCE ||
            db_r->resourcetype == dav_repos_VERSIONED) {

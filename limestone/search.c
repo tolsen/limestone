@@ -39,6 +39,17 @@
 static apr_hash_t *liveprop_map = NULL;
 static apr_hash_t *registered_ops = NULL;
 static apr_hash_t *comp_ops_map = NULL;
+long DAV_NS_ID = 0;
+
+static long get_dav_ns_id(search_ctx *sctx) {
+    if(DAV_NS_ID) {
+        return DAV_NS_ID;
+    }
+
+    dbms_get_ns_id(sctx->db, sctx->db_r, "DAV:", &DAV_NS_ID);
+
+    return DAV_NS_ID;
+}
 
 static dav_error *dav_repos_set_option_head(request_rec * r)
 {
@@ -356,14 +367,11 @@ int parse_props(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
         const void *propname;
         void *attr;
 
-        long dav_ns_id;
-        dbms_get_ns_id(sctx->db, sctx->db_r, "DAV:", &dav_ns_id);
-
         for(hi = apr_hash_first(pool, liveprop_map); hi;
             hi = apr_hash_next(hi)) {
             apr_hash_this(hi, &propname, NULL, &attr);
-            char *prop_key = 
-                get_prop_key(pool, (const char *)propname, dav_ns_id);
+            char *prop_key = get_prop_key(pool, (const char *)propname, 
+                                          get_dav_ns_id(sctx));
             apr_hash_set(sctx->prop_map, prop_key,
                          APR_HASH_KEY_STRING, (char *)attr);
         }
@@ -961,7 +969,7 @@ dav_response *search_mkresponse(apr_pool_t *pool,
     apr_text_header hdr = { 0 };
     apr_hash_index_t *hi;
     const void *prop_key;
-    char *s;
+    char *good_props = NULL, *bad_props = NULL;
     int i = 1;
     dav_response *res = apr_pcalloc(pool, sizeof(*res));
     res->status = 200;
@@ -971,10 +979,6 @@ dav_response *search_mkresponse(apr_pool_t *pool,
 
     /* Get URI */
     res->href = apr_hash_get(sctx->bind_uri_map, &bind_id, sizeof(int));
-
-    /* Make XML here */
-    apr_text_append(pool, &hdr,
-		    "<D:propstat>" DEBUG_CR "<D:prop>" DEBUG_CR);
 
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
         hi = apr_hash_next(hi)) {
@@ -986,44 +990,75 @@ dav_response *search_mkresponse(apr_pool_t *pool,
 
         char *propval = dbrow[i++];
 
-        if(!propval) continue;  /* skip NULLs */
+        if(!propval || !strlen(propval)) {
+            if(!bad_props) {
+                 bad_props = apr_psprintf(pool, " ");
+            }
+            bad_props = apr_pstrcat(pool, bad_props, "<", prop->name, 
+                                     " xmlns=\"", prop->namespace_name, "\"/>",
+                                     NULL);
+            continue;
+        }
 
         /* do some post-processing property values if required */
-        if(strcmp(prop->name, "creationdate") == 0) {
-            char *date = 
-                apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
-            dav_repos_format_strtime(DAV_STYLE_ISO8601, propval, date);
-            propval = date;
-        }
-        else if(strcmp(prop->name, "getlastmodified") == 0) {
-            char *date = 
-                apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
-            dav_repos_format_strtime(DAV_STYLE_RFC822, propval, date);
-            propval = date;
-        }
-        else if(strcmp(prop->name, "resource-id") == 0) {
-            propval = apr_psprintf(pool, "<D:href>urn:uuid:%s</D:href>",
-                                   add_hyphens_to_uuid(pool, propval));
-        }
-        else if(strcmp(prop->name, "owner") == 0) {
-            dav_principal *owner = 
-                dav_repos_get_prin_by_name(sctx->db_r->resource->info->rec,
-                                           propval);
-            propval = apr_psprintf(pool, "<D:href>%s</D:href>", 
-                                   dav_repos_principal_to_s(owner));
+        if(prop->ns_id == get_dav_ns_id(sctx)) {
+            if(strcmp(prop->name, "creationdate") == 0) {
+                char *date = 
+                    apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
+                dav_repos_format_strtime(DAV_STYLE_ISO8601, propval, date);
+                propval = date;
+            }
+            else if(strcmp(prop->name, "getlastmodified") == 0) {
+                char *date = 
+                    apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
+                dav_repos_format_strtime(DAV_STYLE_RFC822, propval, date);
+                propval = date;
+            }
+            else if(strcmp(prop->name, "resource-id") == 0) {
+                propval = apr_psprintf(pool, "<D:href>urn:uuid:%s</D:href>",
+                                       add_hyphens_to_uuid(pool, propval));
+            }
+            else if(strcmp(prop->name, "owner") == 0) {
+                dav_principal *owner = 
+                    dav_repos_get_prin_by_name(sctx->db_r->resource->info->rec,
+                                               propval);
+                propval = apr_psprintf(pool, "<D:href>%s</D:href>", 
+                                       dav_repos_principal_to_s(owner));
+            }
         }
 
-        s = apr_psprintf(pool, "<%s xmlns=\"%s\">%s</%s>" DEBUG_CR, 
-                         prop->name, prop->namespace_name,
-                         propval, prop->name);
-        apr_text_append(pool, &hdr, s);
+        if(!good_props) {
+            good_props = apr_psprintf(pool, " ");
+        }
+
+        good_props = apr_pstrcat(pool, good_props, "<", prop->name, 
+                                 " xmlns=\"", prop->namespace_name, 
+                                 "\">", propval, "</", prop->name, ">", 
+                                 DEBUG_CR, NULL );
     }
 
-    /* Closing 200 */
-    apr_text_append(pool, &hdr,
-		    "</D:prop>" DEBUG_CR
-		    "<D:status>HTTP/1.1 200 OK</D:status>" DEBUG_CR
-		    "</D:propstat>" DEBUG_CR);
+    if(good_props) {
+        apr_text_append(pool, &hdr, "<D:propstat>" DEBUG_CR
+                        "  <D:prop>" DEBUG_CR);
+
+        apr_text_append(pool, &hdr, good_props);
+
+        apr_text_append(pool, &hdr,
+                        "  </D:prop>" DEBUG_CR
+                        "  <D:status>HTTP/1.1 200 OK</D:status>" DEBUG_CR
+                        "</D:propstat>" DEBUG_CR);
+    }
+
+    if(bad_props) { 
+        apr_text_append(pool, &hdr, "<D:propstat>" DEBUG_CR
+                "  <D:prop>" DEBUG_CR);
+
+        apr_text_append(pool, &hdr, bad_props);
+
+        apr_text_append(pool, &hdr, "  </D:prop>" DEBUG_CR
+                "  <D:status>HTTP/1.1 404 Not Found</D:status>" DEBUG_CR
+                "</D:propstat>" DEBUG_CR);
+    }
 
     res->propresult.propstats = hdr.first;
 
@@ -1065,9 +1100,6 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 
     TRACE();
 
-    long dav_ns_id;
-    dbms_get_ns_id(sctx->db, sctx->db_r, "DAV:", &dav_ns_id);
-
     /* Live property tables */
     /* FIXME: JOIN relevant tables only, in case of liveprops */
     sctx->from = 
@@ -1084,7 +1116,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
         apr_hash_this(hi, &prop_key, NULL, NULL);
         dav_repos_property *prop = 
             get_prop_from_prop_key(pool, (char *)prop_key);
-        if(prop->ns_id != dav_ns_id) {
+        if(prop->ns_id != get_dav_ns_id(sctx)) {
             /* Dead property */
             char *dead_property_subquery = 
                 apr_psprintf(pool,

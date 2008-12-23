@@ -73,6 +73,9 @@ DAVDepthInfinity on
   ModMimeUsePathInfo on
 
   DAVUnauthenticatedAccess on
+    DAVResponseRewriteCond Request-URI          /\\!lime/root.*
+    DAVResponseRewriteRule (.*)                 /!lime/root\$1
+
     DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+.$host_domain.*
     DAVResponseRewriteRule /home/[^/]*/?(.*)   /\$1
 

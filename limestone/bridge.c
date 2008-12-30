@@ -652,6 +652,11 @@ dav_error *sabridge_reverse_lookup(const dav_repos_db *d,
     err = dbms_find_shortest_path(db_r->p, d, ROOT_COLLECTION_ID,
                                   db_r->serialno, &path_from_root);
     if(err) return err;
+
+    if (strcmp(path_from_root, "") == 0) {
+        path_from_root = "/";
+    }
+
     db_r->uri = apr_psprintf(db_r->p, "%s%s", db_r->root_path,
                              path_from_root);
 

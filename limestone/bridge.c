@@ -19,6 +19,9 @@
 #include "bridge.h"
 #include "dbms.h"
 #include "dbms_bind.h"
+#include "dbms_redirect.h"      /* dbms_get_redirect_props */
+#include "dbms_deltav.h"
+
 #include "util.h"
 #include "acl.h" /* for create_initial_acl */
 #include "deltav_bridge.h" /* for sabridge_remove_vhr */
@@ -27,6 +30,79 @@
 
 #include <apr_strings.h>
 #include <apr_uuid.h>
+
+dav_error *sabridge_get_property(const dav_repos_db *d, dav_repos_resource *r)
+{
+    apr_pool_t *pool = r->p;
+    dav_error *err = NULL;
+    long serialno = r->serialno;
+    const dbms_bind_list *bind = NULL;
+    int uri_not_found = 0;
+
+    TRACE();
+
+    if (r->serialno)
+        serialno = r->serialno;
+    else if (r->uri && r->root_path && strstr(r->uri, r->root_path)) {
+        err = dbms_lookup_uri(pool, d, r->uri + strlen(r->root_path), &bind);
+        if (err || bind == NULL) return err;
+
+        serialno = bind->resource_id;
+        if (bind->resource_id == -1) {
+            uri_not_found = 1;
+            serialno = bind->parent_id;
+        }
+    }
+
+    if (!serialno > 0)
+        return err;
+
+    r->serialno = serialno;
+    dbms_get_resource(d, r);
+
+    if (uri_not_found && r->resourcetype != dav_repos_REDIRECT) {
+        r->serialno = r->resourcetype = r->owner_id = r->creator_id = 0;
+        r->created_at = r->displayname = r->getcontentlanguage = NULL;
+        r->comment = NULL;
+        r->next = NULL;
+        r->uuid = NULL;
+        return err;
+    }
+
+    if (bind) {
+        r->bind_id = bind->bind_id;
+        r->updated_at = bind->updated_at;
+    }
+
+    if (r->resourcetype == dav_repos_REDIRECT) {
+        dbms_get_redirect_props(d, r);
+        if (bind) {
+            const char *absent_uri;
+            if (bind->uri)
+                absent_uri = r->uri + strlen(bind->uri);
+            else
+                absent_uri = "";
+            r->reftarget = apr_pstrcat(pool, r->reftarget, absent_uri, NULL);
+        }
+    }
+
+    if (r->resourcetype == dav_repos_COLLECTION
+        || r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
+        /* collection contenttype hack */
+        r->getcontenttype = apr_pstrdup(r->p, DIR_MAGIC_TYPE);
+
+        err = dbms_get_collection_max_updated_at
+          (pool, d, r->serialno, r->updated_at, &r->updated_at);
+        if (err) return err;
+    }
+
+    if((err = dbms_get_media_props(d, r)))
+        return err;
+
+    err = dbms_get_deltav_props(d, r);
+
+    return err;
+}
 
 dav_error *sabridge_create_empty_body(const dav_repos_db *d,
                                       dav_repos_resource *r)
@@ -537,7 +613,7 @@ dav_error *sabridge_depth_inf_copy_coll(const dav_repos_db *d,
             sabridge_new_dbr_from_dbr(r_dst, &corr_child);
             corr_child->uri = apr_psprintf(pool, "%s%s", r_dst->uri,
                                            iter->uri + strlen(r_src->uri));
-            if ((err = dbms_get_property(d, corr_child)))
+            if ((err = sabridge_get_property(d, corr_child)))
                 return err;
             if (corr_child->serialno != 0 && 
                 !apr_hash_get(dst_in_use, &corr_child->serialno, sizeof(long))){

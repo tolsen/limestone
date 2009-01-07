@@ -26,6 +26,17 @@
 #define SABRIDGE_DELAY_ACL      2
 
 
+/**
+ * Searches for a resource in the database and returns its live properties
+ * r->uri is the search key; alternatively r->serialno can be the search 
+ * key if r->uri is NULL. 
+ * @param d DB connection struct containing the user, password, and DB name
+ * @param r Out variable to hold the result
+ * @return NULL on success, dav_error otherwise
+ */
+dav_error *sabridge_get_property(const dav_repos_db *d, dav_repos_resource *r);
+
+
 /* @brief Creates an empty body for a medium resource. This includes creating
  *        a new entry into the media table and an empty file in secondary storage.
  * @param d The database

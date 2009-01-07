@@ -224,7 +224,7 @@ void sabridge_build_vcr_pr_hash(dav_repos_db *db, dav_repos_resource *db_r)
 
     sabridge_new_dbr_from_dbr(db_r, &vhr);
     vhr->serialno = db_r->vhr_id;
-    dbms_get_property(db, vhr);
+    sabridge_get_property(db, vhr);
 
     /* Check in /Out status */
     vr_uri = sabridge_mk_version_uri(vhr, db_r->vr_num);
@@ -373,7 +373,7 @@ void sabridge_build_vr_pr_hash(dav_repos_db *db, dav_repos_resource *db_r)
     sabridge_new_dbr_from_dbr(vcr_resource, &vhr_resource);
     vhr_resource->serialno = vcr_resource->vhr_id;
     vhr_resource->uri = NULL;
-    dbms_get_property(db, vhr_resource);
+    sabridge_get_property(db, vhr_resource);
     apr_hash_set(db_r->vpr_hash, "version-history",
                  APR_HASH_KEY_STRING, dav_repos_mk_href(pool,
                                                         sabridge_mk_vhr_uri

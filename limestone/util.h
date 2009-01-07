@@ -138,6 +138,8 @@ dav_error *generate_path(char **path, apr_pool_t * pool,
 int remove_sha1_file(apr_pool_t *pool, const char *file_dir, const char
                      *sha1str);
 
+char *compact_uri(apr_pool_t *pool, const char *u);
+
 /**
  * Get the parent uri 
  * @param pool The pool to allocate from

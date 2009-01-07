@@ -205,6 +205,23 @@ int remove_sha1_file(apr_pool_t *pool, const char *file_dir, const char
   return 0;
 }
 
+/* compact consecutive '/'s into a single '/' */
+char *compact_uri(apr_pool_t *pool, const char *u)
+{
+    int i, j = 0;
+    char *v = apr_pcalloc(pool, (strlen(u) + 1) * sizeof(char));
+
+    v[j] = u[j];
+    for(i = 1; i < strlen(u); i++) {
+        if(v[j] != '/' || u[i] != '/') {
+            j = j + 1;
+            v[j] = u[i];
+        }
+    }
+
+    return v;
+}
+
 char *get_parent_uri(apr_pool_t *pool, const char *uri)
 {
     char *parent_uri = ap_make_dirstr_parent(pool, uri);

@@ -29,8 +29,19 @@ typedef struct dbms_bind_list {
     const char *bind_name;
     char *updated_at;
 
+    const char *uri;
+
     struct dbms_bind_list *next;
 } dbms_bind_list;
+
+dav_error *dbms_lookup_uri(apr_pool_t *pool, const dav_repos_db *d,
+                           const char *uri, const dbms_bind_list **p_bind);
+
+dav_error *dbms_get_collection_max_updated_at(apr_pool_t *pool,
+                                              const dav_repos_db *d,
+                                              long collection_id,
+                                              const char *updated_at,
+                                              const char **p_max_updated_at);
 
 /* Bind Functions */
 dav_error *dbms_insert_bind(apr_pool_t *pool, const dav_repos_db * db,

@@ -146,7 +146,7 @@ static dav_error *dav_repos_get_resource(request_rec * r,
     db_r->uri = s;
 
     /* exist check */
-    if((err = dbms_get_property(db, db_r)))
+    if((err = sabridge_get_property(db, db_r)))
         return err;
 
     if(db_r->serialno) {
@@ -250,7 +250,7 @@ dav_error *dav_repos_get_parent_resource(const dav_resource * resource,
     db_r->resource = parent_resource;
 
     /* exist check */
-    if((err = dbms_get_property(db, db_r)))
+    if((err = sabridge_get_property(db, db_r)))
         return err;
 
     if(db_r->serialno) {

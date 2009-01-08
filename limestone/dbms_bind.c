@@ -21,6 +21,144 @@
 #include <apr_strings.h>
 #include "util.h" /* for format_time */
 
+dav_error *dbms_lookup_uri(apr_pool_t *pool, const dav_repos_db *d,
+                           const char *uri_from_root, const dbms_bind_list **p_bind)
+{
+    char *uri = NULL;
+    char *last = NULL, *next = NULL;
+    char *select, *from, *where, *uri_max_updated_at;
+    int i = 0, j = 0;
+    char *query = NULL;
+    dav_repos_query *q = NULL;
+    char **dbrow;
+    dbms_bind_list *bind = apr_pcalloc(pool, sizeof(*bind));
+    dav_error *err = NULL;
+
+    TRACE();
+
+    /* Strip the root path from URI */
+    uri = compact_uri(pool, uri_from_root);
+    next = apr_strtok(apr_pstrdup(pool, uri), "/", &last);
+
+    if(!next) {
+        bind->resource_id = ROOT_COLLECTION_ID;
+        bind->updated_at = ROOT_UPDATED_AT;
+        *p_bind = bind;
+        return NULL;
+    }
+
+    i = i + 1;
+    select = apr_psprintf(pool, "SELECT b1.resource_id"); 
+    uri_max_updated_at = apr_psprintf(pool, "greatest(b1.updated_at");
+    from = apr_psprintf(pool, "FROM binds b1 ");
+    where = apr_psprintf(pool, "WHERE b1.collection_id = %d "
+                         "AND (b1.name IS NULL OR b1.name = '%s') ", 
+                         ROOT_COLLECTION_ID,
+                         dbms_escape(pool, d->db, next));
+
+    next = apr_strtok(NULL, "/", &last);
+            
+    while(next) {
+        i = i + 1;
+        select = apr_psprintf(pool, "%s, b%d.resource_id", select, i);
+        uri_max_updated_at = apr_psprintf(pool, "%s, b%d.updated_at", 
+                                          uri_max_updated_at, i);
+        from = apr_psprintf(pool, "%sLEFT OUTER JOIN binds b%d "
+                            "ON b%d.resource_id = b%d.collection_id ", 
+                            from, i, i-1, i);
+        where = apr_psprintf(pool, 
+                             "%sAND (b%d.name IS NULL OR b%d.name = '%s') ",
+                             where, i, i, dbms_escape(pool, d->db, next));
+        next = apr_strtok(NULL, "/", &last);
+    }
+
+    uri_max_updated_at = 
+      apr_psprintf(pool, 
+                   "%s) AS uri_max_updated_at, b%d.id ", 
+                   uri_max_updated_at, i);
+
+    select = apr_pstrcat(pool, select, ", ", uri_max_updated_at, NULL);
+    query = apr_pstrcat(pool, select, from, where, NULL);
+
+    
+    q = dbms_prepare(pool, d->db, query);
+
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+        return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                             "dbms_execute error");
+    }
+
+    if (0 == dbms_results_count(q)) {
+        dbms_query_destroy(q);
+        return err;
+    }
+
+    dbrow = dbms_fetch_row(d->db, q, pool);
+    j = 0;
+    while(dbrow[j][0] && j < i) { j++; }
+    if (j != i)
+        bind->resource_id = -1;
+    j = j - 1;
+
+    if (bind->resource_id == -1) {
+        int offset, count = 0;
+        int size = strlen(uri);
+
+        for(offset = 0; offset < size && count < j + 2; offset++) {
+            if(uri[offset] == '/') {
+                count++;
+            }
+        }
+        if (count == j + 2) offset--;
+
+        bind->parent_id = atoi(dbrow[j]);
+        uri[offset] = '\0';
+        bind->uri = uri;
+    } else
+        bind->resource_id = atoi(dbrow[j]);
+
+    bind->updated_at = dbrow[i];
+    bind->bind_id = atoi(dbrow[i+1]);
+
+    dbms_query_destroy(q);
+    *p_bind = bind;
+    return err;
+}
+
+dav_error *dbms_get_collection_max_updated_at(apr_pool_t *pool,
+                                              const dav_repos_db *d,
+                                              long collection_id,
+                                              const char *updated_at,
+                                              const char **p_max_updated_at)
+{
+    const char *query = NULL;
+    dav_repos_query *q = NULL;
+    int ierrno = 0;
+
+    TRACE();
+
+    /* get child_max_updated_at for collections */
+    query = apr_psprintf
+      (pool, "SELECT greatest('%s', MAX(updated_at)) "
+       "FROM binds WHERE collection_id = %ld", updated_at, collection_id);
+
+    q = dbms_prepare(pool, d->db, query);
+
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+    }
+
+    if ((ierrno = dbms_next(q)) <= 0)  {
+        dbms_query_destroy(q);
+    }
+
+    *p_max_updated_at = dbms_get_string(q, 1);
+
+    dbms_query_destroy(q);
+    return NULL;
+}
+
 dav_error *dbms_find_shortest_path_excl_binds(apr_pool_t *pool,
                                               const dav_repos_db *db,
                                               long from_res_id, long to_res_id,

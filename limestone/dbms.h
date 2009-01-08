@@ -264,6 +264,14 @@ int dbms_opendb(dav_repos_db *d, apr_pool_t *p, request_rec *r,
 void dbms_closedb(dav_repos_db * d);
 
 /**
+ * Get the properties of the resource from the resources table
+ * @param d The DB connection struct
+ * @param r The resource handle
+ * @return NULL on success, dav_error otherwise
+ */
+dav_error *dbms_get_resource(const dav_repos_db *d, dav_repos_resource *r);
+
+/**
  * Insert media props of a given resource
  * @param d The DB connection struct
  * @param r The resource handle
@@ -272,14 +280,12 @@ void dbms_closedb(dav_repos_db * d);
 dav_error *dbms_insert_media(const dav_repos_db * d, dav_repos_resource * r);
 
 /**
- * Searches for a resource in the database and returns its live properties
- * r->uri is the search key; alternatively r->serialno can be the search 
- * key if r->uri is NULL. 
- * @param d DB connection struct containing the user, password, and DB name
- * @param r Out variable to hold the result
+ * Get the properties of the resource from the media table
+ * @param d The DB connection struct
+ * @param r The resource handle
  * @return NULL on success, dav_error otherwise
  */
-dav_error *dbms_get_property(const dav_repos_db * d, dav_repos_resource * r);
+dav_error *dbms_get_media_props(const dav_repos_db *d, dav_repos_resource *r);
 
 /**
  * Inserts a resource into the resources table

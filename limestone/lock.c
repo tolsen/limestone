@@ -337,7 +337,7 @@ static dav_error *dav_repos_refresh_locks(dav_lockdb *lockdb,
 
             sabridge_new_dbr_from_dbr(db_r, &lockroot_dbr);
             lockroot_dbr->uri = apr_pstrdup(db_r->p, lock->lockroot);
-            err = dbms_get_property(db, lockroot_dbr);
+            err = sabridge_get_property(db, lockroot_dbr);
             if (err) return err;
 
             err = dbms_insert_lock(lockdb, lockroot_dbr, lock);

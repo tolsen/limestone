@@ -681,7 +681,7 @@ dav_error *dav_repos_deliver_acl_principal_prop_set(request_rec * r,
     send_xml(bb, output, "<D:multistatus xmlns:D=\"DAV:\">" DEBUG_CR);
 
     while (principals != NULL) {
-	dbms_get_property(db, principals);
+	sabridge_get_property(db, principals);
 	dav_repos_build_lpr_hash(principals);
 	send_xml(bb, output, "<D:response>");
 	send_xml(bb, output, dav_repos_mk_href(pool, principals->uri));

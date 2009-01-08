@@ -64,7 +64,7 @@ dav_error *dav_repos_bind_resource(const dav_resource *resource,
     /* think of a better way to do this */
     if (binding) {
         /* check if this can be done without an extra query */
-        dbms_get_property(db, binding->info->db_r);
+        sabridge_get_property(db, binding->info->db_r);
         dav_repos_update_dbr_resource(binding->info->db_r);
     }
     return err;
@@ -105,9 +105,9 @@ dav_error *dav_repos_rebind_resource(const dav_resource *collection,
         new_bind_dbr->uri = uri_bak;
     }
 
-    if (!err) err = dbms_get_property(db, href_dbr);
+    if (!err) err = sabridge_get_property(db, href_dbr);
     if (!err) dav_repos_update_dbr_resource(href_dbr);
-    if (!err) err = dbms_get_property(db, new_bind_dbr);
+    if (!err) err = sabridge_get_property(db, new_bind_dbr);
     if (!err) dav_repos_update_dbr_resource(new_bind_dbr);
     if (new_bind_dbr->resourcetype == dav_repos_RESOURCE) {
         if (!err) err = generate_path(&path, new_bind_dbr->p, db->file_dir, 

@@ -192,7 +192,7 @@ static dav_error *dav_repos_checkout(dav_resource * resource,
 
     sabridge_new_dbr_from_dbr(db_r, &vhr);
     vhr->serialno = db_r->vhr_id;
-    if((err = dbms_get_property(db, vhr)))
+    if((err = sabridge_get_property(db, vhr)))
         return err;
 
     /* Check pre-condition */
@@ -246,12 +246,12 @@ static dav_error *dav_repos_uncheckout(dav_resource * resource)
 
     sabridge_new_dbr_from_dbr(db_r, &vhr);
     vhr->serialno = db_r->vhr_id;
-    if((err = dbms_get_property(db, vhr)))
+    if((err = sabridge_get_property(db, vhr)))
         return err;
 
     sabridge_new_dbr_from_dbr(db_r, &db_r_version);
     db_r_version->uri = sabridge_mk_version_uri(vhr, db_r->vr_num);
-    if ((err = dbms_get_property(db, db_r_version)))
+    if ((err = sabridge_get_property(db, db_r_version)))
 	return err;
 
     if(db_r->resourcetype == dav_repos_VERSIONED_COLLECTION)
@@ -295,7 +295,7 @@ static dav_error *dav_repos_checkin(dav_resource * resource,
 
     sabridge_new_dbr_from_dbr(db_r, &vhr);
     vhr->serialno = db_r->vhr_id;
-    if((err = dbms_get_property(db, vhr)))
+    if((err = sabridge_get_property(db, vhr)))
         return err;
 
     /* Let's create new version resource */
@@ -430,7 +430,7 @@ static dav_error *dav_repos_deliver_version_tree_report(request_rec * r,
     sabridge_new_dbr_from_dbr(db_r, &vhr);
     vhr->serialno = db_r->vhr_id;
     /* Change to get basic props */
-    if((err = dbms_get_property(db, vhr)))
+    if((err = sabridge_get_property(db, vhr)))
         return err;
 
     /* Let's find VRS */
@@ -657,7 +657,7 @@ static dav_error *dav_repos_expand_property_recurse(dav_repos_db * db,
             sabridge_new_dbr_from_dbr(db_r, &new_db_r);
             new_db_r->uri = apr_pstrdup(db_r->p,
                                         dav_xml_get_cdata(href_elems, db_r->p, 1));
-            if((err = dbms_get_property(db, new_db_r)))
+            if((err = sabridge_get_property(db, new_db_r)))
                 return err;
             
             err = dav_repos_expand_property_recurse(db, new_db_r,
@@ -758,7 +758,7 @@ static dav_error *dav_repos_deliver_locate_by_history(request_rec * r,
         vhr->uri =
 	    apr_pstrdup(pool,
 			dav_xml_get_cdata(version_history_hrefs, pool, 1));
-	if((err = dbms_get_property(db, vhr)))
+	if((err = sabridge_get_property(db, vhr)))
             return err;
 
 	DBG2("setting %ld %s", vhr->serialno, vhr->uri);

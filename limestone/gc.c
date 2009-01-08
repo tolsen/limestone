@@ -98,7 +98,7 @@ void *gc_main(apr_thread_t *thread, void *pdata)
         db_r = apr_pcalloc(sub_pool, sizeof(*db_r));
         db_r->p = sub_pool;
         db_r->serialno = resource_id;
-        dbms_get_property(db, db_r);
+        sabridge_get_property(db, db_r);
 
         err = dbms_get_child_binds(db, db_r, 1, &child_binds);
         if (err)

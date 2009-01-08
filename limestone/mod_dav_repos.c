@@ -84,6 +84,7 @@ static void *dav_repos_merge_server_config(apr_pool_t * p, void *base,
     newconf->use_gc = INHERIT_VALUE(parent, child, use_gc);
     newconf->keep_files = INHERIT_VALUE(parent, child, keep_files);
     newconf->css_uri = INHERIT_VALUE(parent, child, css_uri);
+    newconf->xsl_403_uri = INHERIT_VALUE(parent, child, xsl_403_uri);
     newconf->quota = INHERIT_VALUE(parent, child, quota);
 
     return newconf;
@@ -181,6 +182,15 @@ static const char *dav_repos_IndexCSS_cmd(cmd_parms *cmd, void *config,
     return NULL;
 }
 
+static const char *dav_repos_xsl403_cmd(cmd_parms *cmd, void *config, 
+                                          const char *arg1)
+{
+    dav_repos_server_conf *conf = 
+      ap_get_module_config(cmd->server->module_config, &dav_repos_module);
+    conf->xsl_403_uri = apr_pstrdup(cmd->pool, arg1);
+    return NULL;
+}
+
 static const char *dav_repos_quota_cmd(cmd_parms *cmd, void *config, 
                                        const char *arg1)
 {
@@ -220,6 +230,10 @@ static const command_rec dav_repos_cmds[] = {
     AP_INIT_TAKE1("DAVLimestoneIndexCSS", 
                   dav_repos_IndexCSS_cmd, NULL, RSRC_CONF, 
                   "specify the URI of CSS stylesheet for directory indexes"),
+
+    AP_INIT_TAKE1("DAVLimestoneXSL403", 
+                  dav_repos_xsl403_cmd, NULL, RSRC_CONF, 
+                  "specify the URI of XSL stylesheet for DAV:error responses"),
 
     AP_INIT_TAKE1("DAVLimestoneUserQuota", 
                   dav_repos_quota_cmd, NULL, RSRC_CONF, 

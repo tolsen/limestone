@@ -167,11 +167,19 @@ int dav_repos_is_allow(const dav_principal * principal,
         int status = dav_get_permission_denied_status(resource->info->rec);
         dav_error *err = NULL;
 
-        if(status == HTTP_FORBIDDEN) 
+        if(status == HTTP_FORBIDDEN) {
+            const char *prolog = NULL;
+            if (db->xsl_403_uri) {
+                prolog = apr_psprintf(pool, "<?xml-stylesheet "
+                                      "type=\"text/xsl\" href=\"%s\" ?>" 
+                                      DEBUG_CR, db->xsl_403_uri);
+            }
             err = dav_new_error_tag(pool, status, 0, errormsg, NULL,
-                                    "need-privileges", res_elem);
-        else
+                                    "need-privileges", res_elem, prolog);
+        }
+        else {
             err = dav_new_error(pool, status, 0, "Error in dav_repos_is_allow");
+        }
 
         resource->err = err;
     }
@@ -243,12 +251,12 @@ dav_error *dav_repos_set_acl(const dav_acl * acl, dav_response ** response)
     /* Self check for conflicting ACEs */
     if((retVal = sabridge_acl_check_preconditions(acl, acl)) != OK)
         return dav_new_error_tag(db_r->p, retVal, 0, NULL, NULL, 
-                                 "no-ace-conflict", NULL);
+                                 "no-ace-conflict", NULL, NULL);
 
     /* Check for conflicts with protected ACEs */
     if(sabridge_acl_check_preconditions(acl, protected_acl) != OK)
         return dav_new_error_tag(db_r->p, HTTP_FORBIDDEN, 0, NULL, NULL, 
-                                 "no-protected-ace-conflict", NULL);
+                                 "no-protected-ace-conflict", NULL, NULL);
 
     iter = dav_acl_iterate(acl);
     while (dav_ace_iterator_more(iter)) {

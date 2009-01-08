@@ -141,7 +141,7 @@ dav_error *dbms_quota_pre_commit_checks(apr_pool_t *pool, const dav_repos_dbms *
                                  DAV_ERR_QUOTA_INSUFFICIENT,
                                  "Quota restrictions prevent this request "
                                  "from being completed.", NULL,
-                                 "quota-not-exceeded", NULL);
+                                 "quota-not-exceeded", NULL, NULL);
     }
 
     dbms_query_destroy(q);

@@ -116,6 +116,7 @@ typedef struct {
     int use_gc;
     int keep_files;
     const char *css_uri;
+    const char *xsl_403_uri;
     int quota; 
 
     dav_repos_dbms *db;

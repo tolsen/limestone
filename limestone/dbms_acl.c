@@ -286,7 +286,7 @@ dav_error *dbms_add_ace(const dav_repos_db * d, dav_repos_resource * r,
 	const dav_privilege *privilege = dav_privilege_iterator_next(iter);
 	if((retVal = dbms_add_ace_privilege(d, r, privilege, ace_id)) != OK)
             return dav_new_error_tag(pool, retVal, 0, NULL, NULL, 
-                                     "not-supported-privilege", NULL);
+                                     "not-supported-privilege", NULL, NULL);
     }
 
     return err;

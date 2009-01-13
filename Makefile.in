@@ -9,7 +9,7 @@ APROOT := $(PWD)/aproot
 APXS=$(APROOT)/bin/apxs
 WITH_APXS=--with-apxs=$(APXS)
 LIQUIBASE=$(abspath ../liquibase/liquibase)
-LIQUIBASE_PGSQL=$(LIQUIBASE) --classpath="@PGSQL_JDBC_JAR@" --driver="org.postgresql.Driver" --url="jdbc:postgresql://$(LIMESTONE_PGSQL_DB_HOST):$(LIMESTONE_PGSQL_DB_PORT)/$(LIMESTONE_PGSQL_DB_NAME)" --username="$(LIMESTONE_PGSQL_DB_USER)" --password="$(LIMESTONE_PGSQL_DB_PASS)" --defaultSchemaName="$(LIMESTONE_PGSQL_DB_USER)" --changeLogFile=main.xml
+LIQUIBASE_PGSQL=cd limestone/database && $(LIQUIBASE) --classpath="@PGSQL_JDBC_JAR@" --driver="org.postgresql.Driver" --url="jdbc:postgresql://$(LIMESTONE_PGSQL_DB_HOST):$(LIMESTONE_PGSQL_DB_PORT)/$(LIMESTONE_PGSQL_DB_NAME)" --username="$(LIMESTONE_PGSQL_DB_USER)" --password="$(LIMESTONE_PGSQL_DB_PASS)" --defaultSchemaName="$(LIMESTONE_PGSQL_DB_USER)" --changeLogFile=main.xml
 #mysql_vhost=
 #pgsql_vhost=@PGSQL_VHOST@
 TEST_USER1=test1
@@ -397,27 +397,22 @@ prestan-build: $(PRESTAN_MAKEFILE)
 
 
 define force-start-apache
-$(APROOT)/bin/apachectl start
-touch stamps/apache-start
+$(APROOT)/bin/apachectl start && touch stamps/apache-start
 endef
-
-liquibase-status=$(shell cd limestone/database && $(LIQUIBASE_PGSQL) status)
-
-ifeq (,$(findstring 0 change sets,$(liquibase-status)))
-define start-apache
-@echo '$(liquibase-status)'
-@echo Refusing to start limestone with outdated database
-@echo Run "make database-migrate" to upgrade database
-@echo  or "make force-apache-start" to start anyway
-endef
-else
-start-apache=$(force-start-apache)
-endif
 
 apache-start: stamps/apache-start
 stamps/apache-start: stamps/stampdir
-	$(start-apache)
-
+	@export LIQUIBASE_STATUS="$$($(LIQUIBASE_PGSQL) status)" \
+		&& echo "LiquiBase status: $$LIQUIBASE_STATUS" \
+		&& if test '0 change sets' = "$$(echo -n $$LIQUIBASE_STATUS | head -c 13)"; then \
+			echo 'Database is up to date.  Starting LimeStone.'; \
+			$(force-start-apache); \
+		else \
+			echo Refusing to start limestone with outdated database; \
+			echo Run \"make database-migrate\" to upgrade database; \
+			echo  or \"make force-apache-start\" to start anyway; \
+		fi
+			
 force-apache-start:
 	$(force-start-apache)
 
@@ -431,7 +426,7 @@ endef
 endif
 
 define migrate-database-pgsql
-cd limestone/database && $(LIQUIBASE_PGSQL) migrate
+	$(LIQUIBASE_PGSQL) migrate
 endef
 
 define migrate-database
@@ -467,7 +462,7 @@ database-reset-and-limestone-start: database-reset stamps/stampdir
 	$(start-apache)
 
 liquibase-status:
-	@echo '$(liquibase-status)'
+	$(LIQUIBASE_PGSQL) status
 
 liquibase-list-locks:
 	$(LIQUIBASE_PGSQL) listLocks

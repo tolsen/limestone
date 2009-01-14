@@ -23,6 +23,9 @@ endif
 APACHE_DIR=../apache
 RUBYDAV_DIR=../rubydav
 
+RANGER_DIR ?= ../ranger
+include $(RANGER_DIR)/config.mk
+
 apacheextracleantargets= \
 		$(APACHE_DIR)/configure \
 		$(APACHE_DIR)/config.nice \

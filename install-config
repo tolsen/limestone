@@ -199,6 +199,7 @@ open(NEWCONFIG, '>', $NEWCONFIG) or die("couldn't open $NEWCONFIG");
 while (<ORIG_CONFIG>) {
   s/^Listen 80$/#Listen 80/;
   s|(CustomLog "logs/access_log" common$)|#$1|;
+  # TODO: (JKobrin) substitute in USER, GROUP  & SERVER-ADMIN-EMAIL from ENV
   print NEWCONFIG;
 }
 print NEWCONFIG "\nInclude conf/limestone.conf\n";

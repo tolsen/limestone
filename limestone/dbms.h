@@ -54,7 +54,8 @@ typedef enum {
     DAV_AV_CHECKOUT_UNLOCKED_CHECKIN,
     DAV_AV_CHECKOUT,
     DAV_AV_LOCKED_CHECKOUT,
-    DAV_AV_NONE
+    DAV_AV_NONE,
+    DAV_AV_VERSION_CONTROL
 } dav_repos_autoversion_t;
 
 
@@ -192,6 +193,9 @@ struct dav_repos_resource {
        same resource id as this one */
     struct dav_repos_resource *bind;
 
+    /** Value of DAV:auto-version-new-children */
+    dav_repos_autoversion_t av_new_children;
+
     apr_pool_t *p;
     		
     /** dav_resource corresponding to this dav_repos_resource */
@@ -288,12 +292,33 @@ dav_error *dbms_insert_media(const dav_repos_db * d, dav_repos_resource * r);
 dav_error *dbms_get_media_props(const dav_repos_db *d, dav_repos_resource *r);
 
 /**
+ * Get the properties of the collection from the collections table
+ * @param d The DB connection struct
+ * @param r The resource handle
+ * @return NULL on success, dav_error otherwise
+ */
+dav_error *dbms_get_collection_props(const dav_repos_db *d,
+                                     dav_repos_resource *r);
+
+dav_error *dbms_set_collection_new_children_av_type(const dav_repos_db *d,
+                                                    dav_repos_resource *r);
+
+/**
  * Inserts a resource into the resources table
  * @param d DB connection struct containing the user, password, and DB name
  * @param r The resource to insert
  * @return NULL if success, dav_error otherwise
  */
 dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r);
+
+/**
+ * Inserts a collection into the collections table
+ * @param d DB connection struct containing the user, password, and DB name
+ * @param r The resource to insert
+ * @return NULL if success, dav_error otherwise
+ */
+dav_error *dbms_insert_collection(const dav_repos_db *d, dav_repos_resource *r);
+
 /**
  * Set all live properties of the resource 
  * (assuming resource r is already in the database)

@@ -24,6 +24,8 @@
 /* DeltaV functions */
 dav_error *dbms_insert_vhr(const dav_repos_db *db, dav_repos_resource *db_r);
 
+dav_error *dbms_update_vhr(const dav_repos_db *db, dav_repos_resource *db_r);
+
 dav_error *dbms_insert_version(const dav_repos_db * db,
                                dav_repos_resource * vr);
 

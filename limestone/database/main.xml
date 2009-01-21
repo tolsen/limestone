@@ -11,4 +11,5 @@
   <include file="add_property_values_quota_rules.xml"/>
   <include file="add_database_indices.xml"/>
   <include file="create_redirectrefs_table.xml"/>
+  <include file="create_collections_table.xml"/>
 </databaseChangeLog>

@@ -29,12 +29,13 @@
 #include <apr_strings.h>
 
 dav_error *sabridge_vsn_control(const dav_repos_db *db,
-                                dav_repos_resource *db_r)
+                                dav_repos_resource *db_r,
+                                int auto_version)
 {
     dav_error *err = NULL;
     int new_resourcetype = 0;
-    dav_repos_resource *new_version;
-    dav_repos_resource *vhr;
+    dav_repos_resource *new_version = NULL;
+    dav_repos_resource *vhr = NULL;
 
     /* Change the resource type */
     if (db_r->resourcetype == dav_repos_RESOURCE)
@@ -52,7 +53,14 @@ dav_error *sabridge_vsn_control(const dav_repos_db *db,
     err = sabridge_mk_versions_collection(db, vhr);
 
     /* make a copy of the present state of the resource */
-    err = sabridge_mk_new_version(db, db_r, vhr, 1, &new_version);
+    if (!auto_version)
+        err = sabridge_mk_new_version(db, db_r, vhr, 1, &new_version);
+    else {
+        /* HACK to prevent a null version in case of auto versioning */
+        sabridge_new_dbr_from_dbr(db_r, &new_version);
+        new_version->serialno = db_r->serialno;
+        new_version->version = 0;
+    }
 
     if (db->dbms == MYSQL) {
         /* disable foriegn key checks for a while as MYSQL doesn't support 
@@ -70,10 +78,31 @@ dav_error *sabridge_vsn_control(const dav_repos_db *db,
     db_r->vhr_id = vhr->serialno;
 
     /* make the new version entry */
-    err = dbms_insert_version(db, new_version);
+    if (!auto_version)
+        err = dbms_insert_version(db, new_version);
+
+    /* set the version number of the vcr. should be 1 */
+    db_r->vr_num = new_version->version;
 
     /* make an entry into the VCR */
     db_r->checked_id = new_version->serialno;
+
+    dav_repos_resource *parent = NULL;
+    sabridge_new_dbr_from_dbr(db_r, &parent);
+    parent->serialno = db_r->parent_id;
+    dbms_get_collection_props(db, parent);
+    switch (parent->av_new_children) {
+    case DAV_AV_CHECKOUT_CHECKIN:
+    case DAV_AV_CHECKOUT_UNLOCKED_CHECKIN:
+    case DAV_AV_CHECKOUT:
+    case DAV_AV_LOCKED_CHECKOUT:
+    case DAV_AV_NONE:
+        db_r->autoversion_type = parent->av_new_children;
+        break;
+    case DAV_AV_VERSION_CONTROL:
+        db_r->autoversion_type = DAV_AV_NONE;
+    }
+
     err = dbms_insert_vcr(db, db_r);
 
     if (db->dbms == MYSQL) {

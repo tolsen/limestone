@@ -205,11 +205,15 @@ static dav_error *dav_deltav_patch_validate(const dav_resource * resource,
 	if (resource->versioned && operation == DAV_PROP_OP_SET) {
 	    char *av_value = elem->first_child ?
 		apr_pstrdup(resource->pool, elem->first_child->name) : "";
-	    if (!(strcmp(av_value, "checkout-checkin") &&
-		  strcmp(av_value, "checkout-unlocked-checkin") &&
-		  strcmp(av_value, "checkout") &&
-		  strcmp(av_value, "locked-checkout")));
-	    else
+	    if (!(strcmp(av_value, "checkout-checkin")))
+                ;
+            else if(!(strcmp(av_value, "checkout-unlocked-checkin") &&
+                      strcmp(av_value, "checkout") &&
+                      strcmp(av_value, "locked-checkout")))
+                return dav_new_error
+                  (resource->pool, HTTP_FORBIDDEN, 0, apr_psprintf
+                   (resource->pool, "%s supported currently", av_value));
+            else
 		return dav_new_error(resource->pool, HTTP_BAD_REQUEST, 0,
 				     "Undefined value given for DAV:auto-version ");
 	} else

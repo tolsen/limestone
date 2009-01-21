@@ -51,4 +51,8 @@ typedef struct dav_repos_report_elem {
 
 void send_xml( apr_bucket_brigade * bb, ap_filter_t * output, const char *str );
 
+/* Put a resource under version control. */
+dav_error *dav_repos_vsn_control(dav_resource * resource,
+                                 const char *target);
+
 #endif

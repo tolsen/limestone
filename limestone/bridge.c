@@ -25,6 +25,7 @@
 #include "util.h"
 #include "acl.h" /* for create_initial_acl */
 #include "deltav_bridge.h" /* for sabridge_remove_vhr */
+#include "version.h" /* for dav_repos_version_control */
 #include "dbms_principal.h"
 #include "dbms_quota.h"
 
@@ -88,6 +89,9 @@ dav_error *sabridge_get_property(const dav_repos_db *d, dav_repos_resource *r)
 
     if (r->resourcetype == dav_repos_COLLECTION
         || r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
+        err = dbms_get_collection_props(d, r);
+        if (err) return err;
+        
         /* collection contenttype hack */
         r->getcontenttype = apr_pstrdup(r->p, DIR_MAGIC_TYPE);
 
@@ -223,7 +227,7 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     /* Create a 'resources' table entry */
     if((err = dbms_insert_resource(d, r)))
         return err;
-    
+
     if (r->resourcetype == dav_repos_RESOURCE
 	|| r->resourcetype == dav_repos_VERSIONED
 	|| r->resourcetype == dav_repos_VERSION) {
@@ -231,6 +235,22 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
         if (err) goto error;
     }
 
+    if (r->resourcetype == dav_repos_COLLECTION
+        || r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
+        dav_repos_resource *parent = NULL;
+        if (r->parent_id > 0) {
+            sabridge_new_dbr_from_dbr(r, &parent);
+            parent->serialno = r->parent_id;
+            err = dbms_get_collection_props(d, parent);
+            if (err) goto error;
+        } else if (r->uri)
+            sabridge_retrieve_parent(r, &parent);
+
+        r->av_new_children = parent->av_new_children;
+        err = dbms_insert_collection(d, r);
+        if (err) goto error;
+    }
+    
     if (r->resourcetype == dav_repos_USER
         || r->resourcetype == dav_repos_GROUP) {
         err = dbms_insert_principal(d, r);
@@ -249,7 +269,6 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     if (r->uri && (params & SABRIDGE_DELAY_BIND) == 0) {
         dav_repos_resource *parent = NULL;
         sabridge_retrieve_parent(r, &parent);
-
         err = dbms_insert_bind(pool, d, r->serialno,
                                parent->serialno, basename(r->uri));
         if (err) goto error;
@@ -454,7 +473,8 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
                                        dav_repos_resource *r_src,
                                        dav_repos_resource *r_dst,
                                        int depth,
-                                       request_rec *rec)
+                                       request_rec *rec,
+                                       dav_response **response)
 {
     apr_pool_t *pool = r_src->p;
     int create_dest = 0;
@@ -485,7 +505,7 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
     err = sabridge_copy_dead_props(pool, d, r_src->serialno, r_dst->serialno);
     if (err) return err;
     if (depth == DAV_INFINITY)
-        err = sabridge_depth_inf_copy_coll(d, r_src, r_dst, rec);
+        err = sabridge_depth_inf_copy_coll(d, r_src, r_dst, rec, response);
     if (err) return err;
 
     if (create_dest) {
@@ -521,6 +541,12 @@ dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
     case dav_repos_RESOURCE:
     case dav_repos_VERSIONED:
     case dav_repos_VERSION:
+        if (dst->resourcetype == dav_repos_VERSIONED &&
+            dst->checked_state == DAV_RESOURCE_CHECKED_IN)
+            return dav_new_error
+              (src->p, HTTP_CONFLICT, 0,
+               "DAV:cannot-modify-version-controlled-content");
+
         switch (dst->resourcetype) {
         case dav_repos_LOCKNULL:
             sabridge_create_empty_body(d, dst);
@@ -581,7 +607,8 @@ dav_error *sabridge_clear_unused(const dav_repos_db *d,
 dav_error *sabridge_depth_inf_copy_coll(const dav_repos_db *d,
                                         dav_repos_resource *r_src,
                                         dav_repos_resource *r_dst,
-                                        request_rec *rec)
+                                        request_rec *rec,
+                                        dav_response **p_response)
 {
     apr_pool_t *pool = r_src->p;
     apr_hash_t *copy_map = apr_hash_make(pool);
@@ -618,7 +645,15 @@ dav_error *sabridge_depth_inf_copy_coll(const dav_repos_db *d,
             if (corr_child->serialno != 0 && 
                 !apr_hash_get(dst_in_use, &corr_child->serialno, sizeof(long))){
                 err = sabridge_copy_if_compatible(d, iter, corr_child, &dst_reused);
-                if (err) return err;
+                if (err) {
+                    dav_response *resp = apr_pcalloc(pool, sizeof(*resp));
+                    resp->href = corr_child->uri;
+                    resp->desc = err->desc;
+                    resp->status = err->status;
+                    resp->next = *p_response;
+                    *p_response = resp;
+                    dst_reused = 1;
+                }
                 if (dst_reused) {
                     copy_res = corr_child;
                     apr_hash_set(dst_in_use, &corr_child->serialno, 
@@ -628,7 +663,7 @@ dav_error *sabridge_depth_inf_copy_coll(const dav_repos_db *d,
         }
 
         if (copy_res == NULL) {
-            err = sabridge_create_copy(d, iter, rec, parent_copy->serialno, &copy_res);
+            err = sabridge_create_copy(d, iter, rec, parent_copy, &copy_res);
             if (err) return err;
         }
 
@@ -686,7 +721,7 @@ dav_error *sabridge_copy_dead_props(apr_pool_t *pool, const dav_repos_db *d,
 dav_error *sabridge_create_copy(const dav_repos_db *d,
                                 dav_repos_resource *db_r,
                                 request_rec *rec,
-                                long parent_id,
+                                dav_repos_resource *copy_parent,
                                 dav_repos_resource **pcopy_res)
 {
     dav_repos_resource *copy = NULL;
@@ -695,7 +730,7 @@ dav_error *sabridge_create_copy(const dav_repos_db *d,
     TRACE();
 
     sabridge_new_dbr_from_dbr(db_r, &copy);
-    copy->parent_id = parent_id;
+    copy->parent_id = copy_parent->serialno;
     copy->uri = NULL;
 
     if (db_r->resourcetype == dav_repos_RESOURCE ||
@@ -706,6 +741,18 @@ dav_error *sabridge_create_copy(const dav_repos_db *d,
         dav_repos_create_resource
           (copy->resource, SABRIDGE_DELAY_BIND );
         err = sabridge_copy_medium(d, db_r, copy);
+        if (err) return err;
+        switch (copy_parent->av_new_children) {
+        case DAV_AV_CHECKOUT_CHECKIN:
+        case DAV_AV_CHECKOUT_UNLOCKED_CHECKIN:
+        case DAV_AV_CHECKOUT:
+        case DAV_AV_LOCKED_CHECKOUT:
+        case DAV_AV_VERSION_CONTROL:
+            err = dav_repos_vsn_control(copy->resource, NULL);
+            break;
+        default:
+            ;
+        }
         if (err) return err;
     } else if (db_r->resourcetype == dav_repos_COLLECTION ||
                db_r->resourcetype == dav_repos_VERSIONED_COLLECTION) {

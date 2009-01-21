@@ -243,6 +243,62 @@ dav_error *dbms_get_media_props(const dav_repos_db *d, dav_repos_resource *r)
     return err;
 }
 
+dav_error *dbms_get_collection_props(const dav_repos_db *d,
+                                     dav_repos_resource *r)
+{
+    apr_pool_t *pool = r->p;
+    dav_repos_query *q = NULL;
+    int ierrno = 0;
+    dav_error *err = NULL;
+     
+    /* get Content-Length and Content-Type */
+    q = dbms_prepare(pool, d->db,
+                     "SELECT auto_version_new_children "
+                     "FROM collections WHERE resource_id = ?");
+    dbms_set_int(q, 1, r->serialno);
+
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+        return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                                 "dbms_execute error");
+    }
+
+    if ((ierrno = dbms_next(q)) < 0) {
+        dbms_query_destroy(q);
+        return dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,
+                             "dbms_next error");
+    }
+    if (ierrno == 0) {
+        dbms_query_destroy(q);
+        return err;
+    }
+
+    r->av_new_children = dbms_get_int(q, 1);
+        
+    dbms_query_destroy(q);
+    return err;
+}
+
+dav_error *dbms_set_collection_new_children_av_type(const dav_repos_db *d,
+                                                    dav_repos_resource *r)
+{
+    apr_pool_t *pool = r->p;
+    dav_repos_query *q = NULL;
+    dav_error *err = NULL;
+     
+    q = dbms_prepare(pool, d->db,
+                     "UPDATE collections SET auto_version_new_children = ? "
+                     " WHERE resource_id = ?");
+    dbms_set_int(q, 1, r->av_new_children);
+    dbms_set_int(q, 2, r->serialno);
+        
+    if (dbms_execute(q))
+        err = dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                            "dbms_execute error");
+    dbms_query_destroy(q);
+    return err;
+}
+
 dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
 {
     dav_repos_query *q = NULL;
@@ -275,6 +331,28 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
                              "DBMS error during insert to 'resources'");
     
     r->serialno = dbms_insert_id(d->db, "resources", pool);
+    return err;
+}
+
+dav_error *dbms_insert_collection(const dav_repos_db *d, dav_repos_resource *r)
+{
+    dav_repos_query *q = NULL;
+    apr_pool_t *pool = r->p;
+    dav_error *err = NULL;
+
+    TRACE();
+    
+    q = dbms_prepare(pool, d->db,
+                     "INSERT INTO collections (resource_id, auto_version_new_children) "
+                     "VALUES ( ?, ? ) ");
+    dbms_set_int(q, 1, r->serialno);
+    dbms_set_int(q, 2, r->av_new_children);
+
+    if (dbms_execute(q))
+        err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0, 
+                            "DBMS error during insert to 'collections'");
+
+    dbms_query_destroy(q);
     return err;
 }
 

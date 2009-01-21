@@ -681,7 +681,8 @@ static dav_error *dav_repos_deliver(const dav_resource * resource,
 
     TRACE();
 
-    if (db_r->resourcetype == dav_repos_COLLECTION) {
+    if (db_r->resourcetype == dav_repos_COLLECTION ||
+        db_r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
         request_rec *r = resource->info->rec;
 
         /* redirect to a URL with trailing slash if this is not a sub-request */
@@ -801,10 +802,22 @@ static dav_error *dav_repos_create_collection(dav_resource * resource)
     db_r->getcontenttype = apr_pstrdup(db_r->p, DIR_MAGIC_TYPE);
 
     db_r->resourcetype = dav_repos_COLLECTION;
-    if (db_r->serialno == 0)
+        
+    if (db_r->serialno == 0) {
         err = sabridge_insert_resource(db, db_r, resource->info->rec, 0);
-    else /* overwriting a locknull resource */
+    } else { /* overwriting a locknull resource */
+        dav_repos_resource *parent_dbr = NULL;
+
         err = dbms_set_property(db, db_r);
+        if (err) return err;
+
+        sabridge_new_dbr_from_dbr(db_r, &parent_dbr);
+        parent_dbr->serialno = db_r->parent_id;
+        err = dbms_get_collection_props(db, parent_dbr);
+        if (err) return err;
+        db_r->av_new_children = parent_dbr->av_new_children;
+        err = dbms_insert_collection(db, db_r);
+    }
     if (err) return err;
 
     resource->exists = 1;
@@ -821,7 +834,7 @@ static dav_error *dav_repos_create_collection(dav_resource * resource)
 */
 static dav_error *dav_repos_copy_resource(const dav_resource * src,
 					  dav_resource * dst, int depth,
-					  dav_response ** response)
+					  dav_response **p_response)
 {
     dav_error *err = NULL;
     dav_resource *dst_parent;
@@ -831,6 +844,8 @@ static dav_error *dav_repos_copy_resource(const dav_resource * src,
     request_rec *rec = src->info->rec;
 
     TRACE();
+
+    *p_response = NULL;
 
     /* If it's a version resource */
     if (src->type == DAV_RESOURCE_TYPE_HISTORY ||
@@ -860,9 +875,14 @@ static dav_error *dav_repos_copy_resource(const dav_resource * src,
         break;
     case dav_repos_COLLECTION:
     case dav_repos_VERSIONED_COLLECTION:
-        err = sabridge_copy_coll_w_create(db, db_r_src, db_r_dst, depth, rec);
+        err = sabridge_copy_coll_w_create(db, db_r_src, db_r_dst, depth,
+                                          rec, p_response);
         break;
     }
+
+    if (*p_response)
+        err = dav_new_error(db_r_src->p, HTTP_MULTI_STATUS, 0,
+                            "Error copying");
 
     return err;
 }

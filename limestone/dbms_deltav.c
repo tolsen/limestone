@@ -483,6 +483,30 @@ dav_error *dbms_insert_vhr(const dav_repos_db *db,
     return NULL;
 }
 
+dav_error *dbms_update_vhr(const dav_repos_db *db,
+                           dav_repos_resource *vhr)
+{
+    apr_pool_t *pool = vhr->p;
+    dav_repos_query *q = NULL;
+
+    /* make entry in vhrs */
+    q = dbms_prepare(pool, db->db,
+                     "UPDATE vhrs SET root_version_id = ? "
+                     "WHERE resource_id = ? ");
+    dbms_set_int(q, 1, vhr->root_version_id);
+    dbms_set_int(q, 2, vhr->serialno);
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+        db_error_message(pool, db->db, "dbms_execute error");
+        return dav_new_error(pool,
+                             HTTP_INTERNAL_SERVER_ERROR, 0,
+                             "DBMS Error");
+    }
+    dbms_query_destroy(q);
+
+    return NULL;
+}
+
 /** 
  * Make an entry into the vcrs table for an existing resource.
  * Also changes the type of the resource
@@ -510,7 +534,6 @@ dav_error *dbms_insert_vcr(const dav_repos_db *db,
     dbms_set_int(q, 3, db_r->vhr_id);
 
     db_r->checked_state = DAV_RESOURCE_CHECKED_IN;
-    db_r->autoversion_type = DAV_AV_NONE;
     dbms_set_int(q, 4, db_r->autoversion_type);
     db_r->checkin_on_unlock = 1;
 

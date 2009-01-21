@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="chetan" id="1">
+    <comment>Create a collections table</comment>
+    <createTable tableName="collections">
+      <column name="resource_id" type="bigint">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="auto_version_new_children" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <comment>Add FK check on collections.resource_id to resources.id</comment>
+    <addForeignKeyConstraint
+        constraintName="collections_resource_id_fkey"
+        baseTableName="collections"
+        baseColumnNames="resource_id"
+        referencedTableName="resources"
+        referencedColumnNames="id"
+        deferrable="true"
+        deleteCascade="true"
+        />
+  </changeSet>
+
+  <changeSet author="chetan" id="2">
+    <comment>Add collections table entries for existing collections</comment>
+    <sql>INSERT INTO collections(resource_id, auto_version_new_children) (SELECT r.id, 5 FROM resources r WHERE type='Collection' OR type='VersionedCollection')</sql>
+  </changeSet>
+</databaseChangeLog>

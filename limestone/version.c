@@ -95,14 +95,28 @@ static dav_auto_version dav_repos_auto_versionable(const dav_resource *
 						   resource)
 {
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
+    dav_repos_db *db = resource->info->db;
 
     TRACE();
 
     if (resource->type != DAV_RESOURCE_TYPE_REGULAR)
         return DAV_AUTO_VERSION_NEVER;
 
-    if (!resource->exists)
-	return DAV_AUTO_VERSION_NEVER;
+    if (!resource->exists && resource->collection)
+	return DAV_AUTO_VERSION_NEVER; /* No AV for new collections */
+    else if (!resource->exists) {
+        /* get parent's lb:auto-version-new-children property */
+        dav_repos_resource *parent = NULL;
+        sabridge_new_dbr_from_dbr(db_r, &parent);
+        parent->serialno = db_r->parent_id;
+        dbms_get_collection_props(db, parent);
+        switch (parent->av_new_children) {
+        case DAV_AV_NONE:
+            return DAV_AUTO_VERSION_NEVER;
+        default:
+            return DAV_AUTO_VERSION_ALWAYS;
+        }
+    }
 
     if (resource->exists && !resource->versioned)
 	return DAV_AUTO_VERSION_NEVER;
@@ -124,24 +138,33 @@ static dav_auto_version dav_repos_auto_versionable(const dav_resource *
 
     /* checked-out resource */
     if (resource->versioned && resource->working) {
-	if (db_r->autoversion_type == DAV_AV_CHECKOUT_CHECKIN)
-	    return DAV_AUTO_VERSION_ALWAYS;
-	else if (db_r->autoversion_type == DAV_AV_CHECKOUT_UNLOCKED_CHECKIN)
-	    return DAV_AUTO_VERSION_LOCKED;
-	else
-	    return DAV_AUTO_VERSION_NEVER;
+        switch (db_r->autoversion_type) {
+        case DAV_AV_CHECKOUT_CHECKIN:
+            return DAV_AUTO_VERSION_ALWAYS;
+        case DAV_AV_CHECKOUT_UNLOCKED_CHECKIN:
+            /* FIXME */
+            return DAV_AUTO_VERSION_ALWAYS;
+        case DAV_AV_LOCKED_CHECKOUT:
+            return DAV_AUTO_VERSION_LOCKED;
+        case DAV_AV_CHECKOUT:
+        case DAV_AV_NONE:
+        case DAV_AV_VERSION_CONTROL:
+            return DAV_AUTO_VERSION_NEVER;
+
+        }
     }
 
     return DAV_AUTO_VERSION_NEVER;
 }
 
 /* Put a resource under version control. */
-static dav_error *dav_repos_vsn_control(dav_resource * resource,
-					const char *target)
+dav_error *dav_repos_vsn_control(dav_resource * resource,
+                                 const char *target)
 {
     dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
     dav_error *err = NULL;
+    int auto_created = 0;
 
     TRACE();
 
@@ -153,8 +176,8 @@ static dav_error *dav_repos_vsn_control(dav_resource * resource,
 
         /* resource doesn't exist. create a new one as per mod_dav.h */
         err = dav_repos_create_resource(resource, 0);
-        if(err)
-            return err;
+        if(err) return err;
+        auto_created = 1;
     }
     /* postcondition: resource->exists */
 
@@ -167,7 +190,7 @@ static dav_error *dav_repos_vsn_control(dav_resource * resource,
         return NULL;
     }
 
-    err = sabridge_vsn_control(db, db_r);
+    err = sabridge_vsn_control(db, db_r, auto_created);
 
     /* update the fields to reflect new state */
     resource->versioned = 1;
@@ -301,6 +324,12 @@ static dav_error *dav_repos_checkin(dav_resource * resource,
     /* Let's create new version resource */
     err = sabridge_mk_new_version(db, db_r, vhr, db_r->vr_num+1, &new_version);
     if (err) return err;
+
+    if (db_r->vr_num == 0) {
+        vhr->root_version_id = new_version->serialno;
+        err = dbms_update_vhr(db, vhr);
+        if (err) goto error;
+    }
 
     err = dbms_insert_version(db, new_version);
     if (err) goto error;

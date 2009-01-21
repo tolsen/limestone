@@ -143,6 +143,7 @@ dav_error *sabridge_copy_medium(const dav_repos_db *db,
  * @param r_dst the destination resource
  * @param depth depth to which to copy
  * @param rec has info about the user making the request
+ * @param response multi status response to be set
  * 
  * @return NULL on success, error otherwise
  */
@@ -150,7 +151,8 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
                                        dav_repos_resource *r_src,
                                        dav_repos_resource *r_dst,
                                        int depth,
-                                       request_rec *rec);
+                                       request_rec *rec,
+                                       dav_response **response);
 
 /**
  * Create a depth infinity copy of a collection resource.
@@ -163,7 +165,8 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
 dav_error *sabridge_depth_inf_copy_coll(const dav_repos_db *d,
                                         dav_repos_resource *r_src,
                                         dav_repos_resource *r_dst,
-                                        request_rec *rec);
+                                        request_rec *rec,
+                                        dav_response **p_response);
 /** 
  * Removes all the binds of a collection, deleting any orphaned children.
  * As of now, the collection has to be reachable from root for this function
@@ -196,7 +199,7 @@ dav_error *sabridge_copy_dead_props(apr_pool_t *pool, const dav_repos_db *d,
  * @param d handle to the database 
  * @param db_r the resource to copy
  * @param rec contains information about the current user
- * @param parent_id the ACL parent
+ * @param copy_parent the ACL parent resource
  * @param pcopy_res will point to the new copy resource
  * 
  * @return NULL on success, error otherwise
@@ -204,7 +207,7 @@ dav_error *sabridge_copy_dead_props(apr_pool_t *pool, const dav_repos_db *d,
 dav_error *sabridge_create_copy(const dav_repos_db *d,
                                 dav_repos_resource *db_r,
                                 request_rec *rec,
-                                long parent_id,
+                                dav_repos_resource *copy_parent,
                                 dav_repos_resource **pcopy_res);
 /** 
  * Set the uri field to a path from root

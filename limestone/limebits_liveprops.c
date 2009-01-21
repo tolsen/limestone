@@ -33,6 +33,8 @@ enum {
 
     LB_PROPID_login_to_all_domains,
 
+    LB_PROPID_auto_version_new_children,
+
     LB_PROPID_END
 };
 
@@ -64,6 +66,12 @@ static const dav_liveprop_spec dav_limebits_props[] = {
      dav_repos_URI_LB,
      "login-to-all-domains",
      LB_PROPID_login_to_all_domains,
+     1},
+
+    {
+     dav_repos_URI_LB,
+     "auto-version-new-children",
+     LB_PROPID_auto_version_new_children,
      1},
 
     {0}				/* sentinel */
@@ -150,6 +158,30 @@ static dav_prop_insert dav_limebits_insert_prop(const dav_resource * resource,
             if (login_to_all_domains)
                 s = "true";
             else s = "false";
+        } else if (propid == LB_PROPID_auto_version_new_children) {
+            if (!db_r->av_new_children)
+                dbms_get_collection_props(db, db_r);
+
+            switch (db_r->av_new_children) {
+            case DAV_AV_CHECKOUT_CHECKIN:
+                s = "<D:checkout-checkin/>";
+                break;
+            case DAV_AV_CHECKOUT_UNLOCKED_CHECKIN:
+                s = "<D:checkout-unlocked-checkin/>";
+                break;
+            case DAV_AV_CHECKOUT:
+                s = "<D:checkout/>";
+                break;
+            case DAV_AV_LOCKED_CHECKOUT:
+                s = "<D:locked-checkout/>";
+                break;
+            case DAV_AV_VERSION_CONTROL:
+                s = "<lb:version-control/>";
+                break;
+            default:
+                s = NULL;
+                break;
+            }
         }
 
         if (s == NULL) {
@@ -215,6 +247,26 @@ static dav_error *dav_limebits_patch_validate(const dav_resource * resource,
             return dav_new_error(resource->pool, 
                                  dav_get_permission_denied_status(resource->info->rec),
                                  0, "lb:read-private-propertes privilege needed");
+    } else if (priv->propid == LB_PROPID_auto_version_new_children) {
+        if (resource->collection && operation == DAV_PROP_OP_DELETE) {
+            return NULL;
+        }
+        if (resource->collection) {
+	    char *av_value = elem->first_child ?
+		apr_pstrdup(resource->pool, elem->first_child->name) : "";
+	    if (!(strcmp(av_value, "checkout-checkin") &&
+		  strcmp(av_value, "version-control")));
+            else if (!(strcmp(av_value, "checkout-unlocked-checkin") &&
+                       strcmp(av_value, "checkout") &&
+                       strcmp(av_value, "locked-checkout")))
+                return dav_new_error
+                  (resource->pool, HTTP_FORBIDDEN, 0, apr_psprintf
+                   (resource->pool,"%s not supported currently", av_value));
+	    else
+		return dav_new_error
+                  (resource->pool, HTTP_BAD_REQUEST, 0,
+                   "Undefined value for lb:auto-version-new-children");
+        }
     }
 
     return NULL;
@@ -317,6 +369,26 @@ static dav_error *dav_limebits_patch_exec(const dav_resource * resource,
                 rollback_info->rollback_data = (char *)(cur_val ? "t" : "f");
             }
         }
+    } else if (spec->propid == LB_PROPID_auto_version_new_children) {
+        char *av_value = elem->first_child ?
+          apr_pstrdup(resource->pool, elem->first_child->name) : "";
+
+        rollback_info->rollback_data =
+          apr_psprintf(resource->pool, "%d", db_r->autoversion_type);
+
+        if (operation == DAV_PROP_OP_DELETE)
+            db_r->av_new_children = DAV_AV_NONE;
+        else if (!strcmp(av_value, "checkout-checkin")) {
+            db_r->av_new_children = DAV_AV_CHECKOUT_CHECKIN;
+        } else if (!strcmp(av_value, "checkout-unlocked-checkin")) {
+            db_r->av_new_children = DAV_AV_CHECKOUT_UNLOCKED_CHECKIN;
+        } else if (!strcmp(av_value, "checkout")) {
+            db_r->av_new_children = DAV_AV_CHECKOUT;
+        } else if (!strcmp(av_value, "locked-checkout")) {
+            db_r->av_new_children = DAV_AV_LOCKED_CHECKOUT;
+        } else if (!strcmp(av_value, "version-control")) {
+            db_r->av_new_children = DAV_AV_VERSION_CONTROL;
+        }
     }
 
     return err;
@@ -327,7 +399,19 @@ static void dav_limebits_patch_commit(const dav_resource * resource,
                                       void *context,
                                       dav_liveprop_rollback *rollback_ctx)
 {
+    dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
+    dav_repos_db *db = resource->info->db;
+
     TRACE();
+
+    if (rollback_ctx->spec->propid == LB_PROPID_auto_version_new_children)
+	if (resource->collection
+	    && rollback_ctx->operation == DAV_PROP_OP_SET) {
+	    int av_type;
+	    sscanf(rollback_ctx->rollback_data, "%d", &av_type);
+	    if (db_r->av_new_children != av_type)
+		dbms_set_collection_new_children_av_type(db, db_r);
+	}
 }
 
 static dav_error *dav_limebits_patch_rollback(const dav_resource * resource,

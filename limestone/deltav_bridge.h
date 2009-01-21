@@ -21,7 +21,8 @@
 #include "dbms.h"
 
 dav_error *sabridge_vsn_control(const dav_repos_db *db,
-                                dav_repos_resource *db_r);
+                                dav_repos_resource *db_r,
+                                int auto_version);
 
 dav_error *sabridge_mk_new_version(const dav_repos_db *db, 
                                    dav_repos_resource *vcr, 

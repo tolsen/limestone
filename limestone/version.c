@@ -199,12 +199,12 @@ dav_error *dav_repos_vsn_control(dav_resource * resource,
     return NULL;
 }
 
-static dav_error *dav_repos_checkout(dav_resource * resource,
-				     int auto_checkout,
-				     int is_unreserved, int is_fork_ok,
-				     int create_activity,
-				     apr_array_header_t * activities,
-				     dav_resource ** working_resource)
+dav_error *dav_repos_checkout(dav_resource * resource,
+                              int auto_checkout,
+                              int is_unreserved, int is_fork_ok,
+                              int create_activity,
+                              apr_array_header_t * activities,
+                              dav_resource ** working_resource)
 {
     dav_error *err = NULL;
     dav_repos_db *db = resource->info->db;
@@ -294,9 +294,9 @@ static dav_error *dav_repos_uncheckout(dav_resource * resource)
     return NULL;
 }
 
-static dav_error *dav_repos_checkin(dav_resource * resource,
-				    int keep_checked_out,
-				    dav_resource ** version_resource)
+dav_error *dav_repos_checkin(dav_resource * resource,
+                             int keep_checked_out,
+                             dav_resource ** version_resource)
 {
     dav_error *err = NULL;
     dav_repos_db *db = resource->info->db;

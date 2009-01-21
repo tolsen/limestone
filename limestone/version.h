@@ -55,4 +55,14 @@ void send_xml( apr_bucket_brigade * bb, ap_filter_t * output, const char *str );
 dav_error *dav_repos_vsn_control(dav_resource * resource,
                                  const char *target);
 
+dav_error *dav_repos_checkout(dav_resource * resource,
+                              int auto_checkout,
+                              int is_unreserved, int is_fork_ok,
+                              int create_activity,
+                              apr_array_header_t * activities,
+                              dav_resource ** working_resource);
+
+dav_error *dav_repos_checkin(dav_resource * resource,
+                             int keep_checked_out,
+                             dav_resource ** version_resource);
 #endif

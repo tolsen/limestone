@@ -532,6 +532,7 @@ dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
                                        int *p_copied)
 {
     dav_error *err = NULL;
+    int checkin = 0;
 
     TRACE();
 
@@ -540,12 +541,18 @@ dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
     switch (src->resourcetype) {
     case dav_repos_RESOURCE:
     case dav_repos_VERSIONED:
+        if (dst->checked_state == DAV_RESOURCE_CHECKED_IN) {
+            if (dst->autoversion_type == DAV_AV_CHECKOUT_CHECKIN) {
+                err = dav_repos_checkout
+                  (dst->resource, 1, 0, 0, 0, NULL, NULL);
+                if (err) return err;
+                checkin = 1;
+            } else
+                return dav_new_error
+                  (src->p, HTTP_CONFLICT, 0,
+                   "DAV:cannot-modify-version-controlled-content");
+        }
     case dav_repos_VERSION:
-        if (dst->resourcetype == dav_repos_VERSIONED &&
-            dst->checked_state == DAV_RESOURCE_CHECKED_IN)
-            return dav_new_error
-              (src->p, HTTP_CONFLICT, 0,
-               "DAV:cannot-modify-version-controlled-content");
 
         switch (dst->resourcetype) {
         case dav_repos_LOCKNULL:
@@ -569,7 +576,11 @@ dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
         }
         break;
     }
-    return NULL;
+
+    if (checkin)
+        err = dav_repos_checkin(dst->resource, 0, NULL);
+
+    return err;
 }
 
 dav_error *sabridge_clear_unused(const dav_repos_db *d,

@@ -400,7 +400,7 @@ prestan-build: $(PRESTAN_MAKEFILE)
 
 
 define force-start-apache
-$(APROOT)/bin/apachectl start && touch stamps/apache-start
+$(APROOT)/bin/apachectl start && sleep 2 && touch stamps/apache-start
 endef
 
 apache-start: stamps/apache-start

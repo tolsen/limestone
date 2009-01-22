@@ -450,7 +450,7 @@ apache-stop:
 
 limestone-start: limestone-install apache-start
 
-limestone-stop-all: apache-stop-all
+limestone-stop-all: limestone-stop apache-stop-all
 
 limestone-stop: apache-stop
 

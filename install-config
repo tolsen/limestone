@@ -199,7 +199,17 @@ open(NEWCONFIG, '>', $NEWCONFIG) or die("couldn't open $NEWCONFIG");
 while (<ORIG_CONFIG>) {
   s/^Listen 80$/#Listen 80/;
   s|(CustomLog "logs/access_log" common$)|#$1|;
-  # TODO: (JKobrin) substitute in USER, GROUP  & SERVER-ADMIN-EMAIL from ENV
+
+  if ($ENV{'HTTPD_USER'}) {
+    s/(^User ).*/${1}$ENV{'HTTPD_USER'}/;
+  }
+  if ($ENV{'HTTPD_GROUP'}) {
+    s/(^Group ).*/${1}$ENV{'HTTPD_GROUP'}/;
+  }
+  if ($ENV{'HTTPD_SERVERADMIN'}) {
+    s/(^ServerAdmin ).*/${1}$ENV{'HTTPD_SERVERADMIN'}/;
+  }
+
   print NEWCONFIG;
 }
 print NEWCONFIG "\nInclude conf/limestone.conf\n";

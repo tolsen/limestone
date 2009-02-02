@@ -77,7 +77,7 @@ DAVDepthInfinity on
     DAVResponseRewriteRule (.*)                 /!lime/root\$1
 
     DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+.$host_domain.*
-    DAVResponseRewriteRule /home/[^/]*/?(.*)   /\$1
+    DAVResponseRewriteRule ^/home/[^/]*/?(.*)   /\$1
 
   AuthType Digest
   AuthName "users\@limebits.com"

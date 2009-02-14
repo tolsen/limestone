@@ -687,7 +687,8 @@ static dav_error *dav_repos_deliver(const dav_resource * resource,
 
         /* redirect to a URL with trailing slash if this is not a sub-request */
         if (!r->main && r->uri[strlen(r->uri) - 1] != '/') {
-            char *correct_url = apr_pstrcat(pool, dav_get_response_href(r, r->uri), "/", NULL);
+            char *correct_url = apr_pstrcat(pool, dav_get_response_href(r, r->uri), "/",
+                                            r->args ? "?" : NULL, r->args, NULL);
             apr_table_setn(r->headers_out, "Location", correct_url);
             return dav_new_error(pool, HTTP_MOVED_PERMANENTLY, 0,
                                  "Need / at the end of collection");

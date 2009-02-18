@@ -218,8 +218,7 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     if (!r->owner_id)
         r->owner_id = r->creator_id;
 
-    if (r->uri)
-        r->displayname = apr_pstrdup(pool, basename(r->uri));
+    r->displayname = "";
 
     if (r->getcontenttype == NULL)
         r->getcontenttype = apr_pstrdup(pool, "application/octet-stream");
@@ -253,7 +252,7 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     
     if (r->resourcetype == dav_repos_USER
         || r->resourcetype == dav_repos_GROUP) {
-        err = dbms_insert_principal(d, r);
+        err = dbms_insert_principal(d, r, basename(r->uri));
         if (err) goto error;
     }
 

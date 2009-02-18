@@ -27,7 +27,7 @@ dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db 
                                            const char *name, long *prin_id);
 
 dav_error *dbms_insert_principal(const dav_repos_db *d,
-                                 dav_repos_resource *r);
+                                 dav_repos_resource *r, const char *name);
 
 dav_error *dbms_set_principal_email(apr_pool_t *pool, const dav_repos_db *d,
                                     long principal_id, const char *email);

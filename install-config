@@ -62,7 +62,7 @@ sub print_dav_vhost_config ($$$$$$$$$) {
 LogFormat "%h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
 CustomLog "logs/access_log" limestone
 
-DAVLimestoneIndexCSS  http://$host_domain${port_part_of_host}/css/style.css
+DAVLimestoneIndexCSS  http://www.$host_domain${port_part_of_host}/css/style.css
 DAVDBMSTmpDir $TMPDIR
 DAVDBMSFileDir $FILEDIR
 # To allow depth: infinity PROPFINDs required by some clients.
@@ -76,6 +76,11 @@ DAVDepthInfinity on
     DAVResponseRewriteCond Request-URI          /\\!lime/root.*
     DAVResponseRewriteRule (.*)                 /!lime/root\$1
 
+    # work around the fact that the response rewrite system doesn't allow for multiple conditions for a rule. the next rule will undo this one.
+    DAVResponseRewriteCond Host                 ^(drive\\.)?www\\.$host_domain.*
+    DAVResponseRewriteRule (.*)                 /home/\$1
+
+    # keep this tied to the one right above
     DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+.$host_domain.*
     DAVResponseRewriteRule ^/home/[^/]*/?(.*)   /\$1
 

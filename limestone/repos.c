@@ -172,6 +172,8 @@ static dav_error *dav_repos_get_resource(request_rec * r,
 	r->path_info = "";
     }
 
+    apr_table_setn(r->subprocess_env, "limestone_content_type",
+                   db_r->getcontenttype);
     return NULL;
 }
 

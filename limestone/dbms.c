@@ -356,6 +356,29 @@ dav_error *dbms_insert_collection(const dav_repos_db *d, dav_repos_resource *r)
     return err;
 }
 
+dav_error *dbms_update_displayname(const dav_repos_db * d,
+                                   const dav_repos_resource * r)
+{
+    dav_repos_query *q = NULL;
+    apr_pool_t *pool = r->p;
+    dav_error *err = NULL;
+
+    TRACE();
+    q = dbms_prepare(pool, d->db,
+                     "UPDATE resources "
+                     "SET displayname = ? "
+                     "WHERE id = ?");
+    dbms_set_string(q, 1, r->displayname);
+    dbms_set_int(q, 2, r->serialno);
+
+    if (dbms_execute(q))
+        err = dav_new_error(pool,
+                            HTTP_INTERNAL_SERVER_ERROR, 0,
+                            "Couldn't set live props");
+    dbms_query_destroy(q);
+    return err;
+}               /*End of dbms_set_property */
+
 dav_error *dbms_set_property(const dav_repos_db * d,
                              const dav_repos_resource * r)
 {

@@ -330,6 +330,17 @@ dav_error *dbms_insert_collection(const dav_repos_db *d, dav_repos_resource *r);
 dav_error *dbms_set_property(const dav_repos_db * d,
 	                     const dav_repos_resource * r);
 
+
+/**
+ * Update the displayname property of the resource
+ * @param d DB connection struct containing the user, password, and DB name
+ * @param r Identifies the resource to set the property on.
+ *          Contains the displayname value to set.
+ * @return NULL on success, dav_error otherwise
+ */
+dav_error *dbms_update_displayname(const dav_repos_db * d,
+                                   const dav_repos_resource * r);
+
 /**
  * Update the props in media table of the resource
  * @param db The DB connection struct

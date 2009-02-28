@@ -218,7 +218,8 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     if (!r->owner_id)
         r->owner_id = r->creator_id;
 
-    r->displayname = "";
+    if (!r->displayname)
+        r->displayname = "";
 
     if (r->getcontenttype == NULL)
         r->getcontenttype = apr_pstrdup(pool, "application/octet-stream");
@@ -461,6 +462,11 @@ dav_error *sabridge_copy_medium(const dav_repos_db *db,
     if (r_dest->sha1str)
         sabridge_remove_body_from_disk(db, r_dest);
 
+    if (strcmp(r_src->displayname, r_dest->displayname)) {
+        r_dest->displayname = r_src->displayname;
+        dbms_update_displayname(db, r_dest);
+    }
+
     err = dbms_copy_media_props(db, r_src, r_dest);
     if (err) return err;
 
@@ -525,6 +531,24 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
     return NULL;    
 }
 
+dav_error *sabridge_copy_collection(const dav_repos_db *d,
+                                    const dav_repos_resource *src,
+                                    dav_repos_resource *dst)
+{
+    dav_error *err = NULL;
+
+    TRACE();
+
+    if (strcmp(src->displayname, dst->displayname)) {
+        dst->displayname = src->displayname;
+        err = dbms_update_displayname(d, dst);
+        if (err) return err;
+    }
+
+    err = sabridge_copy_dead_props(src->p, d, src->serialno, dst->serialno);
+    return err;
+}
+
 dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
                                        const dav_repos_resource *src,
                                        dav_repos_resource *dst,
@@ -569,7 +593,7 @@ dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
         case dav_repos_LOCKNULL:
         case dav_repos_COLLECTION:
         case dav_repos_VERSIONED_COLLECTION:
-            err = sabridge_copy_dead_props(src->p, d, src->serialno, dst->serialno);
+            err = sabridge_copy_collection(d, src, dst);
             if (err) return err;
             *p_copied = 1;
         }
@@ -741,6 +765,7 @@ dav_error *sabridge_create_copy(const dav_repos_db *d,
 
     sabridge_new_dbr_from_dbr(db_r, &copy);
     copy->parent_id = copy_parent->serialno;
+    copy->displayname = db_r->displayname;
     copy->uri = NULL;
 
     if (db_r->resourcetype == dav_repos_RESOURCE ||
@@ -770,7 +795,8 @@ dav_error *sabridge_create_copy(const dav_repos_db *d,
         copy->resourcetype = dav_repos_COLLECTION;
         dav_repos_create_resource
           (copy->resource, SABRIDGE_DELAY_BIND );
-        sabridge_copy_dead_props(db_r->p, d, db_r->serialno, copy->serialno);
+        err = sabridge_copy_collection(d, db_r, copy);
+        if (err) return err;
     }
     *pcopy_res = copy;
     return NULL;

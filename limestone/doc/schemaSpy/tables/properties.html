@@ -87,7 +87,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>namespace_id</td>
+ <td class='indexedColumn' title='Indexed'>namespace_id</td>
  <td class='detail'>int8</td>
  <td class='detail' align='right'>19</td>
  <td class='detail' align='center'></td>
@@ -106,7 +106,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>name</td>
+ <td class='indexedColumn' title='Indexed'>name</td>
  <td class='detail'>varchar</td>
  <td class='detail' align='right'>4096</td>
  <td class='detail' align='center'></td>
@@ -117,7 +117,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>resource_id</td>
+ <td class='indexedColumn' title='Indexed'>resource_id</td>
  <td class='detail'>int8</td>
  <td class='detail' align='right'>19</td>
  <td class='detail' align='center'></td>
@@ -158,7 +158,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 </table>
-<p/>Table contained 0 rows at Fri Aug 01 16:13 GMT-05:00 2008
+<p/>Table contained 0 rows at Wed Apr 01 10:22 GMT-05:00 2009
 </td></tr></table>
 <div class='indent'>
 <b>Indexes:</b>
@@ -178,6 +178,12 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
   <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
   <td class='constraint' style='text-align:left;'>properties_pkey</td>
  </tr>
+ <tr>
+  <td class='indexedColumn'>resource_id + namespace_id + name</td>
+  <td class='detail'>Must be unique</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>sk_properties_resource_id_namespace_id_name</td>
+ </tr>
 </table>
 </div>
 <table width='100%' border='0'><tr><td class='container'>
@@ -193,17 +199,19 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
 </map>
 <map id="twoDegreesRelationshipsGraph" name="twoDegreesRelationshipsGraph">
 <area shape="rect" href="aces.html#graph" title="aces" alt="" coords="456,491,568,536"/>
-<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="197,427,328,677"/>
-<area shape="rect" href="principals.html#graph" title="principals" alt="" coords="16,585,128,631"/>
+<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="197,507,328,757"/>
+<area shape="rect" href="principals.html#graph" title="principals" alt="" coords="16,665,128,711"/>
 <area shape="rect" href="acl_inheritance.html#graph" title="acl_inheritance" alt="" coords="449,571,575,616"/>
-<area shape="rect" href="acl_privileges.html#graph" title="acl_privileges" alt="" coords="449,1032,575,1077"/>
-<area shape="rect" href="namespaces.html#graph" title="namespaces" alt="" coords="204,923,321,1013"/>
+<area shape="rect" href="acl_privileges.html#graph" title="acl_privileges" alt="" coords="449,1192,575,1237"/>
+<area shape="rect" href="namespaces.html#graph" title="namespaces" alt="" coords="204,1083,321,1173"/>
 <area shape="rect" href="binds.html#graph" title="binds" alt="" coords="456,651,568,696"/>
 <area shape="rect" href="cleanup.html#graph" title="cleanup" alt="" coords="461,731,563,776"/>
-<area shape="rect" href="locks.html#graph" title="locks" alt="" coords="456,11,568,56"/>
-<area shape="rect" href="locks_resources.html#graph" title="locks_resources" alt="" coords="447,91,577,136"/>
-<area shape="rect" href="media.html#graph" title="media" alt="" coords="463,171,561,216"/>
-<area shape="rect" href="properties.html#" title="properties" alt="" coords="397,811,627,997"/>
+<area shape="rect" href="collections.html#graph" title="collections" alt="" coords="457,811,567,856"/>
+<area shape="rect" href="locks.html#graph" title="locks" alt="" coords="456,891,568,936"/>
+<area shape="rect" href="locks_resources.html#graph" title="locks_resources" alt="" coords="447,11,577,56"/>
+<area shape="rect" href="media.html#graph" title="media" alt="" coords="463,91,561,136"/>
+<area shape="rect" href="properties.html#" title="properties" alt="" coords="397,971,627,1157"/>
+<area shape="rect" href="redirectrefs.html#graph" title="redirectrefs" alt="" coords="457,171,567,216"/>
 <area shape="rect" href="vcrs.html#graph" title="vcrs" alt="" coords="456,251,568,296"/>
 <area shape="rect" href="versions.html#graph" title="versions" alt="" coords="456,331,568,376"/>
 <area shape="rect" href="vhrs.html#graph" title="vhrs" alt="" coords="456,411,568,456"/>

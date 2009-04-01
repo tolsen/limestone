@@ -1,4 +1,4 @@
-// dot 2.20.2 on Linux 2.6.25-2-amd64
+// dot 2.20.2 on Linux 2.6.28-1-amd64
 digraph "largeRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -21,7 +21,7 @@ digraph "largeRelationshipsGraph" {
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
       <TR><TD PORT="grantdeny" COLSPAN="3" ALIGN="LEFT">grantdeny</TD></TR>
       <TR><TD PORT="protected" COLSPAN="3" ALIGN="LEFT">protected</TD></TR>
-      <TR><TD PORT="resource_id" COLSPAN="3" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
       <TR><TD PORT="principal_id" COLSPAN="3" ALIGN="LEFT">principal_id</TD></TR>
       <TR><TD PORT="property_namespace_id" COLSPAN="3" ALIGN="LEFT">property_namespace_id</TD></TR>
       <TR><TD PORT="property_name" COLSPAN="3" ALIGN="LEFT">property_name</TD></TR>
@@ -75,8 +75,8 @@ digraph "largeRelationshipsGraph" {
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="binds_locks.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">binds_locks</TD></TR>
-      <TR><TD PORT="lock_id" COLSPAN="3" ALIGN="LEFT">lock_id</TD></TR>
-      <TR><TD PORT="bind_id" COLSPAN="3" ALIGN="LEFT">bind_id</TD></TR>
+      <TR><TD PORT="lock_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">lock_id</TD></TR>
+      <TR><TD PORT="bind_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">bind_id</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
     </TABLE>>
     URL="tables/binds_locks.html#"
@@ -92,6 +92,17 @@ digraph "largeRelationshipsGraph" {
     </TABLE>>
     URL="tables/cleanup.html#"
     tooltip="cleanup"
+  ];
+  "collections" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="collections.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">collections</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="auto_version_new_children" COLSPAN="3" ALIGN="LEFT">auto_version_new_children</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="tables/collections.html#"
+    tooltip="collections"
   ];
   "dav_aces_privileges" [
     label=<
@@ -109,8 +120,8 @@ digraph "largeRelationshipsGraph" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="group_members.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">group_members</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="group_id" COLSPAN="3" ALIGN="LEFT">group_id</TD></TR>
-      <TR><TD PORT="member_id" COLSPAN="3" ALIGN="LEFT">member_id</TD></TR>
+      <TR><TD PORT="group_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">group_id</TD></TR>
+      <TR><TD PORT="member_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">member_id</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
     </TABLE>>
     URL="tables/group_members.html#"
@@ -121,12 +132,12 @@ digraph "largeRelationshipsGraph" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="locks.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">locks</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="uuid" COLSPAN="3" ALIGN="LEFT">uuid</TD></TR>
-      <TR><TD PORT="resource_id" COLSPAN="3" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="uuid" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">uuid</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
       <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="form" COLSPAN="3" ALIGN="LEFT">form</TD></TR>
       <TR><TD PORT="depth" COLSPAN="3" ALIGN="LEFT">depth</TD></TR>
-      <TR><TD PORT="expires_at" COLSPAN="3" ALIGN="LEFT">expires_at</TD></TR>
+      <TR><TD PORT="expires_at" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">expires_at</TD></TR>
       <TR><TD PORT="owner_info" COLSPAN="3" ALIGN="LEFT">owner_info</TD></TR>
       <TR><TD PORT="lockroot" COLSPAN="3" ALIGN="LEFT">lockroot</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 &gt;</TD></TR>
@@ -149,7 +160,7 @@ digraph "largeRelationshipsGraph" {
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="media.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">media</TD></TR>
-      <TR><TD PORT="resource_id" COLSPAN="3" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
       <TR><TD PORT="size" COLSPAN="3" ALIGN="LEFT">size</TD></TR>
       <TR><TD PORT="mimetype" COLSPAN="3" ALIGN="LEFT">mimetype</TD></TR>
       <TR><TD PORT="sha1" COLSPAN="3" ALIGN="LEFT">sha1</TD></TR>
@@ -164,7 +175,7 @@ digraph "largeRelationshipsGraph" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="namespaces.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">namespaces</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="name" COLSPAN="3" ALIGN="LEFT">name</TD></TR>
+      <TR><TD PORT="name" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">name</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">  </TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 &gt;</TD></TR>
     </TABLE>>
     URL="tables/namespaces.html#"
@@ -175,7 +186,7 @@ digraph "largeRelationshipsGraph" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="principals.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">principals</TD></TR>
       <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
-      <TR><TD PORT="name" COLSPAN="3" ALIGN="LEFT">name</TD></TR>
+      <TR><TD PORT="name" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">name</TD></TR>
       <TR><TD PORT="email" COLSPAN="3" ALIGN="LEFT">email</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">9 &gt;</TD></TR>
     </TABLE>>
@@ -187,9 +198,9 @@ digraph "largeRelationshipsGraph" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="properties.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">properties</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="namespace_id" COLSPAN="3" ALIGN="LEFT">namespace_id</TD></TR>
-      <TR><TD PORT="name" COLSPAN="3" ALIGN="LEFT">name</TD></TR>
-      <TR><TD PORT="resource_id" COLSPAN="3" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="namespace_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">namespace_id</TD></TR>
+      <TR><TD PORT="name" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">name</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
       <TR><TD PORT="xmlinfo" COLSPAN="3" ALIGN="LEFT">xmlinfo</TD></TR>
       <TR><TD PORT="value" COLSPAN="3" ALIGN="LEFT">value</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
@@ -209,20 +220,33 @@ digraph "largeRelationshipsGraph" {
     URL="tables/quota.html#"
     tooltip="quota"
   ];
+  "redirectrefs" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="redirectrefs.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">redirectrefs</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="reftarget" COLSPAN="3" ALIGN="LEFT">reftarget</TD></TR>
+      <TR><TD PORT="lifetime" COLSPAN="3" ALIGN="LEFT">lifetime</TD></TR>
+      <TR><TD PORT="updated_at" COLSPAN="3" ALIGN="LEFT">updated_at</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="tables/redirectrefs.html#"
+    tooltip="redirectrefs"
+  ];
   "resources" [
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="resources.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">resources</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="uuid" COLSPAN="3" ALIGN="LEFT">uuid</TD></TR>
+      <TR><TD PORT="uuid" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">uuid</TD></TR>
       <TR><TD PORT="created_at" COLSPAN="3" ALIGN="LEFT">created_at</TD></TR>
       <TR><TD PORT="displayname" COLSPAN="3" ALIGN="LEFT">displayname</TD></TR>
       <TR><TD PORT="contentlanguage" COLSPAN="3" ALIGN="LEFT">contentlanguage</TD></TR>
       <TR><TD PORT="comment" COLSPAN="3" ALIGN="LEFT">comment</TD></TR>
-      <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
+      <TR><TD PORT="owner_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="creator_id" COLSPAN="3" ALIGN="LEFT">creator_id</TD></TR>
       <TR><TD PORT="type" COLSPAN="3" ALIGN="LEFT">type</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">15 &gt;</TD></TR>
     </TABLE>>
     URL="tables/resources.html#"
     tooltip="resources"
@@ -231,8 +255,8 @@ digraph "largeRelationshipsGraph" {
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="transitive_group_members.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">transitive_group_members</TD></TR>
-      <TR><TD PORT="transitive_group_id" COLSPAN="3" ALIGN="LEFT">transitive_group_id</TD></TR>
-      <TR><TD PORT="transitive_member_id" COLSPAN="3" ALIGN="LEFT">transitive_member_id</TD></TR>
+      <TR><TD PORT="transitive_group_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">transitive_group_id</TD></TR>
+      <TR><TD PORT="transitive_member_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">transitive_member_id</TD></TR>
       <TR><TD PORT="transitive_count" COLSPAN="3" ALIGN="LEFT">transitive_count</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
     </TABLE>>
@@ -311,6 +335,7 @@ digraph "largeRelationshipsGraph" {
   "binds_locks":"bind_id":w -> "binds":"id":e [arrowtail=crowtee arrowhead=none];
   "binds_locks":"lock_id":w -> "locks":"id":e [arrowtail=crowtee arrowhead=none];
   "cleanup":"resource_id":w -> "resources":"id":e [arrowtail=crowtee arrowhead=none];
+  "collections":"resource_id":w -> "resources":"id":e [arrowtail=tee arrowhead=none];
   "dav_aces_privileges":"ace_id":w -> "aces":"id":e [arrowtail=crowtee arrowhead=none];
   "dav_aces_privileges":"privilege_id":w -> "acl_privileges":"id":e [arrowtail=crowtee arrowhead=none];
   "group_members":"group_id":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
@@ -324,6 +349,7 @@ digraph "largeRelationshipsGraph" {
   "properties":"namespace_id":w -> "namespaces":"id":e [arrowtail=crowtee arrowhead=none];
   "properties":"resource_id":w -> "resources":"id":e [arrowtail=crowtee arrowhead=none];
   "quota":"principal_id":w -> "principals":"resource_id":e [arrowtail=tee arrowhead=none];
+  "redirectrefs":"resource_id":w -> "resources":"id":e [arrowtail=tee arrowhead=none];
   "resources":"creator_id":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
   "resources":"owner_id":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];
   "transitive_group_members":"transitive_group_id":w -> "principals":"resource_id":e [arrowtail=crowtee arrowhead=none];

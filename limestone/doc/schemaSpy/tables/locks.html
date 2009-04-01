@@ -100,7 +100,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>uuid</td>
+ <td class='indexedColumn' title='Indexed'>uuid</td>
  <td class='detail'>bpchar</td>
  <td class='detail' align='right'>32</td>
  <td class='detail' align='center'></td>
@@ -111,7 +111,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>resource_id</td>
+ <td class='indexedColumn' title='Indexed'>resource_id</td>
  <td class='detail'>int8</td>
  <td class='detail' align='right'>19</td>
  <td class='detail' align='center'></td>
@@ -171,7 +171,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>expires_at</td>
+ <td class='indexedColumn' title='Indexed'>expires_at</td>
  <td class='detail'>timestamp</td>
  <td class='detail' align='right'>29,6</td>
  <td class='detail' align='center'></td>
@@ -204,7 +204,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 </table>
-<p/>Table contained 0 rows at Fri Aug 01 16:13 GMT-05:00 2008
+<p/>Table contained 0 rows at Wed Apr 01 10:22 GMT-05:00 2009
 </td></tr></table>
 <div class='indent'>
 <b>Indexes:</b>
@@ -224,6 +224,24 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
   <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
   <td class='constraint' style='text-align:left;'>locks_pkey</td>
  </tr>
+ <tr>
+  <td class='indexedColumn'>expires_at</td>
+  <td class='detail'>Performance</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>idx_locks_expires_at</td>
+ </tr>
+ <tr>
+  <td class='indexedColumn'>resource_id</td>
+  <td class='detail'>Performance</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>idx_locks_resource_id</td>
+ </tr>
+ <tr>
+  <td class='indexedColumn'>uuid</td>
+  <td class='detail'>Must be unique</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>sk_locks_uuid</td>
+ </tr>
 </table>
 </div>
 <table width='100%' border='0'><tr><td class='container'>
@@ -241,20 +259,22 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
 </map>
 <map id="twoDegreesRelationshipsGraph" name="twoDegreesRelationshipsGraph">
 <area shape="rect" href="aces.html#graph" title="aces" alt="" coords="469,701,581,747"/>
-<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="207,541,337,792"/>
-<area shape="rect" href="principals.html#graph" title="principals" alt="" coords="16,541,128,587"/>
+<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="207,621,337,872"/>
+<area shape="rect" href="principals.html#graph" title="principals" alt="" coords="16,621,128,667"/>
 <area shape="rect" href="acl_inheritance.html#graph" title="acl_inheritance" alt="" coords="463,781,588,827"/>
-<area shape="rect" href="binds_locks.html#graph" title="binds_locks" alt="" coords="713,559,825,649"/>
-<area shape="rect" href="binds.html#graph" title="binds" alt="" coords="469,941,581,987"/>
+<area shape="rect" href="binds_locks.html#graph" title="binds_locks" alt="" coords="713,639,825,729"/>
+<area shape="rect" href="binds.html#graph" title="binds" alt="" coords="469,1101,581,1147"/>
 <area shape="rect" href="locks.html#" title="locks" alt="" coords="416,91,635,347"/>
 <area shape="rect" href="users.html#graph" title="users" alt="" coords="197,161,347,276"/>
 <area shape="rect" href="cleanup.html#graph" title="cleanup" alt="" coords="475,861,576,907"/>
+<area shape="rect" href="collections.html#graph" title="collections" alt="" coords="471,1021,580,1067"/>
 <area shape="rect" href="locks_resources.html#graph" title="locks_resources" alt="" coords="704,95,835,185"/>
-<area shape="rect" href="media.html#graph" title="media" alt="" coords="476,461,575,507"/>
-<area shape="rect" href="properties.html#graph" title="properties" alt="" coords="472,381,579,427"/>
+<area shape="rect" href="media.html#graph" title="media" alt="" coords="476,11,575,56"/>
+<area shape="rect" href="properties.html#graph" title="properties" alt="" coords="472,461,579,507"/>
+<area shape="rect" href="redirectrefs.html#graph" title="redirectrefs" alt="" coords="471,381,580,427"/>
 <area shape="rect" href="vcrs.html#graph" title="vcrs" alt="" coords="469,621,581,667"/>
 <area shape="rect" href="versions.html#graph" title="versions" alt="" coords="469,541,581,587"/>
-<area shape="rect" href="vhrs.html#graph" title="vhrs" alt="" coords="469,11,581,56"/>
+<area shape="rect" href="vhrs.html#graph" title="vhrs" alt="" coords="469,941,581,987"/>
 </map>
 </td></tr></table>
 </div>

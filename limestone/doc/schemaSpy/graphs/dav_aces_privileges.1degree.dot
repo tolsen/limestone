@@ -1,4 +1,4 @@
-// dot 2.20.2 on Linux 2.6.25-2-amd64
+// dot 2.20.2 on Linux 2.6.28-1-amd64
 digraph "oneDegreeRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -23,7 +23,7 @@ digraph "oneDegreeRelationshipsGraph" {
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
       <TR><TD PORT="grantdeny" COLSPAN="3" ALIGN="LEFT">grantdeny</TD></TR>
       <TR><TD PORT="protected" COLSPAN="3" ALIGN="LEFT">protected</TD></TR>
-      <TR><TD PORT="resource_id" COLSPAN="3" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
       <TR><TD PORT="principal_id" COLSPAN="3" ALIGN="LEFT">principal_id</TD></TR>
       <TR><TD PORT="property_namespace_id" COLSPAN="3" ALIGN="LEFT">property_namespace_id</TD></TR>
       <TR><TD PORT="property_name" COLSPAN="3" ALIGN="LEFT">property_name</TD></TR>

@@ -1,4 +1,4 @@
-// dot 2.20.2 on Linux 2.6.25-2-amd64
+// dot 2.20.2 on Linux 2.6.28-1-amd64
 digraph "oneDegreeRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -35,8 +35,8 @@ digraph "oneDegreeRelationshipsGraph" {
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="binds_locks.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">binds_locks</TD></TR>
-      <TR><TD PORT="lock_id" COLSPAN="3" ALIGN="LEFT">lock_id</TD></TR>
-      <TR><TD PORT="bind_id" COLSPAN="3" ALIGN="LEFT">bind_id</TD></TR>
+      <TR><TD PORT="lock_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">lock_id</TD></TR>
+      <TR><TD PORT="bind_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">bind_id</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
     </TABLE>>
     URL="binds_locks.html#graph"
@@ -47,15 +47,15 @@ digraph "oneDegreeRelationshipsGraph" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="resources.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">resources</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="uuid" COLSPAN="3" ALIGN="LEFT">uuid</TD></TR>
+      <TR><TD PORT="uuid" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">uuid</TD></TR>
       <TR><TD PORT="created_at" COLSPAN="3" ALIGN="LEFT">created_at</TD></TR>
       <TR><TD PORT="displayname" COLSPAN="3" ALIGN="LEFT">displayname</TD></TR>
       <TR><TD PORT="contentlanguage" COLSPAN="3" ALIGN="LEFT">contentlanguage</TD></TR>
       <TR><TD PORT="comment" COLSPAN="3" ALIGN="LEFT">comment</TD></TR>
-      <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
+      <TR><TD PORT="owner_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="creator_id" COLSPAN="3" ALIGN="LEFT">creator_id</TD></TR>
       <TR><TD PORT="type" COLSPAN="3" ALIGN="LEFT">type</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">15 &gt;</TD></TR>
     </TABLE>>
     URL="resources.html#graph"
     tooltip="resources"

@@ -1,4 +1,4 @@
 find schemaSpy -type f -not -wholename '*/.svn/*' | xargs -r rm
 java -jar schemaSpy.jar -t pgsql -host localhost -db ${LIMESTONE_PGSQL_DB_NAME} -u ${LIMESTONE_PGSQL_DB_USER} -p ${LIMESTONE_PGSQL_DB_PASS} -o schemaSpy -noimplied -cp /usr/share/java/postgresql.jar
-svn status schemaSpy | grep ^\? | awk '{ print $2; }' | xargs -r svn add
-svn status schemaSpy | grep ^\! | awk '{ print $2; }' | xargs -r svn delete
+#svn status schemaSpy | grep ^\? | awk '{ print $2; }' | xargs -r svn add
+#svn status schemaSpy | grep ^\! | awk '{ print $2; }' | xargs -r svn delete

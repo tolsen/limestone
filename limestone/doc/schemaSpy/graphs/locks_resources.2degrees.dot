@@ -1,4 +1,4 @@
-// dot 2.20.2 on Linux 2.6.25-2-amd64
+// dot 2.20.2 on Linux 2.6.28-1-amd64
 digraph "twoDegreesRelationshipsGraph" {
   graph [
     rankdir="RL"
@@ -20,12 +20,14 @@ digraph "twoDegreesRelationshipsGraph" {
   "binds":"binds.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
   "binds_locks":"binds_locks.heading":w -> "locks":"locks.heading":e [arrowtail=crowtee arrowhead=none];
   "cleanup":"cleanup.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
+  "collections":"collections.heading":w -> "resources":"resources.heading":e [arrowtail=tee arrowhead=none];
   "locks":"locks.heading":w -> "users":"users.heading":e [arrowtail=crowtee arrowhead=none];
   "locks_resources":"lock_id":w -> "locks":"id":e [arrowtail=crowtee arrowhead=none];
   "locks_resources":"resource_id":w -> "resources":"id":e [arrowtail=crowtee arrowhead=none];
   "media":"media.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
   "principals":"principals.heading":w -> "resources":"resources.heading":e [arrowtail=tee arrowhead=none];
   "properties":"properties.heading":w -> "resources":"resources.heading":e [arrowtail=crowtee arrowhead=none];
+  "redirectrefs":"redirectrefs.heading":w -> "resources":"resources.heading":e [arrowtail=tee arrowhead=none];
   "resources":"resources.heading":w -> "principals":"principals.heading":e [arrowtail=crowtee arrowhead=none];
   "resources":"resources.heading":w -> "principals":"principals.heading":e [arrowtail=crowtee arrowhead=none];
   "vcrs":"vcrs.heading":w -> "resources":"resources.heading":e [arrowtail=tee arrowhead=none];
@@ -76,17 +78,26 @@ digraph "twoDegreesRelationshipsGraph" {
     URL="cleanup.html#graph"
     tooltip="cleanup"
   ];
+  "collections" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="collections.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">collections</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">4 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="collections.html#graph"
+    tooltip="collections"
+  ];
   "locks" [
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="locks.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">locks</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="uuid" COLSPAN="3" ALIGN="LEFT">uuid</TD></TR>
-      <TR><TD PORT="resource_id" COLSPAN="3" ALIGN="LEFT">resource_id</TD></TR>
+      <TR><TD PORT="uuid" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">uuid</TD></TR>
+      <TR><TD PORT="resource_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">resource_id</TD></TR>
       <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="form" COLSPAN="3" ALIGN="LEFT">form</TD></TR>
       <TR><TD PORT="depth" COLSPAN="3" ALIGN="LEFT">depth</TD></TR>
-      <TR><TD PORT="expires_at" COLSPAN="3" ALIGN="LEFT">expires_at</TD></TR>
+      <TR><TD PORT="expires_at" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">expires_at</TD></TR>
       <TR><TD PORT="owner_info" COLSPAN="3" ALIGN="LEFT">owner_info</TD></TR>
       <TR><TD PORT="lockroot" COLSPAN="3" ALIGN="LEFT">lockroot</TD></TR>
       <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">2 &gt;</TD></TR>
@@ -132,20 +143,29 @@ digraph "twoDegreesRelationshipsGraph" {
     URL="properties.html#graph"
     tooltip="properties"
   ];
+  "redirectrefs" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD PORT="redirectrefs.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">redirectrefs</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="redirectrefs.html#graph"
+    tooltip="redirectrefs"
+  ];
   "resources" [
     label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD PORT="resources.heading" COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">resources</TD></TR>
       <TR><TD PORT="id" COLSPAN="3" BGCOLOR="#bed1b8" ALIGN="LEFT">id</TD></TR>
-      <TR><TD PORT="uuid" COLSPAN="3" ALIGN="LEFT">uuid</TD></TR>
+      <TR><TD PORT="uuid" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">uuid</TD></TR>
       <TR><TD PORT="created_at" COLSPAN="3" ALIGN="LEFT">created_at</TD></TR>
       <TR><TD PORT="displayname" COLSPAN="3" ALIGN="LEFT">displayname</TD></TR>
       <TR><TD PORT="contentlanguage" COLSPAN="3" ALIGN="LEFT">contentlanguage</TD></TR>
       <TR><TD PORT="comment" COLSPAN="3" ALIGN="LEFT">comment</TD></TR>
-      <TR><TD PORT="owner_id" COLSPAN="3" ALIGN="LEFT">owner_id</TD></TR>
+      <TR><TD PORT="owner_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">owner_id</TD></TR>
       <TR><TD PORT="creator_id" COLSPAN="3" ALIGN="LEFT">creator_id</TD></TR>
       <TR><TD PORT="type" COLSPAN="3" ALIGN="LEFT">type</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">13 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">8 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">15 &gt;</TD></TR>
     </TABLE>>
     URL="resources.html#graph"
     tooltip="resources"

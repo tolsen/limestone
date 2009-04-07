@@ -315,7 +315,7 @@ $(ORIGINAL_HTTPD_CONF) $(APXS): $(APACHE_BUILD_OUT) $(APACHE_INSTALL_DEPS)
 
 # LimeStone
 
-LS_INSTALLED_CONFIG = aproot/conf/limestone.conf
+LS_INSTALLED_CONFIG = aproot/conf/lime-nonvhost/001-limestone.conf
 LS_INSTALLED_MIME_TYPES = aproot/conf/mime.types
 
 ifeq (@ENABLE_PROFILE@,yes)
@@ -364,7 +364,7 @@ $(LS_INSTALLED_CONFIG) logrotate.conf: $(LS_MODULE) install-config
 	./install-config @INSTALL_CONF_FLAGS@
 
 limestone-install-modules: $(LS_INSTALLED_MODULE)
-$(LS_INSTALLED_MODULE): $(LS_MODULE)
+$(LS_INSTALLED_MODULE): $(LS_MODULE) $(LS_INSTALLED_CONFIG)
 	cd limestone && $(MAKE) install
 
 limestone-install: limestone-install-config limestone-install-modules

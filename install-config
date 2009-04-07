@@ -6,27 +6,37 @@
 
 use strict;
 
-my $ORIG_CONFIG = "aproot/conf/original/httpd.conf";
-my $CONFIG = "aproot/conf/httpd.conf";
-my $NEWCONFIG = "aproot/conf/httpd.conf.new";
-my $LIMESTONE_CONFIG = "aproot/conf/limestone.conf";
+my $WD = `pwd`;
+chomp $WD;
+my $TMP_DIR = "${WD}/tmp";
+my $FILES_DIR = "${WD}/files";
+my $NON_VHOST_CONF_DIR_RELATIVE = "conf/lime-nonvhost";
+my $VHOST_CONF_DIR_RELATIVE = "conf/lime-vhost";
+my $NON_VHOST_CONF_DIR = "${WD}/aproot/${NON_VHOST_CONF_DIR_RELATIVE}";
+my $VHOST_CONF_DIR = "${WD}/aproot/${VHOST_CONF_DIR_RELATIVE}";
+my $LOGS_DIR = "${WD}/aproot/logs";
+
+my $ORIG_HTTPD_CONFIG = "aproot/conf/original/httpd.conf";
+my $HTTPD_CONFIG = "aproot/conf/httpd.conf";
+my $NEW_HTTPD_CONFIG = "aproot/conf/httpd.conf.new";
+my $LIMESTONE_CONFIG = "${NON_VHOST_CONF_DIR}/001-limestone.conf";
 my $LOGROTATE_CONFIG = "logrotate.conf";
 my $LOGROTATE_CONFIG_NEW = "logrotate.conf.new";
 
-my $WD = `pwd`;
-chomp $WD;
-my $TMPDIR = "${WD}/tmp";
-my $FILEDIR = "${WD}/files";
-my $LOGSDIR = "${WD}/aproot/logs";
-
 my ($CONF_PGSQL_VHOST, $CONF_MYSQL_VHOST) = ("no", "no");
 
--d $TMPDIR or mkdir($TMPDIR) or die ("couldn't make $TMPDIR");
--d $FILEDIR or mkdir($FILEDIR) or die ("couldn't make $FILEDIR");
- 
 
-sub print_dav_vhost_config ($$$$$$$$$) {
-  my ($config_fh, $vhost_port, $db_driver, $db_host, $db_port, $db_sock, $db_name, $db_user, $db_pass) = (shift, shift, shift, shift, shift, shift, shift, shift, shift);
+# make directories
+my @dirs2create = ($TMP_DIR, $FILES_DIR, $NON_VHOST_CONF_DIR, $VHOST_CONF_DIR);
+my $dir2create;
+
+foreach $dir2create (@dirs2create) {
+  -d $dir2create or mkdir($dir2create) or die ("couldn't make $dir2create");
+}
+
+sub print_limestone_config ($$$$$$$$$) {
+  my ($config_fh, $vhost_port, $db_driver, $db_host,
+      $db_port, $db_sock, $db_name, $db_user, $db_pass) = @_;
 
   my $ROOT_PATH = "/";
 
@@ -63,8 +73,8 @@ LogFormat "%h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %>s %b \\"%{Referer}i\\" 
 CustomLog "logs/access_log" limestone
 
 DAVLimestoneIndexCSS  http://www.$host_domain${port_part_of_host}/css/style.css
-DAVDBMSTmpDir $TMPDIR
-DAVDBMSFileDir $FILEDIR
+DAVDBMSTmpDir $TMP_DIR
+DAVDBMSFileDir $FILES_DIR
 # To allow depth: infinity PROPFINDs required by some clients.
 DAVDepthInfinity on
 
@@ -73,16 +83,16 @@ DAVDepthInfinity on
   ModMimeUsePathInfo on
 
   DAVUnauthenticatedAccess on
-    DAVResponseRewriteCond Request-URI          /\\!lime/root.*
-    DAVResponseRewriteRule (.*)                 /!lime/root\$1
+  DAVResponseRewriteCond Request-URI          /\\!lime/root.*
+  DAVResponseRewriteRule (.*)                 /!lime/root\$1
 
-    # work around the fact that the response rewrite system doesn't allow for multiple conditions for a rule. the next rule will undo this one.
-    DAVResponseRewriteCond Host                 ^(drive\\.)?www\\.$host_domain.*
-    DAVResponseRewriteRule (.*)                 /home/\$1
+  # work around the fact that the response rewrite system doesn't allow for multiple conditions for a rule. the next rule will undo this one.
+  DAVResponseRewriteCond Host                 ^(drive\\.)?www\\.$host_domain.*
+  DAVResponseRewriteRule (.*)                 /home/\$1
 
-    # keep this tied to the one right above
-    DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+.$host_domain.*
-    DAVResponseRewriteRule ^/home/[^/]*/?(.*)   /\$1
+  # keep this tied to the one right above
+  DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+.$host_domain.*
+  DAVResponseRewriteRule ^/home/[^/]*/?(.*)   /\$1
 
   AuthType Digest
   AuthName "users\@limebits.com"
@@ -132,8 +142,8 @@ NameVirtualHost *:${vhost_port}
 Listen $vhost_port
 
 <VirtualHost *:${vhost_port}>
-  ServerName ${host_domain}:${vhost_port}
-
+  ServerName ${host_domain}${port_part_of_host}
+  Include ${VHOST_CONF_DIR_RELATIVE}/
 </VirtualHost>
 EOF
 ;
@@ -143,7 +153,7 @@ sub print_logrotate_config($) {
   my ($config_fh) = @_;
 
   print $config_fh <<EOF
-${LOGSDIR}/*log {
+${LOGS_DIR}/*log {
     weekly
     missingok
     compress
@@ -166,42 +176,30 @@ sub rename_or_die($$) {
     die("couldn't rename $src to $dest");
 }
 
-my ($sql1, $sql2) = (shift, shift);
-$CONF_PGSQL_VHOST="yes" if ($sql1 && ($sql1 eq "pgsql") || $sql2 && ($sql2 eq "pgsql"));
-$CONF_MYSQL_VHOST="yes" if ($sql1 && ($sql1 eq "mysql") || $sql2 && ($sql2 eq "mysql"));
+my @mysql_args = grep /mysql/, @ARGV;
+my @pgsql_args = grep /pgsql/, @ARGV;
+
+die "mysql no longer supported" if ($#mysql_args > -1);
+die "Only pgsql is supported.  Please specify pgsql." if ($#pgsql_args < 0);
+  
 
 open(LIMESTONE_CONFIG, '>', $LIMESTONE_CONFIG) or die("couldn't open $LIMESTONE_CONFIG");
 
-if ($CONF_PGSQL_VHOST eq "yes") {
-  my $LSPORT = $ENV{'LIMESTONE_PGSQL_VHOST_PORT'};
-  my $DBHOST = $ENV{'LIMESTONE_PGSQL_DB_HOST'};
-  my $DBPORT = $ENV{'LIMESTONE_PGSQL_DB_PORT'};
-  my $DBNAME = $ENV{'LIMESTONE_PGSQL_DB_NAME'};
-  my $DBUSER = $ENV{'LIMESTONE_PGSQL_DB_USER'};
-  my $DBPASS = $ENV{'LIMESTONE_PGSQL_DB_PASS'};
-  print_dav_vhost_config
-    (*LIMESTONE_CONFIG, $LSPORT, "pgsql", $DBHOST, $DBPORT, 0, $DBNAME, $DBUSER, $DBPASS)
-}
-
-if ($CONF_MYSQL_VHOST eq "yes") {
-  my $LSPORT = $ENV{'LIMESTONE_MYSQL_VHOST_PORT'};
-  my $DBHOST = $ENV{'LIMESTONE_MYSQL_DB_HOST'};
-  my $DBPORT = $ENV{'LIMESTONE_MYSQL_DB_PORT'};
-  my $DBSOCK = $ENV{'LIMESTONE_MYSQL_DB_SOCK'};
-  my $DBNAME = $ENV{'LIMESTONE_MYSQL_DB_NAME'};
-  my $DBUSER = $ENV{'LIMESTONE_MYSQL_DB_USER'};
-  my $DBPASS = $ENV{'LIMESTONE_MYSQL_DB_PASS'};
-  print_dav_vhost_config
-    (*LIMESTONE_CONFIG, $LSPORT, "mysql", $DBHOST, $DBPORT, $DBSOCK, $DBNAME, $DBUSER, $DBPASS)
-}
+my $LSPORT = $ENV{'LIMESTONE_PGSQL_VHOST_PORT'};
+my $DBHOST = $ENV{'LIMESTONE_PGSQL_DB_HOST'};
+my $DBPORT = $ENV{'LIMESTONE_PGSQL_DB_PORT'};
+my $DBNAME = $ENV{'LIMESTONE_PGSQL_DB_NAME'};
+my $DBUSER = $ENV{'LIMESTONE_PGSQL_DB_USER'};
+my $DBPASS = $ENV{'LIMESTONE_PGSQL_DB_PASS'};
+print_limestone_config
+  (*LIMESTONE_CONFIG, $LSPORT, "pgsql", $DBHOST, $DBPORT, 0, $DBNAME, $DBUSER, $DBPASS);
 
 close(LIMESTONE_CONFIG) or die("couldn't close $LIMESTONE_CONFIG");
 
-open(ORIG_CONFIG, $ORIG_CONFIG) or die("couldn't open $ORIG_CONFIG");
-open(NEWCONFIG, '>', $NEWCONFIG) or die("couldn't open $NEWCONFIG");
+open(ORIG_HTTPD_CONFIG, $ORIG_HTTPD_CONFIG) or die("couldn't open $ORIG_HTTPD_CONFIG");
+open(NEW_HTTPD_CONFIG, '>', $NEW_HTTPD_CONFIG) or die("couldn't open $NEW_HTTPD_CONFIG");
   
-
-while (<ORIG_CONFIG>) {
+while (<ORIG_HTTPD_CONFIG>) {
   s/^Listen 80$/#Listen 80/;
   s|(CustomLog "logs/access_log" common$)|#$1|;
 
@@ -215,20 +213,19 @@ while (<ORIG_CONFIG>) {
     s/(^ServerAdmin ).*/${1}$ENV{'HTTPD_SERVERADMIN'}/;
   }
 
-  print NEWCONFIG;
+  print NEW_HTTPD_CONFIG;
 }
-print NEWCONFIG "\nInclude conf/limestone.conf\n";
+print NEW_HTTPD_CONFIG "\nInclude ${NON_VHOST_CONF_DIR_RELATIVE}/\n";
 
-
-close(ORIG_CONFIG) or die("couldn't close $ORIG_CONFIG");
-close(NEWCONFIG) or die("couldn't close $NEWCONFIG");
+close(ORIG_HTTPD_CONFIG) or die("couldn't close $ORIG_HTTPD_CONFIG");
+close(NEW_HTTPD_CONFIG) or die("couldn't close $NEW_HTTPD_CONFIG");
 
 open(LOGROTATE_CONFIG_NEW, '>', $LOGROTATE_CONFIG_NEW) or
   die("couldn't open $LOGROTATE_CONFIG_NEW");
 print_logrotate_config(*LOGROTATE_CONFIG_NEW);
 close(LOGROTATE_CONFIG_NEW);
 
-rename_or_die($NEWCONFIG, $CONFIG);
+rename_or_die($NEW_HTTPD_CONFIG, $HTTPD_CONFIG);
 rename_or_die($LOGROTATE_CONFIG_NEW, $LOGROTATE_CONFIG);
 
 exit 0;

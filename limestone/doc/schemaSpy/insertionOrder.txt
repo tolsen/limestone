@@ -11,8 +11,10 @@ acl_privileges
 binds
 acl_inheritance
 cleanup
+collections
 media
 quota
+redirectrefs
 user_domains
 binds_locks
 dav_aces_privileges

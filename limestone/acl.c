@@ -107,7 +107,7 @@ const char *dav_repos_principal_to_s(const dav_principal *principal)
 }
 
 /** 
- * Computes if a certain prinvipal is allowed
+ * Computes if a certain principal is allowed
  * to use a given permission on a resource. 
  * @param principal The principal who wants to do something. 
  * @param resource The resource an which the action should be taken. 

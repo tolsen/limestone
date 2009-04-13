@@ -76,7 +76,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
 </thead>
 <tbody valign='top'>
 <tr>
- <td class='detail'>lock_id</td>
+ <td class='indexedColumn' title='Indexed'>lock_id</td>
  <td class='detail'>int8</td>
  <td class='detail' align='right'>19</td>
  <td class='detail' align='center'></td>
@@ -95,7 +95,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>bind_id</td>
+ <td class='indexedColumn' title='Indexed'>bind_id</td>
  <td class='detail'>int8</td>
  <td class='detail' align='right'>19</td>
  <td class='detail' align='center'></td>
@@ -114,8 +114,28 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 </table>
-<p/>Table contained 0 rows at Fri Aug 01 16:13 GMT-05:00 2008
+<p/>Table contained 0 rows at Wed Apr 01 10:22 GMT-05:00 2009
 </td></tr></table>
+<div class='indent'>
+<b>Indexes:</b>
+<table class='dataTable' border='1' rules='groups'><colgroup><colgroup><colgroup><colgroup>
+<thead>
+ <tr>
+  <th>Column(s)</th>
+  <th>Type</th>
+  <th>Sort</th>
+  <th class='constraint' style='text-align:left;'>Constraint Name</th>
+ </tr>
+</thead>
+<tbody>
+ <tr>
+  <td class='indexedColumn'>bind_id + lock_id</td>
+  <td class='detail'>Must be unique</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>sk_binds_locks_bind_id_lock_id</td>
+ </tr>
+</table>
+</div>
 <table width='100%' border='0'><tr><td class='container'>
 <br/><form action='get'><b>Close relationships</b><span class='degrees' id='degrees'>
 &nbsp;within <input type='radio' name='degrees' id='oneDegree' onclick="if (!this.checked) selectGraph('../graphs/binds_locks.2degrees.png', '#twoDegreesRelationshipsGraph');else selectGraph('../graphs/binds_locks.1degree.png', '#oneDegreeRelationshipsGraph'); " checked>one
@@ -128,12 +148,12 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
 <area shape="rect" href="locks.html#graph" title="locks" alt="" coords="16,11,128,261"/>
 </map>
 <map id="twoDegreesRelationshipsGraph" name="twoDegreesRelationshipsGraph">
-<area shape="rect" href="binds_locks.html#" title="binds_locks" alt="" coords="387,195,528,291"/>
-<area shape="rect" href="binds.html#graph" title="binds" alt="" coords="205,296,317,456"/>
-<area shape="rect" href="locks.html#graph" title="locks" alt="" coords="205,11,317,261"/>
-<area shape="rect" href="users.html#graph" title="users" alt="" coords="20,132,132,177"/>
-<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="16,52,136,97"/>
-<area shape="rect" href="locks_resources.html#graph" title="locks_resources" alt="" coords="392,35,523,80"/>
+<area shape="rect" href="binds.html#graph" title="binds" alt="" coords="205,11,317,171"/>
+<area shape="rect" href="resources.html#graph" title="resources" alt="" coords="16,91,136,136"/>
+<area shape="rect" href="binds_locks.html#" title="binds_locks" alt="" coords="387,44,528,140"/>
+<area shape="rect" href="locks.html#graph" title="locks" alt="" coords="205,205,317,456"/>
+<area shape="rect" href="users.html#graph" title="users" alt="" coords="20,297,132,343"/>
+<area shape="rect" href="locks_resources.html#graph" title="locks_resources" alt="" coords="392,229,523,275"/>
 </map>
 </td></tr></table>
 </div>

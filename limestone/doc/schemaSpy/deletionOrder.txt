@@ -10,8 +10,10 @@ group_members
 dav_aces_privileges
 binds_locks
 user_domains
+redirectrefs
 quota
 media
+collections
 cleanup
 acl_inheritance
 binds

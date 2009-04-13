@@ -100,7 +100,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>name</td>
+ <td class='indexedColumn' title='Indexed'>name</td>
  <td class='detail'>varchar</td>
  <td class='detail' align='right'>4096</td>
  <td class='detail' align='center'></td>
@@ -111,7 +111,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 </table>
-<p/>Table contained 2 rows at Fri Aug 01 16:13 GMT-05:00 2008
+<p/>Table contained 2 rows at Wed Apr 01 10:22 GMT-05:00 2009
 </td></tr></table>
 <div class='indent'>
 <b>Indexes:</b>
@@ -130,6 +130,12 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
   <td class='detail'>Primary key</td>
   <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
   <td class='constraint' style='text-align:left;'>namespaces_pkey</td>
+ </tr>
+ <tr>
+  <td class='indexedColumn'>name</td>
+  <td class='detail'>Must be unique</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>sk_namespaces_name</td>
  </tr>
 </table>
 </div>

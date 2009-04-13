@@ -87,7 +87,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>group_id</td>
+ <td class='indexedColumn' title='Indexed'>group_id</td>
  <td class='detail'>int8</td>
  <td class='detail' align='right'>19</td>
  <td class='detail' align='center'></td>
@@ -106,7 +106,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 <tr>
- <td class='detail'>member_id</td>
+ <td class='indexedColumn' title='Indexed'>member_id</td>
  <td class='detail'>int8</td>
  <td class='detail' align='right'>19</td>
  <td class='detail' align='center'></td>
@@ -125,7 +125,7 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
  <td class='comment'></td>
 </tr>
 </table>
-<p/>Table contained 2 rows at Fri Aug 01 16:13 GMT-05:00 2008
+<p/>Table contained 2 rows at Wed Apr 01 10:22 GMT-05:00 2009
 </td></tr></table>
 <div class='indent'>
 <b>Indexes:</b>
@@ -144,6 +144,18 @@ Please <a href='http://sourceforge.net/donate/index.php?group_id=137197' target=
   <td class='detail'>Primary key</td>
   <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
   <td class='constraint' style='text-align:left;'>group_members_pkey</td>
+ </tr>
+ <tr>
+  <td class='indexedColumn'>member_id</td>
+  <td class='detail'>Performance</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>idx_group_members_member_id</td>
+ </tr>
+ <tr>
+  <td class='indexedColumn'>group_id + member_id</td>
+  <td class='detail'>Must be unique</td>
+  <td class='detail' style='text-align:left;'><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span></td>
+  <td class='constraint' style='text-align:left;'>sk_group_members_group_id_member_id</td>
  </tr>
 </table>
 </div>

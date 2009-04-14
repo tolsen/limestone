@@ -123,7 +123,6 @@ int dav_repos_is_allow(const dav_principal * principal,
     dav_repos_resource *db_r;
     dav_repos_db *db;
     apr_pool_t *pool;
-    long principal_id;
 
     TRACE();
 
@@ -146,10 +145,8 @@ int dav_repos_is_allow(const dav_principal * principal,
     long priv_ns_id;
     dbms_get_namespace_id(pool, db, dav_get_privilege_namespace(privilege), &priv_ns_id);
 
-    principal_id = dav_repos_get_principal_id(principal);
-    
-    retVal = dbms_is_allow(db, pool, priv_ns_id, privilege_name, principal_id,
-			   db_r->serialno);
+    retVal = dbms_is_allow(db, priv_ns_id, privilege_name, principal, db_r);
+
     if(!retVal) {
         /* add a need-privileges error tag */
         const char *res_elem = 

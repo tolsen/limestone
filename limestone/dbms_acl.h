@@ -69,9 +69,8 @@ dav_error *dbms_add_ace(const dav_repos_db * d, dav_repos_resource * r,
 
 int dbms_get_acl(const dav_repos_db * d, dav_repos_resource * r);
 
-int dbms_is_allow(const dav_repos_db * db, apr_pool_t * pool,
-		  long priv_ns_id, const char *privilege, long principal_id,
-		  int resource_id);
+int dbms_is_allow(const dav_repos_db * db, long priv_ns_id, const char *privilege, 
+                  const dav_principal *principal, dav_repos_resource *r);
 
 dav_privileges *dbms_get_privileges(const dav_repos_db * db,
 				    apr_pool_t * pool, long principal_id,

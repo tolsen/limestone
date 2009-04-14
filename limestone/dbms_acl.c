@@ -431,7 +431,16 @@ int dbms_get_acl(const dav_repos_db * d, dav_repos_resource * r)
     r->acl = acl;
     return 1;
 }
-       
+
+static const char *make_member_query(apr_pool_t *pool, long p_id, int order)
+{
+    return apr_psprintf(pool, 
+                        " SELECT %d AS p_id, transitive_group_id AS group_id"
+                         " FROM transitive_group_members"
+                         " WHERE transitive_member_id = %ld"
+                        " UNION (SELECT %d, %ld)", order, p_id, order, p_id);
+}
+
 /**
  * Check permissions of a principal on a given (resource, privilege)
  * @param db DB connection struct
@@ -440,34 +449,51 @@ int dbms_get_acl(const dav_repos_db * d, dav_repos_resource * r)
  * @param resource_id of the resource
  * @return TRUE if granted
  */
-int dbms_is_allow(const dav_repos_db * db, apr_pool_t * pool,
-		  long priv_ns_id, const char *privilege, long principal_id,
-		  int resource_id)
+int dbms_is_allow(const dav_repos_db * db, long priv_ns_id, 
+                  const char *privilege, const dav_principal *principal, 
+                  dav_repos_resource *r)
 {
     int retVal = FALSE;
     dav_repos_query *q = NULL;
+    long p_id = dav_repos_get_principal_id(principal);
+    const dav_principal *iter = principal;
+    apr_pool_t *pool = r->p;
 
     TRACE();
 
     /* NOTE: short circuiting ACL checks for super user */
-    if(principal_id == SUPER_USER_ID) {
+    if(p_id == SUPER_USER_ID) {
         return TRUE;
     }
 
-    q = dbms_prepare(pool, db->db,
+    /* first look in cache */
+    if(r->ace_cache && 
+        r->ace_cache->principal_id == p_id && 
+        r->ace_cache->priv_ns_id == priv_ns_id &&
+        strcmp(r->ace_cache->privilege, privilege) == 0) {
+        return r->ace_cache->is_allow;
+    }
+
+    int order = 1;
+    const char *members_query = make_member_query(pool, p_id, order);
+    while((iter = iter->next)) {
+        order = order + 1;
+        p_id = dav_repos_get_principal_id(iter);
+        members_query = apr_pstrcat(pool, members_query, " UNION ",
+                                    make_member_query(pool, p_id, order), NULL);
+    }
+    int max_order = order;
+
+    const char *is_allow_query = 
+        apr_psprintf(pool, 
 		     /* Get the relevant ACE */
-                     "SELECT aces.grantdeny FROM aces "
+                     "SELECT DISTINCT ON (p_id) aces.grantdeny, p_id FROM aces "
                      "INNER JOIN dav_aces_privileges ap "
                      "ON aces.id = ap.ace_id "
                      
                      /* Join with a membership table */
                      "INNER JOIN "
-                     "( (SELECT transitive_group_id AS group_id "
-                     "   FROM transitive_group_members "
-                     "   WHERE transitive_member_id=?) "
-                     " UNION "
-                     "  (SELECT ?) "
-                     ") membership ON aces.principal_id = membership.group_id "
+                     "(%s) membership ON aces.principal_id = membership.group_id "
 
                      /* check the aggregate privileges */
                      "INNER JOIN "
@@ -495,28 +521,52 @@ int dbms_is_allow(const dav_repos_db * db, apr_pool_t * pool,
                      /* give priority to own aces over those inherited
                       * then protected aces, and to aces higher in the list
                         submitted by the client(translates to a lower id) */
-                     "ORDER BY CHAR_LENGTH(par_res_path) DESC, protected DESC, id "
-                     "LIMIT 1 ");
+                     "ORDER BY p_id, CHAR_LENGTH(par_res_path) DESC,"
+                     " protected DESC, id ", members_query);
 
-    dbms_set_int(q, 1, principal_id);
-    dbms_set_int(q, 2, principal_id);
-    dbms_set_string(q, 3, privilege);
-    dbms_set_int(q, 4, priv_ns_id);
-    dbms_set_int(q, 5, resource_id);
+    q = dbms_prepare(pool, db->db, is_allow_query);
+    dbms_set_string(q, 1, privilege);
+    dbms_set_int(q, 2, priv_ns_id);
+    dbms_set_int(q, 3, r->serialno);
 
     if (dbms_execute(q)) {
 	dbms_query_destroy(q);
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    if ((dbms_next(q)) <= 0) {
-	dbms_query_destroy(q);
-    } else {
-	if (strcmp(dbms_get_string(q, 1), ACL_GRANT) == 0)
-	    retVal = TRUE;
-	dbms_query_destroy(q);
+    order = 1;
+    iter = principal;
+    int next_order = 0;
+    int next_is_allow = 0;
+    while(iter) {
+        p_id = dav_repos_get_principal_id(iter);
+        if (next_order < order) {
+            if (dbms_next(q) > 0) {
+                next_order = dbms_get_int(q, 2);
+                next_is_allow = (strcmp(dbms_get_string(q, 1), ACL_GRANT) == 0);
+                if (next_order == 1) {
+                    retVal = next_is_allow;
+                }
+            }
+            else {
+                next_order = max_order + 1;
+            }
+        }
+
+        r->ace_cache = apr_pcalloc(pool, sizeof(ace_cache_t));
+        r->ace_cache->principal_id = p_id;
+        r->ace_cache->priv_ns_id = priv_ns_id;
+        r->ace_cache->privilege = privilege;
+
+        if (next_order == order) {
+            r->ace_cache->is_allow = next_is_allow;
+        }
+
+        order = order + 1;
+        iter = iter->next;
     }
 
+    dbms_query_destroy(q);
     return retVal;
 }
 

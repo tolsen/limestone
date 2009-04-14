@@ -75,6 +75,15 @@ struct dav_repos_property {
 
 typedef struct dav_repos_property dav_repos_property;
 
+typedef struct ace_cache_t ace_cache_t;
+struct ace_cache_t {
+    int principal_id;
+    long priv_ns_id;
+    const char *privilege;
+    int is_allow;
+    ace_cache_t *next;
+};
+
 /**
  * @struct dav_repos_resource
  * 
@@ -179,6 +188,7 @@ struct dav_repos_resource {
     /** ACL corresponding to this resource */
     dav_acl *acl;
     long parent_id;
+    ace_cache_t *ace_cache;
 
     /** redirect lifetime */
     dav_redirectref_lifetime redirect_lifetime;

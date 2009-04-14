@@ -255,6 +255,7 @@ $(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
        --enable-headers \
        --enable-deflate \
        --enable-unique-id \
+       --enable-info \
        @APACHE_CONF_FLAGS@
 
 APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')

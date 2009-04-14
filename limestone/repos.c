@@ -1080,12 +1080,26 @@ const char *dav_repos_getetag(const dav_resource * resource)
 const char *dav_repos_response_href_transform(request_rec *r, const char *uri)
 {
     const char *result_uri = uri, *path;
-    int path_len;
+    int path_len, host_len, server_len;
+
     TRACE();
 
     const char *host = apr_table_get(r->headers_in, "Host");
-    if (strstr(host, r->server->defn_name)) {
-        return result_uri;
+    host_len = strlen(host);
+
+    const char *server_name = r->server->defn_name;
+
+    if (server_name) {
+        server_len = strlen(server_name);
+
+        /* check if Host matches ServerName, or is a subdomain */
+        if (strcmp(host, server_name) == 0 ||
+            (host_len > server_len && 
+             strcmp(host + host_len - server_len, 
+                    apr_pstrcat(r->pool, ".", server_name, NULL))
+            )) {
+            return result_uri;
+        }
     }
 
     if (!(path = (char *)apr_table_get(r->notes, "ls_response_href_t"))) {

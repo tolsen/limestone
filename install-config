@@ -143,7 +143,7 @@ Listen $vhost_port
 
 <VirtualHost *:${vhost_port}>
   ServerName ${host_domain}${port_part_of_host}
-  Include ${VHOST_CONF_DIR_RELATIVE}/
+  Include ${VHOST_CONF_DIR_RELATIVE}/*.conf
 </VirtualHost>
 EOF
 ;
@@ -215,7 +215,7 @@ while (<ORIG_HTTPD_CONFIG>) {
 
   print NEW_HTTPD_CONFIG;
 }
-print NEW_HTTPD_CONFIG "\nInclude ${NON_VHOST_CONF_DIR_RELATIVE}/\n";
+print NEW_HTTPD_CONFIG "\nInclude ${NON_VHOST_CONF_DIR_RELATIVE}/*.conf\n";
 
 close(ORIG_HTTPD_CONFIG) or die("couldn't close $ORIG_HTTPD_CONFIG");
 close(NEW_HTTPD_CONFIG) or die("couldn't close $NEW_HTTPD_CONFIG");

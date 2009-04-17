@@ -153,12 +153,24 @@ then
         fi
 fi
 
+AC_MSG_CHECKING([whether to use authbind])
+AUTHBIND=""
+AUTHBIND_PATH=`which authbind`
+if (test x${LIMESTONE_PGSQL_VHOST_PORT} = x || test ${LIMESTONE_PGSQL_VHOST_PORT} -lt 1024) && \
+   test x${AUTHBIND_PATH} != x; then
+   AC_MSG_RESULT(yes)
+   AUTHBIND=authbind
+else
+   AC_MSG_RESULT(no)
+fi
+
 dnl Output variables
 AC_SUBST(INSTALL_CONF_FLAGS)
 AC_SUBST(VHOSTS)
 AC_SUBST(PGSQL_JDBC_JAR)
 AC_SUBST(APACHE_CONF_FLAGS)
 AC_SUBST(ENABLE_PROFILE)
+AC_SUBST(AUTHBIND)
 
 dnl Output files
 AC_OUTPUT(Makefile)

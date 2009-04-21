@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+
+# usage: ./extract-http-request-related-sql UNIQUE_ID < postgres.log > out.log
+# 
+# This script assumes the following settings in your postgresql.conf
+#
+# log_duration = on
+# log_line_prefix = '%m %d %c %x %v'
+# log_statement = 'all'
+
+use strict;
+
+my $unique_id = $ARGV[0];
+my $session = '';
+
+while (<STDIN>) {
+    if ($session eq '') {
+        next unless /SELECT 'UNIQUE_ID ${unique_id}'/;
+        $session = (split())[4];
+    } else {
+        next unless ((split())[4] eq $session);
+
+        # we're done if the session has gone on to a different request
+        last if (/SELECT 'UNIQUE_ID/ &&
+                 ($_ !~ /SELECT 'UNIQUE_ID ${unique_id}'/));
+    }
+
+    print;
+}

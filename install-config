@@ -25,6 +25,9 @@ my $LOGROTATE_CONFIG_NEW = "logrotate.conf.new";
 
 my ($CONF_PGSQL_VHOST, $CONF_MYSQL_VHOST) = ("no", "no");
 
+my $listen_address =
+  exists($ENV{'LIMESTONE_LISTEN_IP'}) ?
+  ($ENV{'LIMESTONE_LISTEN_IP'} . ':') : '';
 
 # make directories
 my @dirs2create = ($TMP_DIR, $FILES_DIR, $NON_VHOST_CONF_DIR, $VHOST_CONF_DIR);
@@ -139,7 +142,7 @@ CustomLog logs/deflate_log deflate
 
 
 NameVirtualHost *:${vhost_port}
-Listen $vhost_port
+Listen ${listen_address}${vhost_port}
 
 <VirtualHost *:${vhost_port}>
   ServerName ${host_domain}${port_part_of_host}

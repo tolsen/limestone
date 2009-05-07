@@ -23,8 +23,8 @@ endif
 APACHE_DIR=../apache
 RUBYDAV_DIR=../rubydav
 
-RANGER_DIR ?= ../ranger
-include $(RANGER_DIR)/config.mk
+ENV_ENGINE_DIR ?= ../env-engine
+include $(ENV_ENGINE_DIR)/config.mk
 
 apacheextracleantargets= \
 		$(APACHE_DIR)/configure \

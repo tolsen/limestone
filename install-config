@@ -72,7 +72,9 @@ sub print_limestone_config ($$$$$$$$$) {
 
   print $config_fh <<EOF
 
-LogFormat "%h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
+# NOTE: The first number in the LogFormat string refers to our internal LogFormat version.
+# Whenever you make a change to LogFormat you should increment the version number.
+LogFormat "1 %h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
 CustomLog "logs/access_log" limestone
 
 DAVLimestoneIndexCSS  http://www.$host_domain${port_part_of_host}/css/style.css

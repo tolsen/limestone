@@ -23,9 +23,6 @@ endif
 APACHE_DIR=../apache
 RUBYDAV_DIR=../rubydav
 
-ENV_ENGINE_DIR ?= ../env-engine
-include $(ENV_ENGINE_DIR)/config.mk
-
 apacheextracleantargets= \
 		$(APACHE_DIR)/configure \
 		$(APACHE_DIR)/config.nice \
@@ -558,6 +555,9 @@ clean-for-reinstall:
 	-rm -f stamps/limestone-install-*
 
 reinstall: clean-for-reinstall limestone-install 
+
+ENV_ENGINE_DIR ?= ../env-engine
+include $(ENV_ENGINE_DIR)/config.mk
 
 .PHONY: apache-build \
         apache-buildconf \

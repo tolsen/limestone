@@ -59,6 +59,7 @@ static void print_help(const char *exec_name)
             "usage: %s -p password [OPTION] username\n"
             "Create a user on a LimeStone server.\n\n"
             "Mandatory arguments to long options are mandatory for short options too.\n"
+            "   -e, --exists-ok\treturn success even if the user already exists\n" 
             "   -p, --password=STRING\tuser password (required)\n"
             "   -d, --displayname=STRING\tuser's display name\n"
             "   -h, --host=HOSTNAME\tLimeStone server's hostname (default: localhost)\n"
@@ -170,7 +171,8 @@ int main(int argc, char** argv)
     char *name = NULL;
     char *displayname = NULL;
     char *password = NULL;
-  
+
+    int exists_ok = 0;
     char *host = "localhost";
     int port = 8080;
 
@@ -188,6 +190,7 @@ int main(int argc, char** argv)
         static struct option long_options[] =
           {
               { "displayname", required_argument, 0, 'd' },
+              { "exists-ok",   no_argument,       0, 'e' },
               { "host",        required_argument, 0, 'h' },
               { "password",    required_argument, 0, 'p' },
               { "port",        required_argument, 0, 'P' },
@@ -197,7 +200,7 @@ int main(int argc, char** argv)
 
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "d:h:p:P:", long_options, &option_index);
+        c = getopt_long(argc, argv, "ed:h:p:P:", long_options, &option_index);
 
         if (c == -1) break;
 
@@ -205,6 +208,10 @@ int main(int argc, char** argv)
       
         case 'd':
             displayname = optarg;
+            break;
+
+        case 'e':
+            exists_ok = 1;
             break;
       
         case 'h':
@@ -267,7 +274,7 @@ int main(int argc, char** argv)
         fprintf(stderr, "Request failed: %s\n", ne_get_error(session));
     } else {
         status = ne_get_status(request);
-        success = (status->klass == 2);
+        success = ((status->klass == 2) || (exists_ok && status->code == 412));
         result_stream = success ? stdout : stderr;
         fprintf(result_stream, "%d %s\n", status->code, status->reason_phrase);
     }

@@ -39,4 +39,11 @@
     <addUniqueConstraint tableName="transitive_group_members" columnNames="transitive_group_id,transitive_member_id" constraintName="sk_transitive_group_members_transitive_group_id_transitive_member_id"/>
     <addUniqueConstraint tableName="binds_locks" columnNames="bind_id,lock_id" constraintName="sk_binds_locks_bind_id_lock_id"/>
   </changeSet>
+
+  <changeSet author="chetan" id="3">
+    <comment>Add resource-id index on binds table</comment>
+    <createIndex tableName="binds" indexName="idx_binds_resource_id">
+      <column name="resource_id"/>
+    </createIndex>
+  </changeSet>
 </databaseChangeLog>

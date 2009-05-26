@@ -526,7 +526,9 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
     }
 
     /* Delete last slash */
-    dav_repos_chomp_slash(uri);
+    if (strlen(uri) > 1) {
+        dav_repos_chomp_slash(uri);
+    }
 
     if (cur_elem->next) {
         cur_elem = cur_elem->next;

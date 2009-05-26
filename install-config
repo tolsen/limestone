@@ -77,6 +77,8 @@ sub print_limestone_config ($$$$$$$$$) {
 LogFormat "2 %h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %{Destination}i %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
 CustomLog "logs/access_log" limestone
 
+CoreDumpDirectory $LOGS_DIR
+
 DAVLimestoneIndexCSS  http://www.$host_domain${port_part_of_host}/css/style.css
 DAVDBMSTmpDir $TMP_DIR
 DAVDBMSFileDir $FILES_DIR

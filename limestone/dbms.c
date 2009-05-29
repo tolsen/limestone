@@ -98,7 +98,11 @@ int dbms_opendb(dav_repos_db * d, apr_pool_t *p, request_rec * r,
     if (r) {
         const char *unique_id = apr_table_get(r->subprocess_env, "UNIQUE_ID");
         d->db = dbms_api_opendb(p, r);
-        if (unique_id)
+        if (!d->db)
+            ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL,
+                         "dbms_opendb: Error acquiring a database connection");
+            
+        if (d->db && unique_id)
             dbms_select_unique_id(p, d, unique_id);
     } else
         d->db = dbms_api_opendb_params(p, db_driver, db_params);

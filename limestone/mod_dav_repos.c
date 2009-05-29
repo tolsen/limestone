@@ -34,6 +34,7 @@
 #include <http_protocol.h>
 #include <http_log.h>
 #include <http_core.h>		/* for ap_construct_url */
+#include <http_request.h>       /* for ap_hook_create_request */
 #include <mod_dav.h>
 #include <apr_dbd.h>         /* for apr_dbd_init */
 
@@ -337,11 +338,24 @@ static int dav_repos_pre_mpm(apr_pool_t *pool, ap_scoreboard_e sb_type)
     return OK;
 }
 
+static int dav_repos_create_request(request_rec *r)
+{
+    if (r->main) {
+        dav_repos_db *db;
+        db = ap_get_module_config(r->main->request_config, &dav_repos_module);
+        if (db)
+            ap_set_module_config(r->request_config, &dav_repos_module, db);
+    }
+    return OK;
+}
+
 static void register_hooks(apr_pool_t * p)
 {
     /* apache hooks */
     ap_hook_post_config(dav_repos_post_config, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_pre_mpm(dav_repos_pre_mpm, NULL, NULL, APR_HOOK_MIDDLE);
+
+    ap_hook_create_request(dav_repos_create_request, NULL, NULL, APR_HOOK_MIDDLE);
 
     /* live property handling */
     dav_repos_register_liveprops(p);

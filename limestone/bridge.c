@@ -434,7 +434,8 @@ dav_error *sabridge_copy_medium_w_create(const dav_repos_db *d,
     if (r_dst->serialno && r_dst->resourcetype != dav_repos_RESOURCE &&
         r_dst->resourcetype != dav_repos_VERSIONED &&
         r_dst->resourcetype != dav_repos_LOCKNULL) {
-        sabridge_unbind_resource(d, r_dst);
+        err = sabridge_unbind_resource(d, r_dst);
+        if (err) return err;
         r_dst->serialno = 0;
     }
 
@@ -725,14 +726,17 @@ dav_error *sabridge_coll_clear_children(const dav_repos_db *d,
                                         dav_repos_resource *coll)
 {
     dav_repos_resource *iter;
+    dav_error *err = NULL;
 
     sabridge_get_collection_children(d, coll, 1, NULL, &iter, NULL, NULL);
     while (iter) {
         if (iter->bind) {
             dbms_delete_bind(coll->p, d, coll->serialno, iter->serialno,
                              basename(iter->uri));
-        } else
-            sabridge_unbind_resource(d, iter);
+        } else {
+            err = sabridge_unbind_resource(d, iter);
+            if (err) return err;
+        }
         iter = iter->next;
     }
     return NULL;
@@ -835,7 +839,8 @@ dav_error *sabridge_delete_if_orphaned(const dav_repos_db *db,
     if (path_from_root) {
         if (deleted) *deleted = 0;
     } else {
-        sabridge_delete_resource(db, db_r);
+        err = sabridge_delete_resource(db, db_r);
+        if (err) return err;
         if (deleted) *deleted = 1;
     }
     return NULL;
@@ -903,7 +908,7 @@ dav_error *sabridge_unbind_resource(const dav_repos_db *db,
     }
     db_r->next = db_r_next_bak;
 
-    return NULL;
+    return err;
 }
 
 dav_error *sabridge_delete_resource(const dav_repos_db *d,

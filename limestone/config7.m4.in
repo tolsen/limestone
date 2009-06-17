@@ -20,7 +20,7 @@ dnl modules enabled in this directory by default
 
 APACHE_MODPATH_INIT(dav/limestone)
 
-limestone_objects="acl_liveprops.lo acl.lo bind.lo binds_liveprops.lo bridge.lo dbms_acl.lo dbms_bind.lo dbms_dbd.lo dbms_deltav.lo dbms.lo dbms_locks.lo dbms_principal.lo dbms_quota.lo dbms_transaction.lo deltav_bridge.lo deltav_liveprops.lo deltav_util.lo gc.lo limebits_liveprops.lo liveprops.lo lock_bridge.lo lock.lo mod_dav_repos.lo principal.lo props.lo quota_liveprops.lo repos.lo search_liveprops.lo search.lo support_liveprops.lo transaction.lo util.lo version.lo dbms_redirect.lo redirect.lo redirect_liveprops.lo"
+limestone_objects="acl_liveprops.lo acl.lo bind.lo binds_liveprops.lo bridge.lo dbms_acl.lo dbms_bind.lo dbms_dbd.lo dbms_deltav.lo dbms.lo dbms_locks.lo dbms_principal.lo dbms_quota.lo dbms_transaction.lo deltav_bridge.lo deltav_liveprops.lo deltav_util.lo gc.lo limebits_liveprops.lo liveprops.lo lock_bridge.lo lock.lo mod_dav_repos.lo principal.lo props.lo repos.lo search_liveprops.lo search.lo support_liveprops.lo transaction.lo util.lo version.lo dbms_redirect.lo redirect.lo redirect_liveprops.lo"
 
 
 if test "x$enable_dav" != "x"; then

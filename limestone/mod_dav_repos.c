@@ -360,7 +360,6 @@ static void register_hooks(apr_pool_t * p)
     /* live property handling */
     dav_repos_register_liveprops(p);
     dav_deltav_register_liveprops(p);
-    dav_quota_register_liveprops(p);
     dav_acl_register_liveprops(p);
     dav_binds_register_liveprops(p);
     dav_supported_register_liveprops(p);

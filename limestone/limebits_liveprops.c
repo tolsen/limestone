@@ -35,6 +35,8 @@ enum {
 
     LB_PROPID_auto_version_new_children,
 
+    LB_PROPID_limebar_state,
+
     LB_PROPID_END
 };
 
@@ -72,6 +74,12 @@ static const dav_liveprop_spec dav_limebits_props[] = {
      dav_repos_URI_LB,
      "auto-version-new-children",
      LB_PROPID_auto_version_new_children,
+     1},
+
+    {
+     dav_repos_URI_LB,
+     "limebar-state",
+     LB_PROPID_limebar_state,
      1},
 
     {0}				/* sentinel */
@@ -182,6 +190,9 @@ static dav_prop_insert dav_limebits_insert_prop(const dav_resource * resource,
                 s = NULL;
                 break;
             }
+        } else if (propid == LB_PROPID_limebar_state) {
+            s = db_r->limebar_state;
+            s = s ? s : "";
         }
 
         if (s == NULL) {
@@ -266,6 +277,11 @@ static dav_error *dav_limebits_patch_validate(const dav_resource * resource,
 		return dav_new_error
                   (resource->pool, HTTP_BAD_REQUEST, 0,
                    "Undefined value for lb:auto-version-new-children");
+        }
+    } else if (priv->propid == LB_PROPID_limebar_state) {
+        if (operation == DAV_PROP_OP_DELETE) {
+            return dav_new_error(resource->pool, HTTP_FORBIDDEN, 0,
+                                 "lb:limebar-state can't be deleted");
         }
     }
 
@@ -388,6 +404,14 @@ static dav_error *dav_limebits_patch_exec(const dav_resource * resource,
             db_r->av_new_children = DAV_AV_LOCKED_CHECKOUT;
         } else if (!strcmp(av_value, "version-control")) {
             db_r->av_new_children = DAV_AV_VERSION_CONTROL;
+        }
+    } else if (spec->propid == LB_PROPID_limebar_state) {
+        const char *limebar_state = NULL;
+        if (operation == DAV_PROP_OP_SET) {
+            apr_xml_to_text (db_r->p, elem, APR_XML_X2T_INNER, 
+                             NULL, NULL, &limebar_state, NULL);
+            db_r->limebar_state = limebar_state;
+            err = dbms_set_limebar_state(db, db_r);
         }
     }
 

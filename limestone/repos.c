@@ -174,6 +174,8 @@ static dav_error *dav_repos_get_resource(request_rec * r,
 
     apr_table_setn(r->subprocess_env, "limestone_content_type",
                    db_r->getcontenttype);
+    apr_table_setn(r->subprocess_env, "limestone_limebar_state",
+                   db_r->limebar_state);
     return NULL;
 }
 
@@ -819,6 +821,7 @@ static dav_error *dav_repos_create_collection(dav_resource * resource)
         err = dbms_get_collection_props(db, parent_dbr);
         if (err) return err;
         db_r->av_new_children = parent_dbr->av_new_children;
+        db_r->limebar_state = parent_dbr->limebar_state;
         err = dbms_insert_collection(db, db_r);
     }
     if (err) return err;

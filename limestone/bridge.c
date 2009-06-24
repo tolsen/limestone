@@ -234,7 +234,8 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     if (r->getcontenttype == NULL)
         r->getcontenttype = apr_pstrdup(pool, "application/octet-stream");
 
-    r->limebar_state = parent->limebar_state;
+    if (parent)
+        r->limebar_state = parent->limebar_state;
 
     /* Create a 'resources' table entry */
     if((err = dbms_insert_resource(d, r)))

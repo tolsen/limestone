@@ -174,8 +174,9 @@ static dav_error *dav_repos_get_resource(request_rec * r,
 
     apr_table_setn(r->subprocess_env, "limestone_content_type",
                    db_r->getcontenttype);
-    apr_table_setn(r->subprocess_env, "limestone_limebar_state",
-                   db_r->limebar_state);
+    if (r->main)
+        apr_table_setn(r->main->subprocess_env, "limestone_limebar_state",
+                       db_r->limebar_state);
     return NULL;
 }
 

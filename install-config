@@ -8,8 +8,9 @@ use strict;
 
 my $WD = `pwd`;
 chomp $WD;
-my $TMP_DIR = "${WD}/tmp";
-my $FILES_DIR = "${WD}/files";
+my $LIMESTONE_FILES_TMP_DIR = ($ENV{'LIMESTONE_FILES_TMP_DIR'} or $WD);
+my $TMP_DIR = "${LIMESTONE_FILES_TMP_DIR}/tmp";
+my $FILES_DIR = "${LIMESTONE_FILES_TMP_DIR}/files";
 my $NON_VHOST_CONF_DIR_RELATIVE = "conf/lime-nonvhost";
 my $VHOST_CONF_DIR_RELATIVE = "conf/lime-vhost";
 my $NON_VHOST_CONF_DIR = "${WD}/aproot/${NON_VHOST_CONF_DIR_RELATIVE}";

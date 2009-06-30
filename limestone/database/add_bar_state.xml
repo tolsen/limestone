@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="chetan" id="1">
+    <comment>Add bar state property to resources table</comment>
+    <addColumn tableName="resources">
+      <column name="limebar_state" type="text"/>
+    </addColumn>
+  </changeSet>
+</databaseChangeLog>

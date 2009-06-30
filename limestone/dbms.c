@@ -138,7 +138,8 @@ dav_error *dbms_get_resource(const dav_repos_db *d, dav_repos_resource *r)
     /* fetch live properties */
     q = dbms_prepare(r->p, d->db, 
                      "SELECT r.created_at, r.displayname, r.contentlanguage, "
-                     "r.owner_id, r.comment, r.creator_id, r.type, r.uuid "
+                     "r.owner_id, r.comment, r.creator_id, r.type, r.uuid, "
+                     "r.limebar_state "
                      "FROM resources r WHERE r.id = ?");
     dbms_set_int(q, 1, r->serialno);
     if (dbms_execute(q)) {
@@ -171,6 +172,7 @@ dav_error *dbms_get_resource(const dav_repos_db *d, dav_repos_resource *r)
     r->next = NULL;
     r->uuid = dbms_get_string(q, 8);
     r->uuid[32] = '\0';
+    r->limebar_state = dbms_get_string(q, 9);
 
     dbms_query_destroy(q);
     return err;
@@ -316,8 +318,8 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
     q = dbms_prepare(pool, d->db,
                      "INSERT INTO resources (uuid, created_at, owner_id, "
                      "creator_id, type, "
-                     "displayname, contentlanguage ) "
-                     "VALUES ( ?, ?, ?, ?, ?, ?, ? ) ");
+                     "displayname, contentlanguage, limebar_state ) "
+                     "VALUES ( ?, ?, ?, ?, ?, ?, ?, ? ) ");
     dbms_set_string(q, 1, r->uuid);
     dbms_set_string(q, 2, r->created_at);
     //dbms_set_string(q, 3, r->updated_at);
@@ -327,6 +329,7 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
     dbms_set_string(q, 6, r->displayname);
     dbms_set_string(q, 7, r->getcontentlanguage ? r->getcontentlanguage
                     : "en-US");
+    dbms_set_string(q, 8, r->limebar_state);
     
     isql_result = dbms_execute(q);
     dbms_query_destroy(q);
@@ -413,6 +416,28 @@ dav_error *dbms_set_property(const dav_repos_db * d,
     dbms_query_destroy(q);
     return err;
 }               /*End of dbms_set_property */
+
+dav_error *dbms_set_limebar_state(const dav_repos_db *d,
+                                  const dav_repos_resource *r)
+{
+    dav_repos_query *q = NULL;
+    apr_pool_t *pool = r->p;
+    dav_error *err = NULL;
+
+    TRACE();
+    q = dbms_prepare(pool, d->db,
+                     "UPDATE resources "
+                     "SET limebar_state = ? WHERE id = ?");
+    dbms_set_string(q, 1, r->limebar_state);
+    dbms_set_int(q, 2, r->serialno);
+
+    if (dbms_execute(q))
+        err = dav_new_error(pool,
+                            HTTP_INTERNAL_SERVER_ERROR, 0,
+                            "Couldn't set limebar_state props");
+    dbms_query_destroy(q);
+    return err;
+}
 
 dav_error *dbms_update_media_props(const dav_repos_db *d,
                                    dav_repos_resource *db_r)
@@ -726,7 +751,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
            " checked_version.number, uuid, vcrs.vhr_id, versions.vcr_id,"
            " vr_vcr.checked_id, vcrs.version_type, principals.name,"
            " versions.number, child_binds.id, vcrs.checkin_on_unlock,"
-           " child_binds.collection_id, displayname, "
+           " child_binds.collection_id, displayname, limebar_state, "
            " ("
            "SELECT aces.grantdeny"
            " FROM aces"
@@ -790,7 +815,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
            "       checked_version.number, uuid, vcrs.vhr_id, "
            "       versions.vcr_id, vr_vcr.checked_id, vcrs.version_type, "
            "       principals.name, versions.number, children.bind_id, "
-           "       vcrs.checkin_on_unlock, children.parent_id, displayname "
+           "       vcrs.checkin_on_unlock, children.parent_id, displayname, limebar_state "
            "FROM resources "
            "      INNER JOIN "
            "           ( SELECT binds.id as bind_id, resource_id, name, "
@@ -830,7 +855,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
         dbrow = dbms_fetch_row_num(d->db, q, pool, num_children);
         num_children++;
 
-        if (acl_hooks && acl_priv && dbrow[25][0] != 'G')
+        if (acl_hooks && acl_priv && dbrow[26][0] != 'G')
             continue;
 
         /*fetch every row */
@@ -931,6 +956,8 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
         presult_link_tail->uuid = apr_pstrdup(db_r->p, dbrow[14]);
         presult_link_tail->creator_displayname =
           apr_pstrdup(db_r->p, dbrow[19]);
+
+        presult_link_tail->limebar_state = apr_pstrdup(db_r->p, dbrow[25]);
 
         presult_link_tail->p = pool;
 

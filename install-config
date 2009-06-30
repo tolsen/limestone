@@ -8,14 +8,13 @@ use strict;
 
 my $WD = `pwd`;
 chomp $WD;
-my $TMP_DIR = "${WD}/tmp";
-my $FILES_DIR = "${WD}/files";
+my $TMP_DIR = ($ENV{'LIMESTONE_TMP_DIR'} or $WD."/tmp");
+my $FILES_DIR = ($ENV{'LIMESTONE_FILES_DIR'} or $WD."/files");
+my $LOGS_DIR = ($ENV{'LIMESTONE_LOGS_DIR'} or $WD."/aproot/logs"); 
 my $NON_VHOST_CONF_DIR_RELATIVE = "conf/lime-nonvhost";
 my $VHOST_CONF_DIR_RELATIVE = "conf/lime-vhost";
 my $NON_VHOST_CONF_DIR = "${WD}/aproot/${NON_VHOST_CONF_DIR_RELATIVE}";
 my $VHOST_CONF_DIR = "${WD}/aproot/${VHOST_CONF_DIR_RELATIVE}";
-my $LOGS_DIR = "${WD}/aproot/logs";
-
 my $ORIG_HTTPD_CONFIG = "aproot/conf/original/httpd.conf";
 my $HTTPD_CONFIG = "aproot/conf/httpd.conf";
 my $NEW_HTTPD_CONFIG = "aproot/conf/httpd.conf.new";
@@ -75,7 +74,9 @@ sub print_limestone_config ($$$$$$$$$) {
 # NOTE: The first number in the LogFormat string refers to our internal LogFormat version.
 # Whenever you make a change to LogFormat you should increment the version number.
 LogFormat "2 %h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %{Destination}i %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
-CustomLog "logs/access_log" limestone
+CustomLog "$LOGS_DIR/access_log" limestone
+ErrorLog "$LOGS_DIR/error_log"
+PidFile "$LOGS_DIR/httpd.pid"
 
 CoreDumpDirectory $LOGS_DIR
 
@@ -142,7 +143,7 @@ DeflateFilterNote Output outstream
 DeflateFilterNote Ratio ratio
 
 LogFormat '"\%r" \%{outstream}n/\%{instream}n (\%{ratio}n\%\%)' deflate
-CustomLog logs/deflate_log deflate
+CustomLog $LOGS_DIR/deflate_log deflate
 
 
 NameVirtualHost *:${vhost_port}

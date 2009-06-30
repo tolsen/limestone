@@ -203,6 +203,16 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     apr_pool_t *pool = r->p;
     dav_error *err = NULL;
     const dav_hooks_acl *acl_hooks = dav_get_acl_hooks(rec);
+    dav_repos_resource *parent = NULL;
+
+    if (r->parent_id > 0) {
+        sabridge_new_dbr_from_dbr(r, &parent);
+        parent->serialno = r->parent_id;
+        err = dbms_get_resource(d, parent);
+        err = dbms_get_collection_props(d, parent);
+        if (err) goto error;
+    } else if (r->uri)
+        sabridge_retrieve_parent(r, &parent);
 
     /* Get a new UUID */
     r->uuid = get_new_plain_uuid(r->p);
@@ -224,6 +234,9 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     if (r->getcontenttype == NULL)
         r->getcontenttype = apr_pstrdup(pool, "application/octet-stream");
 
+    if (parent)
+        r->limebar_state = parent->limebar_state;
+
     /* Create a 'resources' table entry */
     if((err = dbms_insert_resource(d, r)))
         return err;
@@ -237,15 +250,6 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
 
     if (r->resourcetype == dav_repos_COLLECTION
         || r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
-        dav_repos_resource *parent = NULL;
-        if (r->parent_id > 0) {
-            sabridge_new_dbr_from_dbr(r, &parent);
-            parent->serialno = r->parent_id;
-            err = dbms_get_collection_props(d, parent);
-            if (err) goto error;
-        } else if (r->uri)
-            sabridge_retrieve_parent(r, &parent);
-
         r->av_new_children = parent->av_new_children;
         err = dbms_insert_collection(d, r);
         if (err) goto error;

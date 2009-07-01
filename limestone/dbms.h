@@ -206,6 +206,9 @@ struct dav_repos_resource {
     /** Value of DAV:auto-version-new-children */
     dav_repos_autoversion_t av_new_children;
 
+    /* limebar_state */
+    const char *limebar_state;
+
     apr_pool_t *p;
     		
     /** dav_resource corresponding to this dav_repos_resource */
@@ -340,6 +343,14 @@ dav_error *dbms_insert_collection(const dav_repos_db *d, dav_repos_resource *r);
 dav_error *dbms_set_property(const dav_repos_db * d,
 	                     const dav_repos_resource * r);
 
+/**
+ * Set the limebar state property on a resource
+ * @param d Database handle
+ * @param r The resource for which limebar_state needs to be changed
+ * @return NULL on success, dav_error otherwise
+ */
+dav_error *dbms_set_limebar_state(const dav_repos_db *d,
+                                  const dav_repos_resource *r);
 
 /**
  * Update the displayname property of the resource

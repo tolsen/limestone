@@ -166,7 +166,7 @@ fi
 
 AC_MSG_CHECKING([whether to use sudo])
 SUDO_COMMAND=""
-if test -n ${SUDO_USER}
+if test x${SUDO_USER} != x
 then
    AC_MSG_RESULT(yes)
    SUDO_COMMAND="sudo -u ${SUDO_USER}"

@@ -164,6 +164,18 @@ else
    AC_MSG_RESULT(no)
 fi
 
+AC_MSG_CHECKING([whether to use sudo])
+SUDO_COMMAND=""
+if test x${SUDO_USER} != x
+then
+   AC_MSG_RESULT(yes)
+   SUDO_COMMAND="sudo -u ${SUDO_USER}"
+else
+   AC_MSG_RESULT(no)
+fi
+    
+  
+
 dnl Output variables
 AC_SUBST(INSTALL_CONF_FLAGS)
 AC_SUBST(VHOSTS)
@@ -171,6 +183,7 @@ AC_SUBST(PGSQL_JDBC_JAR)
 AC_SUBST(APACHE_CONF_FLAGS)
 AC_SUBST(ENABLE_PROFILE)
 AC_SUBST(AUTHBIND)
+AC_SUBST(SUDO_COMMAND)
 
 dnl Output files
 AC_OUTPUT(Makefile)

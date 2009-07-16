@@ -169,7 +169,7 @@ SUDO_COMMAND=""
 if test x${SUDO_USER} != x
 then
    AC_MSG_RESULT(yes)
-   SUDO_COMMAND="sudo -u ${SUDO_USER}"
+   SUDO_COMMAND="sudo -E -u ${SUDO_USER}"
 else
    AC_MSG_RESULT(no)
 fi

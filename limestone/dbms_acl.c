@@ -356,7 +356,7 @@ int dbms_get_acl(const dav_repos_db * d, dav_repos_resource * r)
                      /* non-inherited ACE's first, then inherited ACEs 
                       * in reverse order of inheritance 
                       * ( farthest parent first ) */
-                     "ORDER BY CHAR_LENGTH(par_res_path) DESC, aces.id");
+                     "ORDER BY protected DESC, CHAR_LENGTH(par_res_path) DESC, aces.id");
     dbms_set_int(q, 1, r->serialno);
     dbms_execute(q);
 
@@ -521,8 +521,8 @@ int dbms_is_allow(const dav_repos_db * db, long priv_ns_id,
                      /* give priority to own aces over those inherited
                       * then protected aces, and to aces higher in the list
                         submitted by the client(translates to a lower id) */
-                     "ORDER BY p_id, CHAR_LENGTH(par_res_path) DESC,"
-                     " protected DESC, id ", members_query);
+                     "ORDER BY p_id, protected DESC, CHAR_LENGTH(par_res_path) DESC,"
+                     " id ", members_query);
 
     q = dbms_prepare(pool, db->db, is_allow_query);
     dbms_set_string(q, 1, privilege);
@@ -625,7 +625,7 @@ dav_privileges *dbms_get_privileges(const dav_repos_db * db,
                                    "ON aces.resource_id = inherited_res.resource_id "
        
                        " WHERE chi_priv_id = outer_priv.id"
-                       " ORDER BY CHAR_LENGTH(par_res_path) DESC, protected DESC, id LIMIT 1)"
+                       " ORDER BY protected DESC, CHAR_LENGTH(par_res_path) DESC, id LIMIT 1)"
                        " AS action"
                        " FROM acl_privileges outer_priv "
                               "INNER JOIN "

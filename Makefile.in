@@ -504,13 +504,13 @@ endif
 create-test-users: create-test-users-$(1)
 create-test-users-$(1): stamps/create-test-users-$(1)
 stamps/create-test-users-$(1): stamps/stampdir $(ADDUSER)
-	$(ADDUSER) -e -P $$(REAL_$(1)_VHOST_PORT) -d$(TEST_USER1) -pqwerty $(TEST_USER1)
-	$(ADDUSER) -e -P $$(REAL_$(1)_VHOST_PORT) -d$(TEST_USER2) -pqwerty $(TEST_USER2)
+	$(ADDUSER) -e -h $(LIMESTONE_HOST_DOMAIN) -P $$(REAL_$(1)_VHOST_PORT) -d$(TEST_USER1) -pqwerty $(TEST_USER1)
+	$(ADDUSER) -e -h $(LIMESTONE_HOST_DOMAIN) -P $$(REAL_$(1)_VHOST_PORT) -d$(TEST_USER2) -pqwerty $(TEST_USER2)
 	touch $$@
 
 litmus-tests: litmus-tests-$(1)
 litmus-tests-$(1): litmus-build apache-start create-test-users-$(1) 
-	cd $(LITMUS_DIR) && $(MAKE) URL=http://localhost$$($(1)_VHOST_SUFFIX)$(LIMESTONE_PREFIX)/home/$(TEST_USER1) CREDS="$(TEST_USER1) qwerty" check
+	cd $(LITMUS_DIR) && $(MAKE) URL=http://$(LIMESTONE_HOST_DOMAIN)$$($(1)_VHOST_SUFFIX)$(LIMESTONE_PREFIX)/home/$(TEST_USER1) CREDS="$(TEST_USER1) qwerty" check
 
 rubydav-tests: rubydav-tests-$(1)
 rubydav-tests-$(1): apache-start create-test-users-$(1) 
@@ -522,7 +522,7 @@ garbage-test-$(1): apache-stop
 
 benchmarks: benchmarks-$(1)
 benchmarks-$(1): prestan-build database-reset-and-limestone-start
-	-cd $(PRESTAN_DIR) && ./Prestan http://localhost$$($(1)_VHOST_SUFFIX)$(LIMESTONE_PREFIX)/home/$(TEST_USER1) $(TEST_USER1) qwerty
+	-cd $(PRESTAN_DIR) && ./Prestan http://$(LIMESTONE_HOST_DOMAIN)$$($(1)_VHOST_SUFFIX)$(LIMESTONE_PREFIX)/home/$(TEST_USER1) $(TEST_USER1) qwerty
 
 .PHONY: create-test-users create-test-users-$(1) litmus-tests-$(1) rubydav-tests-$(1) garbage-test-$(1)
 

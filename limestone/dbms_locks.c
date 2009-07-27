@@ -465,6 +465,9 @@ dav_error *dbms_refresh_lock(dav_lockdb *lockdb,
                             "Couldn't refresh lock");
     dbms_query_destroy(q);
 
+    if (!err)
+        lock->timeout = new_time;
+
     return err;
 }
 

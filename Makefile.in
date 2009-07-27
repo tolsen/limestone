@@ -398,7 +398,7 @@ prestan-build: $(PRESTAN_MAKEFILE)
 
 
 define force-start-apache
-@AUTHBIND@ $(APROOT)/bin/apachectl start && sleep 2 && touch stamps/apache-start
+@SUDO_COMMAND@ @AUTHBIND@ $(APROOT)/bin/apachectl start && sleep 2 && touch stamps/apache-start
 endef
 
 apache-start: stamps/apache-start
@@ -421,7 +421,7 @@ ifeq ($(strip $(wildcard stamps/apache-start)),)
 stop-apache=
 else
 define stop-apache
--$(APROOT)/bin/apachectl stop
+-@SUDO_COMMAND@ $(APROOT)/bin/apachectl stop
 -rm -f stamps/apache-start
 endef
 endif

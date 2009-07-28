@@ -36,8 +36,8 @@ when :svn
   print "#{main_version} (r#{svn_version})"
 
 when :git
-
-  version_info = LimebitsVersion.get_git_version_info '../..'
+  superproject_path = File.dirname(__FILE__) + '/../..'
+  version_info = LimebitsVersion.get_git_version_info superproject_path
 
   if version_info['tag'].nil?
     print "#{version_info['branch']}_#{version_info['commit']}"

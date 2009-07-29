@@ -398,7 +398,7 @@ prestan-build: $(PRESTAN_MAKEFILE)
 
 
 define force-start-apache
-@SUDO_COMMAND@ @AUTHBIND@ $(APROOT)/bin/apachectl start && sleep 2 && touch stamps/apache-start
+ulimit -c unlimited && @SUDO_COMMAND@ @AUTHBIND@ $(APROOT)/bin/apachectl start && sleep 2 && touch stamps/apache-start
 endef
 
 apache-start: stamps/apache-start

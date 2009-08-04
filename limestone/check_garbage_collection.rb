@@ -102,7 +102,7 @@ ensure
 end
 
 @num_resources_left_behind = @rows - @num_deltav_resources
-expected_num_resources = 15
+expected_num_resources = 19
 if @num_resources_left_behind != expected_num_resources then
   puts "Unexpected number(" + @num_resources_left_behind.to_s + ") of rows left behind"
   puts "Other than the resources rooted at /history, we expect #{expected_num_resources} resources to be left behind."

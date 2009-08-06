@@ -931,7 +931,7 @@ const char *principal_href_prefix(request_rec *r)
 {
     const char *server_name = r->server->server_hostname;
     int port = r->server->port;
-    if (port != 80) {
+    if (port && port != 80) {
         server_name = apr_psprintf(r->pool, "%s:%d", server_name, port);
     } 
     return apr_pstrcat(r->pool, "http://", server_name, NULL);

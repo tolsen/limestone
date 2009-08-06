@@ -1,8 +1,10 @@
 #!/usr/bin/ruby
 
+require File.dirname(__FILE__) + '/../../rubydav/lib/limebits_version'
+
 
 def detect_vcs
-  dir = File.dirname(__FILE__)
+  dir = File.dirname(__FILE__) + '/..'
 
   return [:svn, :git, :hg].detect { |vcs| File.directory? "#{dir}/.#{vcs}" }
 end
@@ -32,6 +34,18 @@ when :svn
   svn_version = `svnversion -n`
 
   print "#{main_version} (r#{svn_version})"
+
+when :git
+  superproject_path = File.dirname(__FILE__) + '/../..'
+  version_info = LimebitsVersion.get_git_version_info superproject_path
+
+  if version_info['tag'].nil?
+    print "#{version_info['branch']}_#{version_info['commit']}"
+  else
+    print version_info['tag']
+  end
+
+  print '*' unless version_info['pristine']
   
 else
   print "unknown"

@@ -47,6 +47,8 @@ begin
   insert_ace(dbh, 'G', id, 3, get_privilege_id(dbh, "read"))
   insert_ace(dbh, 'D', id, 3, get_privilege_id(dbh, "bind"))
   dbh.do("INSERT INTO acl_inheritance (resource_id, path) VALUES (#{id}, '2,#{id}')")
+  dbh.do("CREATE RULE set_tags_owner_binds_insert AS ON INSERT TO binds WHERE NEW.collection_id = #{id} DO UPDATE resources SET owner_id = 1 WHERE id = NEW.resource_id")
+  dbh.do("CREATE RULE set_tags_owner_binds_update AS ON UPDATE TO binds WHERE NEW.collection_id = #{id} DO UPDATE resources SET owner_id = 1 WHERE id = NEW.resource_id")
 
   exit 0
 rescue DBI::DatabaseError => e

@@ -180,6 +180,20 @@ int parse_query(request_rec *r, search_ctx *sctx)
         return result;
     }
 
+    /* Find the where XML element */
+    where_elem = dav_find_child(basicsearch_elem, "where");
+
+    /* Parse where element */
+    if (where_elem) {
+        /* Register WHERE ops, allocating from process pool and lazily
+         * evaluating it so as to avoid re-computing it for each request */
+        register_ops(r->server->process->pool);
+
+        if((result = parse_where(r, sctx, where_elem->first_child)) != HTTP_OK)
+            return result;
+        
+    }
+
     /* Find the from XML element */
     from_elem = dav_find_child(basicsearch_elem, "from");
     
@@ -193,20 +207,6 @@ int parse_query(request_rec *r, search_ctx *sctx)
     /* Parse from element */
     if ((result = parse_from(r, sctx, from_elem)) != HTTP_OK) {
         return result;
-    }
-
-    /* Find the where XML element */
-    where_elem = dav_find_child(basicsearch_elem, "where");
-
-    /* Parse where element */
-    if (where_elem) {
-        /* Register WHERE ops, allocating from process pool and lazily
-         * evaluating it so as to avoid re-computing it for each request */
-        register_ops(r->server->process->pool);
-
-        if((result = parse_where(r, sctx, where_elem->first_child)) != HTTP_OK)
-            return result;
-        
     }
 
     /* Find the orderby XML element */
@@ -545,6 +545,12 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
     dav_get_resource_from_uri(uri, r, 0, NULL, &ri);
     db_ri = ri->info->db_r;
 
+    /* first, check for is-bit query */
+    if (sctx->is_bit_query) {
+        sctx->b2_rid = db_ri->serialno;
+        return HTTP_OK;
+    }
+
     sabridge_get_collection_children(sctx->db, db_ri, depth, "read", &iter, 
                                      NULL, &nitems);
     db_ri->next = iter;
@@ -600,6 +606,8 @@ void register_ops(apr_pool_t *pool)
                      parse_log_ops);
         apr_hash_set(registered_ops, "is-collection", APR_HASH_KEY_STRING,
                      parse_is_coll);
+        apr_hash_set(registered_ops, "is-bit", APR_HASH_KEY_STRING,
+                     parse_is_bit);
         apr_hash_set(registered_ops, "is-defined", APR_HASH_KEY_STRING,
                      parse_is_defined);
     }
@@ -748,6 +756,24 @@ int parse_is_coll(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
     apr_pool_t *pool = r->pool;
 
     TRACE();
+    if(!sctx->where_cond)
+        /* apr_pstrcat cannot handle NULL strings */
+        sctx->where_cond = apr_psprintf(pool, " ");
+
+    sctx->where_cond = 
+        apr_pstrcat(pool, sctx->where_cond, 
+                    "( type = 'Collection' )", NULL);
+
+    return HTTP_OK;
+}
+
+int parse_is_bit(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
+{
+    apr_pool_t *pool = r->pool;
+
+    TRACE();
+    sctx->is_bit_query = 1;
+
     if(!sctx->where_cond)
         /* apr_pstrcat cannot handle NULL strings */
         sctx->where_cond = apr_psprintf(pool, " ");
@@ -975,12 +1001,19 @@ dav_response *search_mkresponse(apr_pool_t *pool,
     int i = 1;
     dav_response *res = apr_pcalloc(pool, sizeof(*res));
     res->status = 200;
-    int bind_id = atoi(dbrow[0]);
+    int bind_id;
 
     TRACE();
 
-    /* Get URI */
-    res->href = apr_hash_get(sctx->bind_uri_map, &bind_id, sizeof(int));
+    if (sctx->is_bit_query) {
+        res->href = dbrow[0];
+    }
+    else {
+        bind_id = atoi(dbrow[0]);
+
+        /* Get URI */
+        res->href = apr_hash_get(sctx->bind_uri_map, &bind_id, sizeof(int));
+    }
 
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
         hi = apr_hash_next(hi)) {
@@ -1083,7 +1116,15 @@ int build_query_select(request_rec *r, search_ctx *sctx)
     TRACE();
 
     /* create the select part of the query */
-    sctx->select = apr_psprintf(r->pool, "SELECT binds.id");
+    if (sctx->is_bit_query) {
+        sctx->select = apr_psprintf(r->pool, 
+            "SELECT '/' || b1.name || '/' || b2.name || '/' || b3.name || "
+                "'/' || b4.name AS path");
+    }
+    else {
+        sctx->select = apr_psprintf(r->pool, "SELECT binds.id");
+    }
+
     for(hi = apr_hash_first(r->pool, sctx->prop_map); hi ; 
         hi = apr_hash_next(hi)) {
         apr_hash_this(hi, NULL, NULL, &val);
@@ -1107,11 +1148,22 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     sctx->from = 
         apr_psprintf(pool, 
                      " FROM resources "
-                     " LEFT JOIN binds ON resources.id = binds.resource_id " 
                      " LEFT JOIN locks ON resources.id = locks.resource_id " 
                      " LEFT JOIN media ON resources.id = media.resource_id "
                      " LEFT JOIN principals ON "
                      "principals.resource_id = resources.owner_id ");
+
+    if (sctx->is_bit_query) {
+        sctx->from = apr_pstrcat(pool, sctx->from, 
+            " LEFT JOIN binds b4 ON b4.resource_id = resources.id"
+            " INNER JOIN binds b3 ON b4.collection_id = b3.resource_id"
+            " INNER JOIN binds b2 ON b3.collection_id = b2.resource_id"
+            " INNER JOIN binds b1 ON b2.collection_id = b1.resource_id", NULL);
+    }
+    else {
+        sctx->from = apr_pstrcat(pool, sctx->from, 
+            " LEFT JOIN binds ON resources.id = binds.resource_id ", NULL);
+    }
 
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
         hi = apr_hash_next(hi)) {
@@ -1143,16 +1195,29 @@ int build_query_where(request_rec *r, search_ctx *sctx)
     char *temp;
 
     TRACE();
-    sctx->where = apr_psprintf(r->pool, " WHERE binds.id IN (");
-    for(hi = apr_hash_first(r->pool, sctx->bind_uri_map); hi;
-        hi = apr_hash_next(hi)) {
-        apr_hash_this(hi, &bind, NULL, NULL);
-        temp = apr_psprintf(r->pool, " %d,", *(int *)bind);
-        sctx->where = apr_pstrcat(r->pool, sctx->where, temp, NULL);
+
+    if (sctx->is_bit_query) {
+        sctx->where = apr_psprintf(r->pool, 
+            " WHERE b1.collection_id = %d AND b1.name = 'home'"
+            " AND b3.name = 'bits'", ROOT_COLLECTION_ID);
+    }
+    else {    
+        sctx->where = apr_psprintf(r->pool, " WHERE binds.id IN (");
+        for(hi = apr_hash_first(r->pool, sctx->bind_uri_map); hi;
+            hi = apr_hash_next(hi)) {
+            apr_hash_this(hi, &bind, NULL, NULL);
+            temp = apr_psprintf(r->pool, " %d,", *(int *)bind);
+            sctx->where = apr_pstrcat(r->pool, sctx->where, temp, NULL);
+        }
+
+        /* correct the last ',' */
+        sctx->where[strlen(sctx->where) - 1] = ')';
     }
 
-    /* correct the last ',' */
-    sctx->where[strlen(sctx->where) - 1] = ')';
+    if (sctx->b2_rid) {
+        temp = apr_psprintf(r->pool, " AND b2.resource_id = %d ", sctx->b2_rid);
+        sctx->where = apr_pstrcat(r->pool, sctx->where, temp, NULL);
+    }
 
     if(sctx->where_cond) {
         /* Add other WHERE conditions */

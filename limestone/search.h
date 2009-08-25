@@ -70,6 +70,9 @@ typedef struct {
     apr_hash_t *bind_uri_map;   /* bind_id to URI mapping */
     apr_hash_t *prop_map;	/* Propname-Attribute map */
     apr_xml_doc *doc;
+    int is_bit_query;           /* set if WHERE clause filters on is-bit */
+    int b2_rid;                 /* set to the resource_id on which to filter
+                                   the second bind for a is-bit query */
 } search_ctx;
 
 typedef struct dead_prop_list dead_prop_list;
@@ -105,6 +108,8 @@ int parse_comp_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 int parse_log_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 
 int parse_is_coll(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
+
+int parse_is_bit(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 
 int parse_is_defined(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 

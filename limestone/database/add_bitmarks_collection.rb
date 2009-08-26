@@ -38,17 +38,17 @@ begin
   # connect to the SQL server
   dbh = DBI.connect("DBI:#{@dbi_dbd_driver}:database=#{@db_name};host=#{@db_hostname};port=#{@db_port}", @db_username, @db_password)
 
-  dbh.do("INSERT INTO resources (uuid, created_at, owner_id, creator_id, type, displayname, contentlanguage, limebar_state) VALUES ('d3743422812811de8ff22bcb8b7a3827', '2009-08-04 18:58:41', 1, 1, 'Collection', 'tags', 'en-US', '')");
+  dbh.do("INSERT INTO resources (uuid, created_at, owner_id, creator_id, type, displayname, contentlanguage, limebar_state) VALUES ('d3743422812811de8ff22bcb8b7a3827', '2009-08-04 18:58:41', 1, 1, 'Collection', 'bitmarks', 'en-US', '')");
   id = get_resource_id(dbh, 'd3743422812811de8ff22bcb8b7a3827');
   dbh.do("INSERT INTO collections (resource_id, auto_version_new_children) VALUES ( #{id}, 5 )");
-  dbh.do("INSERT INTO binds(name, collection_id, resource_id, updated_at) VALUES('tags',2,#{id},'2009-08-04 18:58:41')");
+  dbh.do("INSERT INTO binds(name, collection_id, resource_id, updated_at) VALUES('bitmarks',2,#{id},'2009-08-04 18:58:41')");
   insert_ace(dbh, 'G', id, 1, get_privilege_id(dbh, "all"))
   insert_ace(dbh, 'G', id, 4, get_privilege_id(dbh, "bind-collection"))
   insert_ace(dbh, 'G', id, 3, get_privilege_id(dbh, "read"))
   insert_ace(dbh, 'D', id, 3, get_privilege_id(dbh, "bind"))
   dbh.do("INSERT INTO acl_inheritance (resource_id, path) VALUES (#{id}, '2,#{id}')")
-  dbh.do("CREATE RULE set_tags_owner_binds_insert AS ON INSERT TO binds WHERE NEW.collection_id = #{id} DO UPDATE resources SET owner_id = 1 WHERE id = NEW.resource_id")
-  dbh.do("CREATE RULE set_tags_owner_binds_update AS ON UPDATE TO binds WHERE NEW.collection_id = #{id} DO UPDATE resources SET owner_id = 1 WHERE id = NEW.resource_id")
+  dbh.do("CREATE RULE set_bitmarks_owner_binds_insert AS ON INSERT TO binds WHERE NEW.collection_id = #{id} DO UPDATE resources SET owner_id = 1 WHERE id = NEW.resource_id")
+  dbh.do("CREATE RULE set_bitmarks_owner_binds_update AS ON UPDATE TO binds WHERE NEW.collection_id = #{id} DO UPDATE resources SET owner_id = 1 WHERE id = NEW.resource_id")
 
   exit 0
 rescue DBI::DatabaseError => e

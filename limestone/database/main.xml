@@ -14,5 +14,5 @@
   <include file="create_redirectrefs_table.xml"/>
   <include file="create_collections_table.xml"/>
   <include file="add_bar_state.xml"/>
-  <include file="add_tags_collection.xml"/>
+  <include file="add_bitmarks_collection.xml"/>
 </databaseChangeLog>

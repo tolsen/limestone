@@ -102,6 +102,9 @@ DAVDepthInfinity on
   DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+.$host_domain.*
   DAVResponseRewriteRule ^/home/[^/]*/?(.*)   /\$1
 
+  DAVResponseRewriteCond Host                           ^(drive\\.)?[^.]+.[^.]+.$host_domain.*
+  DAVResponseRewriteRule ^/home/[^/]*/bits/[^/]*/?(.*)  /\$1
+
   AuthType Digest
   AuthName "users\@limebits.com"
   BrowserMatch ".*MSIE.*" AuthDigestEnableQueryStringHack=On

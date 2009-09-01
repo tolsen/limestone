@@ -39,16 +39,13 @@
 static apr_hash_t *liveprop_map = NULL;
 static apr_hash_t *registered_ops = NULL;
 static apr_hash_t *comp_ops_map = NULL;
-long DAV_NS_ID = 0;
 
-static long get_dav_ns_id(search_ctx *sctx) {
-    if(DAV_NS_ID) {
-        return DAV_NS_ID;
-    }
+static long get_ns_id(apr_pool_t *pool, search_ctx *sctx, const char *ns) {
+    long *ns_id = apr_pcalloc(pool, sizeof(long));
+    dbms_get_ns_id(sctx->db, sctx->db_r, ns, ns_id);
+    apr_hash_set(sctx->namespace_map, ns_id, sizeof(long), ns);
 
-    dbms_get_ns_id(sctx->db, sctx->db_r, "DAV:", &DAV_NS_ID);
-
-    return DAV_NS_ID;
+    return *ns_id;
 }
 
 static dav_error *dav_repos_set_option_head(request_rec * r)
@@ -93,6 +90,8 @@ static dav_error *dav_repos_search_resource(request_rec * r,
     sctx->db_r = db_r;
     sctx->bind_uri_map = apr_hash_make(r->pool);
     sctx->prop_map = apr_hash_make(r->pool);
+    sctx->bitmarks_map = apr_hash_make(r->pool);
+    sctx->namespace_map = apr_hash_make(r->pool);
    
     /* Get db_handle from request_rec */
     db_handle = dav_repos_get_db(r);
@@ -276,32 +275,6 @@ int build_query(request_rec *r, search_ctx *sctx)
     return HTTP_OK;
 }
 
-
-/**
- * Processes the SELECT portion of the XML query
- * @param r The method request record
- * @param query The SQL query being constructed
- * @param cur_elem The current XML element of WHERE clause being processed
- * @param assoc The association list of dead props and their tables
- * @return The HTTP response code
- */
-int parse_select(request_rec * r, search_ctx * sctx, apr_xml_elem * cur_elem)
-{
-    apr_xml_elem *select_elem;
-
-    TRACE();
-
-    if (cur_elem->first_child) {
-        select_elem = cur_elem->first_child;
-    } else {
-        sctx->err_msg = apr_pstrdup(r->pool, "<select> element empty");
-        return HTTP_BAD_REQUEST;
-    }
-
-    return parse_props(r, sctx, select_elem);
-
-}
-
 static char *get_prop_key(apr_pool_t *pool, const char *propname,
                           long ns_id)
 {
@@ -321,47 +294,61 @@ static const char *get_ns_uri(apr_array_header_t *ns_xlate, int ns)
 }
 
 /**
- * Parse props XML into an array of properties
+ * Processes the SELECT portion of the XML query
  * @param r The method request record
- * @param sctx The search context
- * @param select_elem The SELECT XML element
+ * @param query The SQL query being constructed
+ * @param cur_elem The current XML element of WHERE clause being processed
+ * @param assoc The association list of dead props and their tables
  * @return The HTTP response code
  */
-int parse_props(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
+int parse_select(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
 {
-    apr_xml_elem *propi = NULL;
+    apr_xml_elem *prop_elem, *bitmark_elem, *allprop_elem, *propi = NULL;
     apr_pool_t *ppool = r->server->process->pool;
     apr_pool_t *pool = r->pool;
-    
+    const char *ns, *attr;
+    char *prop_key;
+    long ns_id;
+
     TRACE();
 
-    if (apr_strnatcmp(select_elem->name, "prop") == 0) {
+    prop_elem = dav_find_child(select_elem, "prop");
+    bitmark_elem = dav_find_child_no_ns(select_elem, "bitmark");
+    allprop_elem = dav_find_child(select_elem, "allprop");
 
+    if (prop_elem) {
         /* No prop information */
-        if (!select_elem->first_child || select_elem->first_child->first_child)
+        if (!prop_elem->first_child || prop_elem->first_child->first_child)
         {
             sctx->err_msg = apr_pstrdup(r->pool, "No prop information");
             return HTTP_BAD_REQUEST;
         }
 
         /* Build props map */
-        for(propi = select_elem->first_child; propi; 
+        for(propi = prop_elem->first_child; propi; 
             propi = propi->next) {
-            const char *ns = get_ns_uri(sctx->doc->namespaces, propi->ns);
-            long ns_id;
-            dbms_get_ns_id(sctx->db, sctx->db_r, ns, &ns_id);
-            char *prop_key = 
-                get_prop_key(pool, propi->name, ns_id);
-            const char *attr = 
-                prop_attr_lookup(ppool, pool, propi, prop_key);
+            ns = get_ns_uri(sctx->doc->namespaces, propi->ns);
+            ns_id = get_ns_id(pool, sctx, ns);
+            prop_key = get_prop_key(pool, propi->name, ns_id);
+            attr = prop_attr_lookup(ppool, pool, propi, prop_key);
             apr_hash_set(sctx->prop_map, prop_key, 
                          APR_HASH_KEY_STRING, attr);
         }
-        return HTTP_OK;
     }
 
+    if (bitmark_elem) {
+        if (bitmark_elem->first_child) {
+            for (propi = bitmark_elem->first_child; propi;
+                 propi = propi->next) {
+                apr_hash_set(sctx->bitmarks_map, propi->name, 
+                             APR_HASH_KEY_STRING, propi->name);
+            }
 
-    if (apr_strnatcmp(select_elem->name, "allprop") == 0) {
+            sctx->bitmark_support_req = 1;
+        }
+    }
+
+    if (allprop_elem) {
         apr_hash_index_t *hi;
         apr_hash_t *liveprop_map = get_liveprop_map(ppool);
         const void *propname;
@@ -371,22 +358,22 @@ int parse_props(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
             hi = apr_hash_next(hi)) {
             apr_hash_this(hi, &propname, NULL, &attr);
             char *prop_key = get_prop_key(pool, (const char *)propname, 
-                                          get_dav_ns_id(sctx));
+                                          get_ns_id(pool, sctx, "DAV:"));
             apr_hash_set(sctx->prop_map, prop_key,
                          APR_HASH_KEY_STRING, (char *)attr);
         }
-
-        return HTTP_OK;
     }
 
-    /* Unknown element name */
-    sctx->err_msg =
-        apr_psprintf(r->pool,
-                "Unknown element name(%s) in select."
-                "Use <allprop> or <prop>", select_elem->name);
+    if (!prop_elem && !allprop_elem && !sctx->bitmark_support_req) {
+        /* Unknown element name */
+        sctx->err_msg =
+            apr_psprintf(r->pool,
+                    "Unknown element name(%s) in select."
+                    "Use <allprop> or <prop>", select_elem->name);
+        return HTTP_BAD_REQUEST;
+    }
 
-    return HTTP_BAD_REQUEST;
-
+    return HTTP_OK;
 }
 
 const char *prop_attr_lookup(apr_pool_t *ppool, apr_pool_t *pool,
@@ -672,8 +659,7 @@ int parse_comp_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
     TRACE();
 
     const char *ns = get_ns_uri(sctx->doc->namespaces, prop->ns);
-    long ns_id;
-    dbms_get_ns_id(sctx->db, sctx->db_r, ns, &ns_id);
+    long ns_id = get_ns_id(pool, sctx, ns);
     char *prop_key = get_prop_key(pool, prop->name, ns_id);
     const char *attr = prop_attr_lookup(ppool, pool, prop, prop_key); 
 
@@ -794,8 +780,7 @@ int parse_is_defined(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
     TRACE();
 
     const char *ns = get_ns_uri(sctx->doc->namespaces, prop->ns);
-    long ns_id;
-    dbms_get_ns_id(sctx->db, sctx->db_r, ns, &ns_id);
+    long ns_id = get_ns_id(pool, sctx, ns);
     char *prop_key = get_prop_key(pool, prop->name, ns_id);
     const char *attr = prop_attr_lookup(ppool, pool, prop, prop_key); 
 
@@ -870,8 +855,7 @@ int parse_order(request_rec *r, search_ctx *sctx, apr_xml_elem *order_elem)
         apr_xml_elem *prop = prop_elem->first_child;
         if(prop) {
             const char *ns = get_ns_uri(sctx->doc->namespaces, prop->ns);
-            long ns_id;
-            dbms_get_ns_id(sctx->db, sctx->db_r, ns, &ns_id);
+            long ns_id = get_ns_id(r->pool, sctx, ns);
             char *prop_key = 
                 get_prop_key(r->pool, prop->name, ns_id);
             attr = prop_attr_lookup(ppool, r->pool, prop, prop_key); 
@@ -939,29 +923,160 @@ int parse_offset(request_rec * r, search_ctx * sctx,
  */
 int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
 {
-    dav_response *newres, *tail;
-    char **dbrow;
-    int i, results_count = 0;
+    dav_response *tail;
+    char **dbrow, **good_props, **bad_props;
+    int i, results_count = 0, j, bind_id;
+    const char *last_href = NULL, *href;
+    apr_hash_t *bitmarks = NULL;
+    apr_hash_index_t *hi;
+    apr_array_header_t *values;
+    const void *bitmark;
+    void *value;
+    const char *good_bitmarks = NULL, *bad_bitmarks = NULL;
 
     TRACE();
 
     tail = *res = NULL;
+    good_props = apr_pcalloc(pool, sizeof(char *));
+    bad_props = apr_pcalloc(pool, sizeof(char *));
     
     results_count = dbms_results_count(sctx->q);
 
-    for(i=0; i<results_count; i++) {
-        dbrow = dbms_fetch_row_num(sctx->db->db, sctx->q, pool, i);
-        /* for each result build dav_response */
-        newres = search_mkresponse(pool, sctx, dbrow);
+    for(i=0; i<results_count+1; i++) {
+        if (i != results_count) {
+            dbrow = dbms_fetch_row_num(sctx->db->db, sctx->q, pool, i);
 
-        /* add this to multistatus response */
-        if (!*res) {
-            tail = *res = newres;
+            if (sctx->is_bit_query) {
+                href = dbrow[0];
+            }
+            else {
+                bind_id = atoi(dbrow[0]);
+
+                /* Get URI */
+                href = apr_hash_get(sctx->bind_uri_map, &bind_id, sizeof(int));
+            }
         }
-        else {
-            tail->next = newres;
-            tail = newres;
+        
+        if (!last_href || apr_strnatcmp(href, last_href) != 0 || i == results_count ) {
+            if (last_href) {
+                apr_text_header hdr = { 0 };
+
+                if(*good_props) {
+                    apr_text_append(pool, &hdr, "<D:propstat>" DEBUG_CR
+                                    "  <D:prop>" DEBUG_CR);
+
+                    apr_text_append(pool, &hdr, *good_props);
+
+                    apr_text_append(pool, &hdr,
+                                    "  </D:prop>" DEBUG_CR
+                                    "  <D:status>HTTP/1.1 200 OK</D:status>" DEBUG_CR
+                                    "</D:propstat>" DEBUG_CR);
+                    *good_props = NULL;
+                }
+
+                if(*bad_props) { 
+                    apr_text_append(pool, &hdr, "<D:propstat>" DEBUG_CR
+                            "  <D:prop>" DEBUG_CR);
+
+                    apr_text_append(pool, &hdr, *bad_props);
+
+                    apr_text_append(pool, &hdr, "  </D:prop>" DEBUG_CR
+                            "  <D:status>HTTP/1.1 404 Not Found</D:status>" DEBUG_CR
+                            "</D:propstat>" DEBUG_CR);
+                    *bad_props = NULL;
+                }
+                if (bitmarks) {
+                    for (hi = apr_hash_first(pool, bitmarks); hi;
+                         hi = apr_hash_next(hi)) {
+                        apr_hash_this(hi, &bitmark, NULL, &value);
+                        values = (apr_array_header_t *)value;
+                        if (values->nelts == 0) {
+                            if (!bad_bitmarks) {
+                                bad_bitmarks = apr_psprintf(pool, " ");
+                            }
+                            bad_bitmarks = apr_pstrcat(pool, bad_bitmarks,
+                                "<", (const char *)bitmark, "/>", NULL);
+                        }
+                        else {
+                            if (!good_bitmarks) {
+                                good_bitmarks = apr_psprintf(pool, " ");
+                            }
+                            good_bitmarks = apr_pstrcat(pool, good_bitmarks,
+                                "<", (const char *)bitmark,">",
+                                apr_array_pstrcat(pool, values, ','),
+                                "</", (const char *)bitmark, ">",
+                                DEBUG_CR, NULL );
+                        }
+                    }
+                }
+
+                if (good_bitmarks) {
+                    apr_text_append(pool, &hdr, "<bitmarkstat "
+                    "xmlns=\"http://limebits.com/ns/1.0/\">" DEBUG_CR
+                    "  <bitmark>" DEBUG_CR);
+
+                    apr_text_append(pool, &hdr, good_bitmarks);
+
+                    apr_text_append(pool, &hdr, 
+                        "  </bitmark>" DEBUG_CR
+                        "  <status>HTTP/1.1 200 OK</status>" DEBUG_CR
+                        "</bitmarkstat>" DEBUG_CR);
+
+                    good_bitmarks = NULL;
+                }
+
+                if (bad_bitmarks) {
+                    apr_text_append(pool, &hdr, "<bitmarkstat "
+                    "xmlns=\"http://limebits.com/ns/1.0/\">" DEBUG_CR
+                    "  <bitmark>" DEBUG_CR);
+
+                    apr_text_append(pool, &hdr, bad_bitmarks);
+
+                    apr_text_append(pool, &hdr, 
+                        "  </bitmark>" DEBUG_CR
+                        "  <status>HTTP/1.1 404 Not Found</status>" DEBUG_CR
+                        "</bitmarkstat>" DEBUG_CR);
+
+                    bad_bitmarks = NULL;
+                }
+
+                dav_response *newres = apr_pcalloc(pool, sizeof(*newres));
+                newres->status = 200;
+                newres->href = apr_pstrdup(pool, last_href);
+                newres->propresult.propstats = hdr.first;
+                /* add this to multistatus response */
+                if (!*res) {
+                    tail = *res = newres;
+                }
+                else {
+                    tail->next = newres;
+                    tail = newres;
+                }
+            }
+
+            if ( i != results_count ) {
+                /* for each result build dav_response */
+                j = search_mkresponse(pool, sctx, dbrow, good_props, bad_props);
+                last_href = apr_pstrdup(pool, href);
+                if (sctx->bitmark_support_req) {
+                    bitmarks = apr_hash_copy(pool, sctx->bitmarks_map);
+                    for (hi = apr_hash_first(pool, bitmarks); hi;
+                         hi = apr_hash_next(hi)) {
+                        apr_hash_this(hi, &bitmark, NULL, &value);
+                        apr_hash_set(bitmarks, (const char *)bitmark, 
+                            APR_HASH_KEY_STRING, 
+                            apr_array_make(pool, 1, sizeof(char *)));
+                    }
+                }
+            }
         }
+        
+        if (bitmarks) {
+            values = apr_hash_get(bitmarks, dbrow[j], APR_HASH_KEY_STRING);
+            char **v = apr_array_push(values);
+            *v = apr_pstrdup(pool, dbrow[j+1]);
+        }
+         
     }
 
     return HTTP_OK;
@@ -990,53 +1105,39 @@ static dav_repos_property *get_prop_from_prop_key(apr_pool_t *pool,
     return prop;
 }
 
-dav_response *search_mkresponse(apr_pool_t *pool,
-				search_ctx *sctx,
-				char **dbrow)
+int search_mkresponse(apr_pool_t *pool, search_ctx *sctx, char **dbrow,
+                      char **good_props, char **bad_props)
 {
-    apr_text_header hdr = { 0 };
     apr_hash_index_t *hi;
     const void *prop_key;
-    char *good_props = NULL, *bad_props = NULL;
+    char *propval;
     int i = 1;
-    dav_response *res = apr_pcalloc(pool, sizeof(*res));
-    res->status = 200;
-    int bind_id;
 
     TRACE();
 
-    if (sctx->is_bit_query) {
-        res->href = dbrow[0];
-    }
-    else {
-        bind_id = atoi(dbrow[0]);
-
-        /* Get URI */
-        res->href = apr_hash_get(sctx->bind_uri_map, &bind_id, sizeof(int));
-    }
-
-    for(hi = apr_hash_first(pool, sctx->prop_map); hi;
+    for(hi = apr_hash_first(pool, sctx->prop_map); 
+        hi;
         hi = apr_hash_next(hi)) {
         apr_hash_this(hi, &prop_key, NULL, NULL);
         dav_repos_property *prop = 
             get_prop_from_prop_key(pool, (char *)prop_key);
-        prop->namespace_name = 
-            dbms_get_ns_name(sctx->db, sctx->db_r, prop->ns_id);
+        prop->namespace_name = apr_hash_get(sctx->namespace_map, &prop->ns_id,
+                                            sizeof(long));
 
-        char *propval = dbrow[i++];
+        propval = dbrow[i++];
 
         if(!propval || !strlen(propval)) {
-            if(!bad_props) {
-                 bad_props = apr_psprintf(pool, " ");
+            if(!*bad_props) {
+                 *bad_props = apr_psprintf(pool, " ");
             }
-            bad_props = apr_pstrcat(pool, bad_props, "<", prop->name, 
+            *bad_props = apr_pstrcat(pool, *bad_props, "<", prop->name, 
                                      " xmlns=\"", prop->namespace_name, "\"/>",
                                      NULL);
             continue;
         }
 
         /* do some post-processing property values if required */
-        if(prop->ns_id == get_dav_ns_id(sctx)) {
+        if(prop->ns_id == get_ns_id(pool, sctx, "DAV:")) {
             if(strcmp(prop->name, "creationdate") == 0) {
                 char *date = 
                     apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
@@ -1062,42 +1163,17 @@ dav_response *search_mkresponse(apr_pool_t *pool,
             }
         }
 
-        if(!good_props) {
-            good_props = apr_psprintf(pool, " ");
+        if(!*good_props) {
+            *good_props = apr_psprintf(pool, " ");
         }
 
-        good_props = apr_pstrcat(pool, good_props, "<", prop->name, 
+        *good_props = apr_pstrcat(pool, *good_props, "<", prop->name, 
                                  " xmlns=\"", prop->namespace_name, 
                                  "\">", propval, "</", prop->name, ">", 
                                  DEBUG_CR, NULL );
     }
 
-    if(good_props) {
-        apr_text_append(pool, &hdr, "<D:propstat>" DEBUG_CR
-                        "  <D:prop>" DEBUG_CR);
-
-        apr_text_append(pool, &hdr, good_props);
-
-        apr_text_append(pool, &hdr,
-                        "  </D:prop>" DEBUG_CR
-                        "  <D:status>HTTP/1.1 200 OK</D:status>" DEBUG_CR
-                        "</D:propstat>" DEBUG_CR);
-    }
-
-    if(bad_props) { 
-        apr_text_append(pool, &hdr, "<D:propstat>" DEBUG_CR
-                "  <D:prop>" DEBUG_CR);
-
-        apr_text_append(pool, &hdr, bad_props);
-
-        apr_text_append(pool, &hdr, "  </D:prop>" DEBUG_CR
-                "  <D:status>HTTP/1.1 404 Not Found</D:status>" DEBUG_CR
-                "</D:propstat>" DEBUG_CR);
-    }
-
-    res->propresult.propstats = hdr.first;
-
-    return res;
+    return i;
 }
 
 /*
@@ -1132,6 +1208,11 @@ int build_query_select(request_rec *r, search_ctx *sctx)
                                    (char *)val, NULL);
     }
 
+    if (sctx->bitmark_support_req) {
+        sctx->select = apr_pstrcat(r->pool, sctx->select, 
+                        ", bitmarks.name, bitmarks.value", NULL);
+    }
+
     return HTTP_OK;
 }
 
@@ -1140,6 +1221,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     apr_hash_index_t *hi;
     apr_pool_t *pool = r->pool;
     const void *prop_key;
+    dav_repos_property *prop;
 
     TRACE();
 
@@ -1159,6 +1241,12 @@ int build_query_from(request_rec *r, search_ctx *sctx)
             " INNER JOIN binds b3 ON b4.collection_id = b3.resource_id"
             " INNER JOIN binds b2 ON b3.collection_id = b2.resource_id"
             " INNER JOIN binds b1 ON b2.collection_id = b1.resource_id", NULL);
+
+        if (sctx->bitmark_support_req) {
+            sctx->from = apr_pstrcat(pool, sctx->from, 
+            " LEFT JOIN binds b5 ON b5.name = resources.uuid "
+            " INNER JOIN binds b6 ON b6.collection_id = b5.resource_id ", NULL);
+        }
     }
     else {
         sctx->from = apr_pstrcat(pool, sctx->from, 
@@ -1168,9 +1256,8 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
         hi = apr_hash_next(hi)) {
         apr_hash_this(hi, &prop_key, NULL, NULL);
-        dav_repos_property *prop = 
-            get_prop_from_prop_key(pool, (char *)prop_key);
-        if(prop->ns_id != get_dav_ns_id(sctx)) {
+        prop = get_prop_from_prop_key(pool, (char *)prop_key);
+        if(prop->ns_id != get_ns_id(pool, sctx, "DAV:")) {
             /* Dead property */
             char *dead_property_subquery = 
                 apr_psprintf(pool,
@@ -1185,13 +1272,19 @@ int build_query_from(request_rec *r, search_ctx *sctx)
         }
     }
 
-   return HTTP_OK;
+    if (sctx->bitmark_support_req) {
+        sctx->from = apr_pstrcat(pool, sctx->from,
+                        " LEFT JOIN properties bitmarks "
+                        "ON bitmarks.resource_id = b6.resource_id ", NULL);
+    }
+
+    return HTTP_OK;
 }
 
 int build_query_where(request_rec *r, search_ctx *sctx)
 {
     apr_hash_index_t *hi;
-    const void *bind;
+    const void *bind, *bitmark;
     char *temp;
 
     TRACE();
@@ -1224,7 +1317,25 @@ int build_query_where(request_rec *r, search_ctx *sctx)
         sctx->where = apr_pstrcat(r->pool, sctx->where, " AND ", 
                                   sctx->where_cond, NULL);
     }
-    
+
+    if (sctx->bitmark_support_req) {
+        sctx->where = apr_pstrcat(r->pool, sctx->where, 
+                        " AND (bitmarks.name IN (", NULL);
+        for(hi = apr_hash_first(r->pool, sctx->bitmarks_map); hi;
+            hi = apr_hash_next(hi)) {
+            apr_hash_this(hi, &bitmark, NULL, NULL);
+            sctx->where = apr_pstrcat(r->pool, sctx->where, 
+                            "'", (char *)bitmark, "',", NULL);
+        }
+
+        /* correct the last ',' */
+        sctx->where[strlen(sctx->where) - 1] = ')';
+
+        sctx->where = apr_pstrcat(r->pool, sctx->where, 
+                        " OR bitmarks.name IS NULL)",
+                        NULL);
+    }
+
     return HTTP_OK;
 }
 

@@ -99,10 +99,10 @@ DAVDepthInfinity on
   DAVResponseRewriteRule (.*)                 /home/\$1
 
   # keep this tied to the one right above
-  DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+.$host_domain.*
+  DAVResponseRewriteCond Host                 ^(drive\\.)?[^.]+\\.$host_domain.*
   DAVResponseRewriteRule ^/home/[^/]*/?(.*)   /\$1
 
-  DAVResponseRewriteCond Host                           ^(drive\\.)?[^.]+.[^.]+.$host_domain.*
+  DAVResponseRewriteCond Host                           ^(drive\\.)?[^.]+\\.[^.]+\\.$host_domain.*
   DAVResponseRewriteRule ^/home/[^/]*/bits/[^/]*/?(.*)  /\$1
 
   AuthType Digest

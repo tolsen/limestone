@@ -529,14 +529,37 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
 
     /* Get and append bind id(s) */
     dav_resource *ri;
-    dav_get_resource_from_uri(uri, r, 0, NULL, &ri);
-    db_ri = ri->info->db_r;
 
     /* first, check for is-bit query */
     if (sctx->is_bit_query) {
-        sctx->b2_rid = db_ri->serialno;
+        /* validate uri */
+        int uri_depth = 0, i;
+        for (i = 0; i < strlen(uri); i++) {
+            if (uri[i] == '/') {
+                uri_depth++;
+            }
+        }
+
+        if (uri_depth > 1 && strncmp(uri, "/home", 5) == 0) {
+            int d = 3;
+            i = 0;
+            while(d && uri[i]) {
+                if (uri[i++] == '/') {
+                    d--;
+                }
+            }
+
+            uri = apr_pstrndup(r->pool, uri, i);
+            dav_get_resource_from_uri(uri, r, 0, NULL, &ri);
+            db_ri = ri->info->db_r;
+            sctx->b2_rid = db_ri->serialno;
+        }
+
         return HTTP_OK;
     }
+    
+    dav_get_resource_from_uri(uri, r, 0, NULL, &ri);
+    db_ri = ri->info->db_r;
 
     sabridge_get_collection_children(sctx->db, db_ri, depth, "read", &iter, 
                                      NULL, &nitems);

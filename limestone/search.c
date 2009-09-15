@@ -419,6 +419,8 @@ apr_hash_t *get_liveprop_map(apr_pool_t *pool)
                      APR_HASH_KEY_STRING, "resources.uuid");
         apr_hash_set(liveprop_map, "owner",
                      APR_HASH_KEY_STRING, "principals.name");
+        apr_hash_set(liveprop_map, "lastmodified",
+                     APR_HASH_KEY_STRING, "resources.lastmodified");
     }
 
     return liveprop_map;

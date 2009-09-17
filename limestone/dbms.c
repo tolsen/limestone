@@ -52,6 +52,8 @@
 #include "dbms_api.h"
 #include "acl.h"                /* dav_repos_get_principal_url */
 
+#define HOME_COLLECTION_ID 8    
+
 /** 
  * @struct resource_list
  * Structure for temporarily storing results of a SELECT query on resources 
@@ -178,6 +180,41 @@ dav_error *dbms_get_resource(const dav_repos_db *d, dav_repos_resource *r)
     return err;
 }
 
+static dav_error *dbms_notify_resource_updated(const dav_repos_db *d, 
+                                               dav_repos_resource *r)
+{
+    dav_repos_query *q = NULL;
+    dav_error *err = NULL;
+    int ierrno;
+
+    q = dbms_prepare(r->p, d->db, 
+                     "UPDATE resources SET lastmodified = ?"
+                     " WHERE id IN ("
+                      " WITH RECURSIVE ancestors(resource_id, visited) AS ("
+                       " VALUES(?::bigint, ARRAY[?]::bigint[])"
+                       " UNION ALL"
+                        " SELECT collection_id,"
+                            " visited::bigint[] || collection_id"
+                        " FROM binds INNER JOIN ancestors"
+                        " ON binds.resource_id = ancestors.resource_id" 
+                        " WHERE collection_id > ?"
+                            " AND NOT collection_id = ANY(visited)"
+                      " ) SELECT resource_id FROM ancestors)");
+    dbms_set_string(q, 1, r->updated_at);
+    dbms_set_int(q, 2, r->serialno);
+    dbms_set_int(q, 3, r->serialno);
+    dbms_set_int(q, 4, HOME_COLLECTION_ID);
+
+    if ((ierrno = dbms_execute(q))) {
+        err = dav_new_error(r->p, HTTP_INTERNAL_SERVER_ERROR, 0,
+                            "DBMS error while updating lastmodified");
+    }
+
+    dbms_query_destroy(q);
+
+    return err;
+}
+
 dav_error *dbms_insert_media(const dav_repos_db * d, dav_repos_resource * r)
 {
     dav_repos_query *q = NULL;
@@ -202,6 +239,10 @@ dav_error *dbms_insert_media(const dav_repos_db * d, dav_repos_resource * r)
         err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
                             "DBMS error while inserting into 'media'");
     dbms_query_destroy(q);
+
+    if (!err) {
+        err = dbms_notify_resource_updated(d, r);
+    }
 
     return err;
 }
@@ -463,6 +504,11 @@ dav_error *dbms_update_media_props(const dav_repos_db *d,
         err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
                             "Couldn't update media entry");
     dbms_query_destroy(q);
+
+    if (!err) {
+        err = dbms_notify_resource_updated(d, db_r);
+    }
+
     return err;
 }
 
@@ -1016,7 +1062,7 @@ dav_error *dbms_copy_media_props(const dav_repos_db *d,
     r_dest->getcontenttype = r_src->getcontenttype;
     r_dest->sha1str = r_src->sha1str;
 
-    return NULL;
+    return dbms_notify_resource_updated(d, r_dest);
 }
 
 dav_error *dbms_delete_dead_props(apr_pool_t *pool, const dav_repos_db *d,

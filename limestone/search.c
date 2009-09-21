@@ -1096,10 +1096,12 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
             }
         }
         
-        if (bitmarks) {
+        if (bitmarks && dbrow[j]) {
             values = apr_hash_get(bitmarks, dbrow[j], APR_HASH_KEY_STRING);
-            char **v = apr_array_push(values);
-            *v = apr_pstrdup(pool, dbrow[j+1]);
+            if (values) {
+                char **v = apr_array_push(values);
+                *v = apr_pstrdup(pool, dbrow[j+1]);
+            }
         }
          
     }
@@ -1245,7 +1247,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 {
     apr_hash_index_t *hi;
     apr_pool_t *pool = r->pool;
-    const void *prop_key;
+    const void *prop_key, *bitmark;
     dav_repos_property *prop;
 
     TRACE();
@@ -1299,8 +1301,20 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 
     if (sctx->bitmark_support_req) {
         sctx->from = apr_pstrcat(pool, sctx->from,
-                        " LEFT JOIN properties bitmarks "
-                        "ON bitmarks.resource_id = b6.resource_id ", NULL);
+                        " LEFT JOIN properties bitmarks"
+                        " ON bitmarks.resource_id = b6.resource_id"
+                        " AND bitmarks.name IN (", NULL);
+
+        for(hi = apr_hash_first(pool, sctx->bitmarks_map); hi;
+            hi = apr_hash_next(hi)) {
+            apr_hash_this(hi, &bitmark, NULL, NULL);
+            sctx->from = apr_pstrcat(pool, sctx->from, 
+                            "'", (char *)bitmark, "',", NULL);
+        }
+
+        /* correct the last ',' */
+        sctx->from[strlen(sctx->from) - 1] = ')';
+
     }
 
     return HTTP_OK;
@@ -1309,7 +1323,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 int build_query_where(request_rec *r, search_ctx *sctx)
 {
     apr_hash_index_t *hi;
-    const void *bind, *bitmark;
+    const void *bind;
     char *temp;
 
     TRACE();
@@ -1341,24 +1355,6 @@ int build_query_where(request_rec *r, search_ctx *sctx)
         /* Add other WHERE conditions */
         sctx->where = apr_pstrcat(r->pool, sctx->where, " AND ", 
                                   sctx->where_cond, NULL);
-    }
-
-    if (sctx->bitmark_support_req) {
-        sctx->where = apr_pstrcat(r->pool, sctx->where, 
-                        " AND (bitmarks.name IN (", NULL);
-        for(hi = apr_hash_first(r->pool, sctx->bitmarks_map); hi;
-            hi = apr_hash_next(hi)) {
-            apr_hash_this(hi, &bitmark, NULL, NULL);
-            sctx->where = apr_pstrcat(r->pool, sctx->where, 
-                            "'", (char *)bitmark, "',", NULL);
-        }
-
-        /* correct the last ',' */
-        sctx->where[strlen(sctx->where) - 1] = ')';
-
-        sctx->where = apr_pstrcat(r->pool, sctx->where, 
-                        " OR bitmarks.name IS NULL)",
-                        NULL);
     }
 
     return HTTP_OK;

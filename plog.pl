@@ -19,6 +19,7 @@
 
 # This library is provided by the debian package libdbd-pg-perl
 use DBD::Pg;
+use IO::Handle;
 use Getopt::Long;
 
 # Statement and database handles
@@ -27,11 +28,10 @@ my $sth;
 
 # Options passed in as arguments, none of them are strictly required. But their use is suggested
 # to avoid default action
-my ($dbuser, $dbpass, $dbhost, $dbname, $dbtracelog, $dbschema, $debug);
+my ($dbuser, $dbpass, $dbhost, $dbname, $dbtracelog, $dbschema, $debug, $dbport);
 
 # Default option values
 $dbhost = 'localhost';
-$dbschema = 'plog';
 $dbtable = 'logdata';
 $dbtracelog = 'plog_dbtrace.log';
 
@@ -40,6 +40,7 @@ GetOptions(
 	'u|user=s' 	=> \$dbuser,   # Database connection user
 	'p|password=s' 	=> \$dbpass,   # Database user password
 	'h|host=s' 	=> \$dbhost,   # Database hostname/ip
+	'P|port=i' 	=> \$dbport,   # Database port
 	'd|database=s'	=> \$dbname,   # Database name
 	'l|tracelog=s'	=> \$dbtracelog, # Database trace log used if debugging is on
 	's|schema=s'	=> \$dbschema, # Database schema
@@ -86,13 +87,13 @@ my @fieldnames = (
 my @vals = ();
 
 # Entry point for doing stuff... main loop
-for (<>) {
+while (<STDIN>) {
 	if (/^$/) {
 		insert_vals (\@vals);
 		@vals =  map { "" } (0..$#fieldnames);
 	} else {
        		chomp;
-		m/^(.+):(.*)$/;
+		m/^([^:]+):([\s\S]*)$/;
 		($name, $value) = ($1, $2);
 	# push only if "valid field"
 		if (exists $validfields{$name}) {
@@ -106,11 +107,12 @@ for (<>) {
 # Subroutines/Functions
 sub create_statement_handle {
 	if (! $dbh or $dbh->ping < 1) {
-		$dbh = DBI->connect('dbi:Pg:dbname=' . $dbname . ',',"$dbuser",'',{AutoCommit=>1})
+		$dbh = DBI->connect('dbi:Pg:dbname=' . $dbname . ';host=' . $dbhost . ';port=' . $dbport, $dbuser, $dbpass,{AutoCommit=>1})
                      or throw_error($!);
 
 	if ( $debug ) {
 		open($tracefile, ">$dbtracelog") or die ($!);
+                autoflush $tracefile 1;
 		$dbh->pg_server_trace($tracefile);
 	}
 
@@ -118,7 +120,7 @@ sub create_statement_handle {
 	if ($error = $dbh->err) {
 		throw_error($error);	
 	} else {
-                $query = 'INSERT INTO "' . $dbtable . '" ("' . join('","', @fieldnames) . '") ' .
+                $query = 'INSERT INTO ' . $dbtable . ' ("' . join('","', @fieldnames) . '") ' .
                          'VALUES (';
 		$query .= '?,' x $#fieldnames;
 		$query .= '?)';

@@ -84,7 +84,7 @@ LogFormat "log_version:3\\nhttp_version:%H\\nremote_ip:%h\\nrequest_id:%{UNIQUE_
 
 CustomLog "$LOGS_DIR/access_log" limestone
 # plog.pl will take command line options here if desired
-CustomLog "| $PLOG_PATH" plog
+CustomLog "| $PLOG_PATH -u $db_user -p $db_pass -d $db_name -h $db_host -P $db_port -s plog_$db_user -debug 1 -l $LOGS_DIR/plog_dbtrace.log" plog
 
 ErrorLog "$LOGS_DIR/error_log"
 PidFile "$LOGS_DIR/httpd.pid"
@@ -209,7 +209,7 @@ open(LIMESTONE_CONFIG, '>', $LIMESTONE_CONFIG) or die("couldn't open $LIMESTONE_
 
 my $LSPORT = $ENV{'LIMESTONE_PGSQL_VHOST_PORT'};
 my $DBHOST = $ENV{'LIMESTONE_PGSQL_DB_HOST'};
-my $DBPORT = $ENV{'LIMESTONE_PGSQL_DB_PORT'};
+my $DBPORT = $ENV{'LIMESTONE_PGSQL_DB_PORT'} || 5432;
 my $DBNAME = $ENV{'LIMESTONE_PGSQL_DB_NAME'};
 my $DBUSER = $ENV{'LIMESTONE_PGSQL_DB_USER'};
 my $DBPASS = $ENV{'LIMESTONE_PGSQL_DB_PASS'};

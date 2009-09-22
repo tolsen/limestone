@@ -2,7 +2,7 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
   <changeSet author="paritosh" id="1">
     <comment>Create logdata table</comment>
-    <createTable tableName="logdata" schemaName="plog">
+    <createTable tableName="logdata" schemaName="${plog_schema}">
         <column name="id" type="integer" autoIncrement="true">
            <constraints primaryKey="true" nullable="false"/>
         </column>
@@ -28,13 +28,13 @@
     </createTable>
 
     <comment>Add indices</comment>
-    <createIndex tableName="logdata" schemaName="plog" indexName="idx_logdata_resource_uuid">
+    <createIndex tableName="logdata" schemaName="${plog_schema}" indexName="idx_logdata_resource_uuid">
         <column name="resource_uuid"/>
     </createIndex>
-    <createIndex tableName="logdata" schemaName="plog" indexName="idx_logdata_auth_user">
+    <createIndex tableName="logdata" schemaName="${plog_schema}" indexName="idx_logdata_auth_user">
         <column name="auth_user"/>
     </createIndex>
-    <createIndex tableName="logdata" schemaName="plog" indexName="idx_logdata_request_method">
+    <createIndex tableName="logdata" schemaName="${plog_schema}" indexName="idx_logdata_request_method">
         <column name="request_method"/>
     </createIndex>
 

@@ -950,12 +950,12 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
 {
     dav_response *tail;
     char **dbrow, **good_props, **bad_props;
-    int i, results_count = 0, j, bind_id;
+    int i, results_count = 0, j, bind_id, k;
     const char *last_href = NULL, *href;
     apr_hash_t *bitmarks = NULL;
     apr_hash_index_t *hi;
     apr_array_header_t *values;
-    const void *bitmark;
+    const void *bm;
     void *value;
     const char *good_bitmarks = NULL, *bad_bitmarks = NULL;
 
@@ -1013,37 +1013,41 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
                 if (bitmarks) {
                     for (hi = apr_hash_first(pool, bitmarks); hi;
                          hi = apr_hash_next(hi)) {
-                        apr_hash_this(hi, &bitmark, NULL, &value);
+                        apr_hash_this(hi, &bm, NULL, &value);
                         values = (apr_array_header_t *)value;
                         if (values->nelts == 0) {
                             if (!bad_bitmarks) {
                                 bad_bitmarks = apr_psprintf(pool, " ");
                             }
                             bad_bitmarks = apr_pstrcat(pool, bad_bitmarks,
-                                "<", (const char *)bitmark, "/>", NULL);
+                                "<", (const char *)bm, "/>", NULL);
                         }
                         else {
                             if (!good_bitmarks) {
                                 good_bitmarks = apr_psprintf(pool, " ");
                             }
-                            good_bitmarks = apr_pstrcat(pool, good_bitmarks,
-                                "<", (const char *)bitmark,">",
-                                apr_array_pstrcat(pool, values, ','),
-                                "</", (const char *)bitmark, ">",
-                                DEBUG_CR, NULL );
+
+                            for (k=0; k<values->nelts; k++) {
+                                bitmark *b = (bitmark *)values->elts;
+                                good_bitmarks = apr_pstrcat(pool, 
+                                    good_bitmarks,
+                                    "<bitmark>" DEBUG_CR
+                                    " <href>", b[k].href, "</href>" DEBUG_CR
+                                    " <", b[k].name, ">", b[k].value,
+                                    "</", b[k].name, ">" DEBUG_CR
+                                    "</bitmark>" DEBUG_CR, NULL );
+                            }
                         }
                     }
                 }
 
                 if (good_bitmarks) {
                     apr_text_append(pool, &hdr, "<bitmarkstat "
-                    "xmlns=\"http://limebits.com/ns/1.0/\">" DEBUG_CR
-                    "  <bitmark>" DEBUG_CR);
+                    "xmlns=\"http://limebits.com/ns/1.0/\">" DEBUG_CR);
 
                     apr_text_append(pool, &hdr, good_bitmarks);
 
                     apr_text_append(pool, &hdr, 
-                        "  </bitmark>" DEBUG_CR
                         "  <status>HTTP/1.1 200 OK</status>" DEBUG_CR
                         "</bitmarkstat>" DEBUG_CR);
 
@@ -1087,10 +1091,10 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
                     bitmarks = apr_hash_copy(pool, sctx->bitmarks_map);
                     for (hi = apr_hash_first(pool, bitmarks); hi;
                          hi = apr_hash_next(hi)) {
-                        apr_hash_this(hi, &bitmark, NULL, &value);
-                        apr_hash_set(bitmarks, (const char *)bitmark, 
+                        apr_hash_this(hi, &bm, NULL, &value);
+                        apr_hash_set(bitmarks, (const char *)bm, 
                             APR_HASH_KEY_STRING, 
-                            apr_array_make(pool, 1, sizeof(char *)));
+                            apr_array_make(pool, 1, sizeof(bitmark)));
                     }
                 }
             }
@@ -1099,8 +1103,10 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
         if (bitmarks && dbrow[j]) {
             values = apr_hash_get(bitmarks, dbrow[j], APR_HASH_KEY_STRING);
             if (values) {
-                char **v = apr_array_push(values);
-                *v = apr_pstrdup(pool, dbrow[j+1]);
+                bitmark *b = apr_array_push(values);
+                b->name = apr_pstrdup(pool, dbrow[j]);
+                b->value = apr_pstrdup(pool, dbrow[j+1]);
+                b->href = apr_pstrdup(pool, dbrow[j+2]);
             }
         }
          
@@ -1237,7 +1243,9 @@ int build_query_select(request_rec *r, search_ctx *sctx)
 
     if (sctx->bitmark_support_req) {
         sctx->select = apr_pstrcat(r->pool, sctx->select, 
-                        ", bitmarks.name, bitmarks.value", NULL);
+                        ", bitmarks.name, bitmarks.value, "
+                        "'/bitmarks/' || resources.uuid || '/' || b6.name", 
+                        NULL);
     }
 
     return HTTP_OK;
@@ -1247,7 +1255,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 {
     apr_hash_index_t *hi;
     apr_pool_t *pool = r->pool;
-    const void *prop_key, *bitmark;
+    const void *prop_key, *bm;
     dav_repos_property *prop;
 
     TRACE();
@@ -1272,7 +1280,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
         if (sctx->bitmark_support_req) {
             sctx->from = apr_pstrcat(pool, sctx->from, 
             " LEFT JOIN binds b5 ON b5.name = resources.uuid "
-            " INNER JOIN binds b6 ON b6.collection_id = b5.resource_id ", NULL);
+            " LEFT JOIN binds b6 ON b6.collection_id = b5.resource_id ", NULL);
         }
     }
     else {
@@ -1307,9 +1315,9 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 
         for(hi = apr_hash_first(pool, sctx->bitmarks_map); hi;
             hi = apr_hash_next(hi)) {
-            apr_hash_this(hi, &bitmark, NULL, NULL);
+            apr_hash_this(hi, &bm, NULL, NULL);
             sctx->from = apr_pstrcat(pool, sctx->from, 
-                            "'", (char *)bitmark, "',", NULL);
+                            "'", (char *)bm, "',", NULL);
         }
 
         /* correct the last ',' */

@@ -80,6 +80,12 @@ typedef struct {
 
 typedef struct dead_prop_list dead_prop_list;
 
+typedef struct {
+    const char *href;
+    const char *name;
+    const char *value;
+} bitmark;
+
 int parse_query(request_rec * r, search_ctx * sctx);
 
 int build_query(request_rec * r, search_ctx * sctx);

@@ -67,9 +67,15 @@ typedef struct {
     char *off;
     char *err_msg;
     const char *nresults;       /* No of results to limit to */
-    apr_hash_t *bind_uri_map;   /* bind_id to URI mapping */
-    apr_hash_t *prop_map;	/* Propname-Attribute map */
+    apr_hash_t *bind_uri_map;   /* bind_id:URI mapping */
+    apr_hash_t *prop_map;	/* Propname:Attribute map */
+    apr_hash_t *bitmarks_map;	/* Bitmarks:Attribute map */
+    apr_hash_t *namespace_map;	/* ns_id:namespace map */
     apr_xml_doc *doc;
+    int is_bit_query;           /* set if WHERE clause filters on is-bit */
+    int bitmark_support_req;    /* set if bitmarks support required */
+    int b2_rid;                 /* set to the resource_id on which to filter
+                                   the second bind for a is-bit query */
 } search_ctx;
 
 typedef struct dead_prop_list dead_prop_list;
@@ -81,9 +87,8 @@ int build_query(request_rec * r, search_ctx * sctx);
 int build_xml_response(apr_pool_t *pool, search_ctx * sctx,
 		       dav_response ** res);
 
-dav_response *search_mkresponse(apr_pool_t *pool,
-				search_ctx *sctx,
-				char **dbrow);
+int search_mkresponse(apr_pool_t *pool, search_ctx *sctx, char **dbrow,
+                      char **good_props, char **bad_props);
 
 int parse_select(request_rec *r, search_ctx *sctx, apr_xml_elem *select_elem);
 
@@ -105,6 +110,8 @@ int parse_comp_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 int parse_log_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 
 int parse_is_coll(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
+
+int parse_is_bit(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 
 int parse_is_defined(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx);
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
   <include file="add_private_properties.xml"/>
+  <include file="add_bind_collection.xml"/>
   <include file="add_lb_email_property.xml"/>
   <include file="consolidate_resource_types.xml"/>
   <include file="remove_resource_types_table.xml"/>
@@ -13,4 +14,6 @@
   <include file="create_redirectrefs_table.xml"/>
   <include file="create_collections_table.xml"/>
   <include file="add_bar_state.xml"/>
+  <include file="add_bitmarks_collection.xml"/>
+  <include file="add_lb_lastmodified_property.xml"/>
 </databaseChangeLog>

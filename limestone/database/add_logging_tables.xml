@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment>Create logdata table</comment>
+    <createTable tableName="logdata" schemaName="plog">
+        <column name="id" type="integer" autoIncrement="true">
+           <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="log_version" type="integer"/>
+        <column name="http_version" type="text"/>
+        <column name="remote_ip" type="inet"/>
+        <column name="request_id" type="character(24)">
+            <constraints unique="true"/>
+        </column>
+        <column name="request_method" type="text"/>
+        <column name="request_uri" type="text"/>
+        <column name="request_referer" type="text"/>
+        <column name="virtual_host" type="text"/>
+        <column name="destination_uri" type="text"/>
+        <column name="received_time" type="datetime"/>
+        <column name="response_microseconds" type="integer"/>
+        <column name="request_firstline" type="text"/>
+        <column name="response_status" type="smallint"/>
+        <column name="resource_uuid" type="character(32)"/>
+        <column name="response_size" type="integer"/>
+        <column name="auth_user" type="text"/>
+        <column name="user_agent" type="text"/>
+    </createTable>
+
+    <comment>Add indices</comment>
+    <createIndex tableName="logdata" schemaName="plog" indexName="idx_logdata_resource_uuid">
+        <column name="resource_uuid"/>
+    </createIndex>
+    <createIndex tableName="logdata" schemaName="plog" indexName="idx_logdata_auth_user">
+        <column name="auth_user"/>
+    </createIndex>
+    <createIndex tableName="logdata" schemaName="plog" indexName="idx_logdata_request_method">
+        <column name="request_method"/>
+    </createIndex>
+
+  </changeSet>
+</databaseChangeLog>

@@ -421,6 +421,8 @@ apr_hash_t *get_liveprop_map(apr_pool_t *pool)
                      APR_HASH_KEY_STRING, "principals.name");
         apr_hash_set(liveprop_map, "lastmodified",
                      APR_HASH_KEY_STRING, "resources.lastmodified");
+        apr_hash_set(liveprop_map, "popularity",
+                     APR_HASH_KEY_STRING, "resources.views");
     }
 
     return liveprop_map;

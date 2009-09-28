@@ -21,6 +21,7 @@
 use DBD::Pg;
 use IO::Handle;
 use Getopt::Long;
+use Sys::Syslog;
 
 # Statement and database handles
 my $dbh;
@@ -37,14 +38,14 @@ $dbtracelog = 'plog_dbtrace.log';
 
 # Collect options
 GetOptions(
-	'u|user=s' 	=> \$dbuser,   # Database connection user
-	'p|password=s' 	=> \$dbpass,   # Database user password
-	'h|host=s' 	=> \$dbhost,   # Database hostname/ip
-	'P|port=i' 	=> \$dbport,   # Database port
-	'd|database=s'	=> \$dbname,   # Database name
-	'l|tracelog=s'	=> \$dbtracelog, # Database trace log used if debugging is on
-	's|schema=s'	=> \$dbschema, # Database schema
-	'x|debug=f'	=> \$debug,    # Presence of this option as argument will enable debugging
+	'user=s' 	=> \$dbuser,   # Database connection user
+	'password=s' 	=> \$dbpass,   # Database user password
+	'host=s' 	=> \$dbhost,   # Database hostname/ip
+	'port=i' 	=> \$dbport,   # Database port
+	'database=s'	=> \$dbname,   # Database name
+	'tracelog=s'	=> \$dbtracelog, # Database trace log used if debugging is on
+	'schema=s'	=> \$dbschema, # Database schema
+	'debug=f'	=> \$debug,    # Presence of this option as argument will enable debugging
 );
 
 # Option processing
@@ -138,10 +139,12 @@ sub insert_vals {
 	if (! $sth or $sth->execute( @{$_[0]} ) != 1) {
 	# then the insert didn't work right
 	# let's give it one more shot then shit the bed
+                eval {throw_error($dbh->err);}; throw_error($@) if $@;
 		create_statement_handle();
 		if ($sth->execute ( @{$_[0]} ) != 1) {
 		#shit the bed
 			throw_error($dbh->err);
+                        die;
 		} 
 	}
 }

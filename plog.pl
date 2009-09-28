@@ -90,7 +90,7 @@ my @vals = ();
 # Entry point for doing stuff... main loop
 while (<STDIN>) {
 	if (/^$/) {
-		insert_vals (\@vals);
+		filter_out_gratuitous_logs(\@vals) or insert_vals (\@vals);
 		@vals =  map { "" } (0..$#fieldnames);
 	} else {
        		chomp;
@@ -106,6 +106,7 @@ while (<STDIN>) {
 
 
 # Subroutines/Functions
+
 sub create_statement_handle {
 	if (! $dbh or $dbh->ping < 1) {
 		$dbh = DBI->connect('dbi:Pg:dbname=' . $dbname . ';host=' . $dbhost . ';port=' . $dbport, $dbuser, $dbpass,{AutoCommit=>1})
@@ -131,6 +132,7 @@ sub create_statement_handle {
 }	
 
 sub insert_vals {
+
         # Turn dashes into NULL values for numeric columns 
 	if (${$_[0]}[$validfields{'response_size'}] eq '-') {
                 ${$_[0]}[$validfields{'response_size'}] = undef;
@@ -139,7 +141,10 @@ sub insert_vals {
 	if (! $sth or $sth->execute( @{$_[0]} ) != 1) {
 	# then the insert didn't work right
 	# let's give it one more shot then shit the bed
-                eval {throw_error($dbh->err);}; throw_error($@) if $@;
+
+                eval {throw_error($dbh->err);};
+                	throw_error($@) if $@;
+
 		create_statement_handle();
 		if ($sth->execute ( @{$_[0]} ) != 1) {
 		#shit the bed
@@ -147,6 +152,23 @@ sub insert_vals {
                         die;
 		} 
 	}
+}
+
+sub filter_out_gratuitous_logs {
+# The entry should be filtered out if this function returns true
+       my $filter = 0; 
+       $vals_ref = $_[0];
+
+# as per https://trac.limebits.net/ticket/4817
+       if (${$vals_ref}[$validfields{remote_ip}] eq '69.123.90.201') {
+		if (${$vals_ref}[$validfields{request_method}] eq 'OPTIONS' ||
+                    ${$vals_ref}[$validfields{request_method}] eq 'PROPFIND'
+                   ) {
+       			$filter = 1;
+       		}
+       } 	
+
+       $filter;
 }
 
 { # scope enclosure for myname

@@ -18,4 +18,5 @@
   <include file="add_lb_lastmodified_property.xml"/>
   <include file="add_logging_tables.xml"/>
   <include file="add_resource_views.xml"/>
+  <include file="fix_resource_views.xml"/> 
 </databaseChangeLog>

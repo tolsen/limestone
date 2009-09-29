@@ -120,6 +120,18 @@ DAVDepthInfinity on
   AuthName "users\@limebits.com"
   BrowserMatch ".*MSIE.*" AuthDigestEnableQueryStringHack=On
 
+  BrowserMatch "^CFNetwork" redirect-carefully
+  BrowserMatch "^Dreamweaver-WebDAV-SCM1" redirect-carefully
+  BrowserMatch "^gnome-vfs/1.0" redirect-carefully
+  BrowserMatch "Microsoft Data Access Internet Publishing Provider" redirect-carefully
+  BrowserMatch "Microsoft-WebDAV-MiniRedir/5.1.2600" redirect-carefully
+  BrowserMatch "Mozilla/2.0 (compatible; MS FrontPage 4.0)" redirect-carefully
+  BrowserMatch "MS FrontPage" redirect-carefully
+  BrowserMatch "^OmniFocus" redirect-carefully
+  BrowserMatch "^WebDAVFS/1.[012345]" redirect-carefully
+  BrowserMatch "^WebDrive" redirect-carefully
+  BrowserMatch "^XML Spy" redirect-carefully
+
   AuthDigestProvider dbd
 
   Require valid-user

@@ -29,12 +29,14 @@ my $sth;
 
 # Options passed in as arguments, none of them are strictly required. But their use is suggested
 # to avoid default action
-my ($dbuser, $dbpass, $dbhost, $dbname, $dbtracelog, $dbschema, $debug, $dbport);
+my ($dbuser, $dbpass, $dbhost, $dbname, $dbtracelog, $dbschema, $debug, $dbport, $ipfilter);
 
 # Default option values
 $dbhost = 'localhost';
 $dbtable = 'logdata';
 $dbtracelog = 'plog_dbtrace.log';
+$ipfilter = $ENV{'LIMESTONE_PLOG_FILTERED_IPS'} || '';
+@filtered_ips = split(/ /, $ipfilter);
 
 # Collect options
 GetOptions(
@@ -45,7 +47,7 @@ GetOptions(
 	'database=s'	=> \$dbname,   # Database name
 	'tracelog=s'	=> \$dbtracelog, # Database trace log used if debugging is on
 	'schema=s'	=> \$dbschema, # Database schema
-	'debug=f'	=> \$debug,    # Presence of this option as argument will enable debugging
+	'debug=f'	=> \$debug     # Presence of this option as argument will enable debugging
 );
 
 # Option processing
@@ -160,7 +162,7 @@ sub filter_out_gratuitous_logs {
        $vals_ref = $_[0];
 
 # as per https://trac.limebits.net/ticket/4817
-       if (${$vals_ref}[$validfields{remote_ip}] eq '69.123.90.201') {
+       if ( grep { "$_" eq "${$vals_ref}[$validfields{remote_ip}]" } @filtered_ips ) {
 		if (${$vals_ref}[$validfields{request_method}] eq 'OPTIONS' ||
                     ${$vals_ref}[$validfields{request_method}] eq 'PROPFIND'
                    ) {

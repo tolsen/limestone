@@ -520,6 +520,10 @@ garbage-test: garbage-test-$(1)
 garbage-test-$(1): apache-stop
 	$$(call test-garbage,$(1))
 
+plog-tests: plog-tests-$(1)
+plog-tests-$(1): apache-stop
+	ruby tests/test_plog_ipfilter.rb -d $($(1)_DBI) -n $(LIMESTONE_$(1)_DB_HOST) -P $(LIMESTONE_$(1)_DB_PORT) -u $(LIMESTONE_$(1)_DB_USER) -p $(LIMESTONE_$(1)_DB_PASS) -l $(LIMESTONE_$(1)_DB_NAME)
+
 benchmarks: benchmarks-$(1)
 benchmarks-$(1): prestan-build database-reset-and-limestone-start
 	-cd $(PRESTAN_DIR) && ./Prestan http://$(LIMESTONE_HOST_DOMAIN)$$($(1)_VHOST_SUFFIX)$(LIMESTONE_PREFIX)/home/$(TEST_USER1) $(TEST_USER1) qwerty
@@ -530,7 +534,7 @@ endef
 
 $(foreach vhost, @VHOSTS@, $(eval $(call database-dependent-targets-template,$(vhost))))
 
-tests: limestone-install database-reset-and-limestone-start litmus-tests rubydav-tests
+tests: limestone-install database-reset-and-limestone-start litmus-tests rubydav-tests plog-tests
 	$(stop-apache)
 	$(test-garbage)
 	$(reset-database)

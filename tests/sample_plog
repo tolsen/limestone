@@ -1,0 +1,72 @@
+log_version:3
+http_version:HTTP/1.1
+remote_ip:127.0.0.1
+request_id:SsOeq38AAQEAADKTIJAAAAAA
+request_method:OPTIONS
+request_uri:/home/test1/
+request_referer:-
+virtual_host:localhost
+destination_uri:-
+received_time:2009-09-30 14:08:43 -0400
+response_microseconds:8069
+request_firstline:OPTIONS /home/test1/ HTTP/1.1
+response_status:401
+resource_uuid:77ff4964ade811dea1876dee80f941ab
+response_size:401
+auth_user:unauthenticated
+user_agent:cadaver/0.23.2 neon/0.29.0
+
+log_version:3
+http_version:HTTP/1.1
+remote_ip:127.0.1.1
+request_id:SsOer38AAQEAADKTIJEAAAAA
+request_method:OPTIONS
+request_uri:/home/test1/
+request_referer:-
+virtual_host:localhost
+destination_uri:-
+received_time:2009-09-30 14:08:47 -0400
+response_microseconds:6117
+request_firstline:OPTIONS /home/test1/ HTTP/1.1
+response_status:200
+resource_uuid:77ff4964ade811dea1876dee80f941ab
+response_size:-
+auth_user:test1
+user_agent:cadaver/0.23.2 neon/0.29.0
+
+log_version:3
+http_version:HTTP/1.1
+remote_ip:127.0.0.1
+request_id:SsOer38AAQEAADKTIJIAAAAA
+request_method:PROPFIND
+request_uri:/home/test1/
+request_referer:-
+virtual_host:localhost
+destination_uri:-
+received_time:2009-09-30 14:08:47 -0400
+response_microseconds:9864
+request_firstline:PROPFIND /home/test1/ HTTP/1.1
+response_status:207
+resource_uuid:77ff4964ade811dea1876dee80f941ab
+response_size:639
+auth_user:test1
+user_agent:cadaver/0.23.2 neon/0.29.0
+
+log_version:3
+http_version:HTTP/1.1
+remote_ip:127.0.0.1
+request_id:SsOes38AAQEAADKTIJMAAAAA
+request_method:MKCOL
+request_uri:/home/test1/test/
+request_referer:-
+virtual_host:localhost
+destination_uri:-
+received_time:2009-09-30 14:08:51 -0400
+response_microseconds:20669
+request_firstline:MKCOL /home/test1/test/ HTTP/1.1
+response_status:201
+resource_uuid:-
+response_size:191
+auth_user:test1
+user_agent:cadaver/0.23.2 neon/0.29.0
+

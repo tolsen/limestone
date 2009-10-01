@@ -11,6 +11,7 @@ chomp $WD;
 my $TMP_DIR = ($ENV{'LIMESTONE_TMP_DIR'} or $WD."/tmp");
 my $FILES_DIR = ($ENV{'LIMESTONE_FILES_DIR'} or $WD."/files");
 my $LOGS_DIR = ($ENV{'LIMESTONE_LOGS_DIR'} or $WD."/aproot/logs"); 
+my $PLOG_PATH = ($ENV{'PLOG_PATH'} or $WD."/plog.pl");
 my $NON_VHOST_CONF_DIR_RELATIVE = "conf/lime-nonvhost";
 my $VHOST_CONF_DIR_RELATIVE = "conf/lime-vhost";
 my $NON_VHOST_CONF_DIR = "${WD}/aproot/${NON_VHOST_CONF_DIR_RELATIVE}";
@@ -73,8 +74,18 @@ sub print_limestone_config ($$$$$$$$$) {
 
 # NOTE: The first number in the LogFormat string refers to our internal LogFormat version.
 # Whenever you make a change to LogFormat you should increment the version number.
-LogFormat "2 %h %{Host}i %u %t %D %{UNIQUE_ID}e \\"%r\\" %{Destination}i %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
+LogFormat "3 %h %{Host}i %u %t %D %{LIMESTONE_RESOURCE_UUID}e %{UNIQUE_ID}e \\"%r\\" %{Destination}i %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone
+
+# This 'plog' format is easy to parse and insert into database. This format should mimic the
+# 'limestone' format as closely as possible. As such, the version number matches. This is just
+# to help correlate versions and is not a functional requirement of plog.
+
+LogFormat "log_version:3\\nhttp_version:%H\\nremote_ip:%h\\nrequest_id:%{UNIQUE_ID}e\\nrequest_method:%m\\nrequest_uri:%U\\nrequest_referer:%{Referer}i\\nvirtual_host:%{Host}i\\ndestination_uri:%{Destination}i\\nreceived_time:%{%F %R:%S %z}t\\nresponse_microseconds:%D\\nrequest_firstline:%r\\nresponse_status:%>s\\nresource_uuid:%{LIMESTONE_RESOURCE_UUID}e\\nresponse_size:%b\\nauth_user:%u\\nuser_agent:%{User-Agent}i\\n" plog
+
 CustomLog "$LOGS_DIR/access_log" limestone
+# plog.pl will take command line options here if desired
+CustomLog "| $PLOG_PATH -user $db_user -password $db_pass -database $db_name -host $db_host -port $db_port -schema plog_$db_user -debug 1 -tracelog $LOGS_DIR/plog_dbtrace.log" plog
+
 ErrorLog "$LOGS_DIR/error_log"
 PidFile "$LOGS_DIR/httpd.pid"
 
@@ -108,6 +119,18 @@ DAVDepthInfinity on
   AuthType Digest
   AuthName "users\@limebits.com"
   BrowserMatch ".*MSIE.*" AuthDigestEnableQueryStringHack=On
+
+  BrowserMatch "^CFNetwork" redirect-carefully
+  BrowserMatch "^Dreamweaver-WebDAV-SCM1" redirect-carefully
+  BrowserMatch "^gnome-vfs/1.0" redirect-carefully
+  BrowserMatch "Microsoft Data Access Internet Publishing Provider" redirect-carefully
+  BrowserMatch "Microsoft-WebDAV-MiniRedir/5.1.2600" redirect-carefully
+  BrowserMatch "Mozilla/2.0 (compatible; MS FrontPage 4.0)" redirect-carefully
+  BrowserMatch "MS FrontPage" redirect-carefully
+  BrowserMatch "^OmniFocus" redirect-carefully
+  BrowserMatch "^WebDAVFS/1.[012345]" redirect-carefully
+  BrowserMatch "^WebDrive" redirect-carefully
+  BrowserMatch "^XML Spy" redirect-carefully
 
   AuthDigestProvider dbd
 
@@ -198,7 +221,7 @@ open(LIMESTONE_CONFIG, '>', $LIMESTONE_CONFIG) or die("couldn't open $LIMESTONE_
 
 my $LSPORT = $ENV{'LIMESTONE_PGSQL_VHOST_PORT'};
 my $DBHOST = $ENV{'LIMESTONE_PGSQL_DB_HOST'};
-my $DBPORT = $ENV{'LIMESTONE_PGSQL_DB_PORT'};
+my $DBPORT = $ENV{'LIMESTONE_PGSQL_DB_PORT'} || 5432;
 my $DBNAME = $ENV{'LIMESTONE_PGSQL_DB_NAME'};
 my $DBUSER = $ENV{'LIMESTONE_PGSQL_DB_USER'};
 my $DBPASS = $ENV{'LIMESTONE_PGSQL_DB_PASS'};

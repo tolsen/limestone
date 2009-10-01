@@ -18,15 +18,15 @@ begin
 
   # get the lastmodified values we need
   rows = dbh.select_all(
-  "WITH RECURSIVE bus(resource_id, updated_at, level) AS ( \
-    SELECT media.resource_id, media.updated_at, 0 \
-        FROM binds INNER JOIN media ON binds.resource_id = media.resource_id \
-        WHERE media.resource_id NOT IN ( SELECT collection_id FROM binds ) \
+  "WITH RECURSIVE bus(resource_id, updated_at, visited) AS ( \
+    SELECT resource_id, updated_at, ARRAY[resource_id]::bigint[] \
+        FROM media \
     UNION ALL \
-        SELECT collection_id, bus.updated_at, level + 1 \
+        SELECT collection_id, bus.updated_at, \
+          visited::bigint[] || collection_id \
         FROM binds INNER JOIN bus ON binds.resource_id = bus.resource_id \
-        WHERE bus.level = level\
-   ) SELECT resource_id, MAX(updated_at) from bus WHERE level <> 0 GROUP BY resource_id;");
+        WHERE NOT collection_id = ANY(visited)\
+   ) SELECT resource_id, MAX(updated_at) from bus GROUP BY resource_id;");
 
   # update quota for each owner_id
   rows.each do |row| dbh.do("UPDATE resources SET lastmodified = '#{row[1]}' WHERE id = #{row[0]}") end if rows

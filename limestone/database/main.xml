@@ -19,4 +19,5 @@
   <include file="add_logging_tables.xml"/>
   <include file="add_resource_views.xml"/>
   <include file="fix_resource_views.xml"/> 
+  <include file="retry_add_bitmarks_collection.xml"/> 
 </databaseChangeLog>

@@ -1173,7 +1173,8 @@ int search_mkresponse(apr_pool_t *pool, search_ctx *sctx, char **dbrow,
 
         /* do some post-processing property values if required */
         if(prop->ns_id == get_ns_id(pool, sctx, "DAV:")) {
-            if(strcmp(prop->name, "creationdate") == 0) {
+            if(strcmp(prop->name, "creationdate") == 0
+               || strcmp(prop->name, "lastmodified") == 0 ) {
                 char *date = 
                     apr_pcalloc(pool, APR_RFC822_DATE_LEN * sizeof(char));
                 dav_repos_format_strtime(DAV_STYLE_ISO8601, propval, date);

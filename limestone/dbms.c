@@ -358,12 +358,11 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
     
     q = dbms_prepare(pool, d->db,
                      "INSERT INTO resources (uuid, created_at, owner_id, "
-                     "creator_id, type, "
-                     "displayname, contentlanguage, limebar_state ) "
-                     "VALUES ( ?, ?, ?, ?, ?, ?, ?, ? ) ");
+                     "creator_id, type, displayname, "
+                     "contentlanguage, limebar_state, lastmodified ) "
+                     "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? ) ");
     dbms_set_string(q, 1, r->uuid);
     dbms_set_string(q, 2, r->created_at);
-    //dbms_set_string(q, 3, r->updated_at);
     dbms_set_int(q, 3, r->owner_id);
     dbms_set_int(q, 4, r->creator_id);
     dbms_set_string(q, 5, dav_repos_resource_types[r->resourcetype]);
@@ -371,6 +370,7 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
     dbms_set_string(q, 7, r->getcontentlanguage ? r->getcontentlanguage
                     : "en-US");
     dbms_set_string(q, 8, r->limebar_state);
+    dbms_set_string(q, 9, time_apr_to_str(pool, apr_time_now()));
     
     isql_result = dbms_execute(q);
     dbms_query_destroy(q);

@@ -74,6 +74,7 @@ typedef struct {
     apr_xml_doc *doc;
     int is_bit_query;           /* set if WHERE clause filters on is-bit */
     int bitmark_support_req;    /* set if bitmarks support required */
+    const char *b4_name;        /* set to name of bind 4 in is-bit query */
     int b2_rid;                 /* set to the resource_id on which to filter
                                    the second bind for a is-bit query */
 } search_ctx;

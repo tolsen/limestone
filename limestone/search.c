@@ -547,6 +547,11 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
         if (uri_depth > 1 && strncmp(uri, "/home", 5) == 0) {
             int d = 3;
             i = 0;
+
+            if (uri_depth == 4 && strstr(uri, "/bits/")) {
+                sctx->b4_name = apr_pstrdup(r->pool, basename(uri));
+            }
+
             while(d && uri[i]) {
                 if (uri[i++] == '/') {
                     d--;
@@ -557,6 +562,7 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
             dav_get_resource_from_uri(uri, r, 0, NULL, &ri);
             db_ri = ri->info->db_r;
             sctx->b2_rid = db_ri->serialno;
+
         }
 
         return HTTP_OK;
@@ -1361,6 +1367,12 @@ int build_query_where(request_rec *r, search_ctx *sctx)
         temp = apr_psprintf(r->pool, " AND b2.resource_id = %d ", sctx->b2_rid);
         sctx->where = apr_pstrcat(r->pool, sctx->where, temp, NULL);
     }
+
+    if (sctx->b4_name) {
+        sctx->where = apr_pstrcat(r->pool, sctx->where, 
+                        " AND b4.name = '", sctx->b4_name, "' ", NULL);
+    }
+
 
     if(sctx->where_cond) {
         /* Add other WHERE conditions */

@@ -38,6 +38,10 @@ begin
   # connect to the SQL server
   dbh = DBI.connect("DBI:#{@dbi_dbd_driver}:database=#{@db_name};host=#{@db_hostname};port=#{@db_port}", @db_username, @db_password)
 
+  # check if bitmarks collection already exists
+  id = get_resource_id(dbh, 'd3743422812811de8ff22bcb8b7a3827');
+  exit 0 if id != -1
+
   dbh.do("INSERT INTO resources (uuid, created_at, owner_id, creator_id, type, displayname, contentlanguage, limebar_state) VALUES ('d3743422812811de8ff22bcb8b7a3827', '2009-08-04 18:58:41', 1, 1, 'Collection', 'bitmarks', 'en-US', '')");
   id = get_resource_id(dbh, 'd3743422812811de8ff22bcb8b7a3827');
   dbh.do("INSERT INTO collections (resource_id, auto_version_new_children) VALUES ( #{id}, 5 )");

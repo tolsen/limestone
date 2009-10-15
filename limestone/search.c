@@ -1253,7 +1253,8 @@ int build_query_select(request_rec *r, search_ctx *sctx)
     if (sctx->bitmark_support_req) {
         sctx->select = apr_pstrcat(r->pool, sctx->select, 
                         ", bitmarks.name, bitmarks.value, "
-                        "'/bitmarks/' || resources.uuid || '/' || b6.name", 
+                        "'/bitmarks/' || resources.uuid ||"
+                        " '/' || bitmark_resources.name", 
                         NULL);
     }
 
@@ -1285,16 +1286,19 @@ int build_query_from(request_rec *r, search_ctx *sctx)
             " INNER JOIN binds b3 ON b4.collection_id = b3.resource_id"
             " INNER JOIN binds b2 ON b3.collection_id = b2.resource_id"
             " INNER JOIN binds b1 ON b2.collection_id = b1.resource_id", NULL);
-
-        if (sctx->bitmark_support_req) {
-            sctx->from = apr_pstrcat(pool, sctx->from, 
-            " LEFT JOIN binds b5 ON b5.name = resources.uuid "
-            " LEFT JOIN binds b6 ON b6.collection_id = b5.resource_id ", NULL);
-        }
     }
     else {
         sctx->from = apr_pstrcat(pool, sctx->from, 
             " LEFT JOIN binds ON resources.id = binds.resource_id ", NULL);
+    }
+
+    if (sctx->bitmark_support_req) {
+        sctx->from = apr_pstrcat(pool, sctx->from, 
+        " LEFT JOIN binds bitmarked_resources"
+            " ON bitmarked_resources.name = resources.uuid "
+        " LEFT JOIN binds bitmark_resources"
+            " ON bitmark_resources.collection_id"
+                " = bitmarked_resources.resource_id ", NULL);
     }
 
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
@@ -1319,7 +1323,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     if (sctx->bitmark_support_req) {
         sctx->from = apr_pstrcat(pool, sctx->from,
                         " LEFT JOIN properties bitmarks"
-                        " ON bitmarks.resource_id = b6.resource_id"
+                        " ON bitmarks.resource_id = bitmark_resources.resource_id"
                         " AND bitmarks.name IN (", NULL);
 
         for(hi = apr_hash_first(pool, sctx->bitmarks_map); hi;

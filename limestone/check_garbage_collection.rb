@@ -91,7 +91,9 @@ begin
   # get the number of resources from the table
   row = dbh.select_one("SELECT COUNT(*) FROM resources")
   @rows = row[0]
-  @num_deltav_resources = get_num_unique_children(dbh, "history")
+  @num_accounted_resources = get_num_unique_children(dbh, "history") 
+  @num_accounted_resources += get_num_unique_children(dbh, "bitmarks")
+
 rescue DBI::DatabaseError => e
   puts "An error occurred"
   puts "Error code: #{e.err}"
@@ -101,8 +103,8 @@ ensure
   dbh.disconnect if dbh
 end
 
-@num_resources_left_behind = @rows - @num_deltav_resources
-expected_num_resources = 28
+@num_resources_left_behind = @rows - @num_accounted_resources
+expected_num_resources = 14
 if @num_resources_left_behind != expected_num_resources then
   puts "Unexpected number(" + @num_resources_left_behind.to_s + ") of rows left behind"
   puts "Other than the resources rooted at /history, we expect #{expected_num_resources} resources to be left behind."

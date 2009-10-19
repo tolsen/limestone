@@ -186,7 +186,7 @@ int dbms_execute(dav_repos_query * query)
     //DBG2("[%d]Query to execute: %s\n", getpid(), escquery);
     DBG1("Query to execute: %s\n", escquery);
 
-    if (!strncasecmp("select", escquery, 6)) {
+    if (!strncasecmp("select", escquery, 6) || !strncasecmp("with", escquery, 4)) {
 	query->is_select = 1;
 	error =
 	    apr_dbd_select(query->db->ap_dbd_dbms->driver, query->pool,

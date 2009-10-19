@@ -693,8 +693,18 @@ int parse_comp_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
 
     const char *ns = get_ns_uri(sctx->doc->namespaces, prop->ns);
     long ns_id = get_ns_id(pool, sctx, ns);
+    const char *ns_id_str = apr_psprintf(pool, "%ld", ns_id);
+    int is_bitmark = !strcmp(cur_elem->first_child->name, "bitmark");
     char *prop_key = get_prop_key(pool, prop->name, ns_id);
-    const char *attr = prop_attr_lookup(ppool, pool, prop, prop_key); 
+    const char *attr;
+    
+    
+    if (is_bitmark) {
+        attr = apr_psprintf(pool, "value");
+    }
+    else {
+        attr = prop_attr_lookup(ppool, pool, prop, prop_key);
+    }
 
     op = apr_hash_get(get_comp_ops_map(ppool), cur_elem->name, 
                       APR_HASH_KEY_STRING);
@@ -716,9 +726,14 @@ int parse_comp_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
     }
 
     if (type) {
-        sctx->where_cond = 
-            apr_pstrcat(pool, sctx->where_cond, " ( ", attr, "::", type, " ",
-                        op, " ", literal->first_cdata.first->text, " )", NULL);
+        attr = apr_pstrcat(pool, attr, "::", type, NULL);
+    }
+
+    if (is_bitmark) {
+        sctx->where_cond = apr_pstrcat(pool, sctx->where_cond, "( resources.id IN"
+            " (SELECT resource_id FROM resource_bitmarks WHERE namespace_id = ",
+            ns_id_str, " AND name = '", prop->name, "' AND ", attr, " ", op,
+            " '", literal->first_cdata.first->text, "' ))", NULL);
     }
     else {
         sctx->where_cond = 
@@ -1235,12 +1250,27 @@ int build_query_select(request_rec *r, search_ctx *sctx)
 
     /* create the select part of the query */
     if (sctx->is_bit_query) {
-        sctx->select = apr_psprintf(r->pool, 
+        sctx->select = apr_psprintf(r->pool,
             "SELECT '/' || b1.name || '/' || b2.name || '/' || b3.name || "
                 "'/' || b4.name AS path");
     }
     else {
         sctx->select = apr_psprintf(r->pool, "SELECT binds.id");
+    }
+
+    if (sctx->bitmark_support_req) {
+        sctx->select = apr_pstrcat(r->pool, "WITH resource_bitmarks AS ("
+            " SELECT resources.id AS resource_id, bitmarks.namespace_id,"
+                " bitmarks.name, bitmarks.value,"
+                " bitmark_resources.name AS bitmark_id"
+            " FROM resources"
+                " INNER JOIN binds bitmarked_resources"
+                    " ON bitmarked_resources.name = resources.uuid"
+                " INNER JOIN binds bitmark_resources"
+                    " ON bitmark_resources.collection_id = bitmarked_resources.resource_id"
+                " INNER JOIN properties bitmarks"
+                    " ON bitmarks.resource_id = bitmark_resources.resource_id ) ",
+            sctx->select, NULL);
     }
 
     for(hi = apr_hash_first(r->pool, sctx->prop_map); hi ; 
@@ -1252,9 +1282,9 @@ int build_query_select(request_rec *r, search_ctx *sctx)
 
     if (sctx->bitmark_support_req) {
         sctx->select = apr_pstrcat(r->pool, sctx->select, 
-                        ", bitmarks.name, bitmarks.value, "
+                        ", resource_bitmarks.name, resource_bitmarks.value, "
                         "'/bitmarks/' || resources.uuid ||"
-                        " '/' || bitmark_resources.name", 
+                        " '/' || resource_bitmarks.bitmark_id", 
                         NULL);
     }
 
@@ -1292,15 +1322,6 @@ int build_query_from(request_rec *r, search_ctx *sctx)
             " LEFT JOIN binds ON resources.id = binds.resource_id ", NULL);
     }
 
-    if (sctx->bitmark_support_req) {
-        sctx->from = apr_pstrcat(pool, sctx->from, 
-        " LEFT JOIN binds bitmarked_resources"
-            " ON bitmarked_resources.name = resources.uuid "
-        " LEFT JOIN binds bitmark_resources"
-            " ON bitmark_resources.collection_id"
-                " = bitmarked_resources.resource_id ", NULL);
-    }
-
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
         hi = apr_hash_next(hi)) {
         apr_hash_this(hi, &prop_key, NULL, NULL);
@@ -1322,9 +1343,9 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 
     if (sctx->bitmark_support_req) {
         sctx->from = apr_pstrcat(pool, sctx->from,
-                        " LEFT JOIN properties bitmarks"
-                        " ON bitmarks.resource_id = bitmark_resources.resource_id"
-                        " AND bitmarks.name IN (", NULL);
+            " LEFT JOIN resource_bitmarks"
+                " ON resource_bitmarks.resource_id = resources.id"
+                " AND resource_bitmarks.name IN (", NULL);
 
         for(hi = apr_hash_first(pool, sctx->bitmarks_map); hi;
             hi = apr_hash_next(hi)) {

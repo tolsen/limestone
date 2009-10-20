@@ -52,6 +52,7 @@
 #include "deltav_util.h"
 #include "version.h"
 #include "acl.h"
+#include "search.h"     /* for dav_repos_deliver_property_stats */
 
 /* ### should move these report names to a public header to share with
 ### the client (and third parties). */
@@ -880,8 +881,7 @@ static dav_error *dav_repos_deliver_report(request_rec * r,
 						   output);
     
     else if (doc && dav_validate_root(doc, "principal-match"))
-	return dav_repos_deliver_principal_match(r, resource, doc,
-						   output);
+	return dav_repos_deliver_principal_match(r, resource, doc, output);
     
     else if (doc && dav_validate_root(doc, "principal-property-search"))
 	return dav_repos_deliver_principal_property_search(r, resource, doc,
@@ -890,6 +890,9 @@ static dav_error *dav_repos_deliver_report(request_rec * r,
     else if (doc && dav_validate_root(doc, "principal-search-property-set"))
 	return dav_repos_deliver_principal_search_property_set(r, resource, doc,
 						   output);
+
+    else if (doc && strcmp(doc->root->name, "property-stats") == 0)
+	return dav_repos_deliver_property_stats(r, resource, doc, output);
 
     return dav_new_error(resource->pool,
 			 HTTP_INTERNAL_SERVER_ERROR, 0,

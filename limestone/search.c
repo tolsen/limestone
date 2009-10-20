@@ -1434,3 +1434,108 @@ int build_query_offset(request_rec *r, search_ctx *sctx)
     }
     return HTTP_OK;
 }
+
+
+dav_error *dav_repos_deliver_property_stats(request_rec * r,
+					    const dav_resource * resource,
+					    const apr_xml_doc * doc,
+					    ap_filter_t * output)
+{
+    apr_bucket_brigade *bb;
+    apr_pool_t *pool = resource->pool;
+    dav_repos_db *db = resource->info->db;
+    dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
+    dav_error *err = NULL;
+    long *ns_id = apr_pcalloc(pool, sizeof(long));
+    const char *ns;
+
+    dav_error *bad_request = 
+        dav_new_error(pool, HTTP_BAD_REQUEST, 0, 
+                      "Bad XML request in dav_repos_deliver_property_stats");
+
+    /* parse request XML */
+    apr_xml_elem *property_stats = doc->root;
+
+    apr_xml_elem *prop_tag = dav_find_child_no_ns(property_stats, "prop");
+    if (!prop_tag || !prop_tag->first_child) { return bad_request; }
+
+    apr_xml_elem *prop = prop_tag->first_child;
+    ns = get_ns_uri(doc->namespaces, prop->ns);
+
+    if ((err = dbms_get_ns_id(db, db_r, ns, ns_id))) { 
+        return err; 
+    }
+
+    apr_xml_elem *sample_set = 
+                        dav_find_child_no_ns(property_stats, "sample-set");
+    if (!sample_set) { return bad_request; }
+
+    apr_xml_elem *stat_tag = dav_find_child_no_ns(property_stats, "stat");
+    if (!stat_tag || !stat_tag->first_child) { return bad_request; }
+
+    apr_xml_elem *stat = stat_tag->first_child;
+
+    /* build the query */
+    char *query = 
+        apr_psprintf(pool, "SELECT value, %s(value) FROM properties"
+                            " WHERE namespace_id = %ld AND name = '%s'"
+                                " AND value IN(", 
+                     stat->name, *ns_id, prop->name);
+
+    apr_xml_elem *value;
+    for (value = sample_set->first_child; value; value = value->next) {
+        query = apr_pstrcat(pool, query, "'", dbms_escape(pool, db->db, 
+                            value->first_cdata.first->text), "',", NULL);
+    }
+
+    /* correct the last ',' */
+    query[strlen(query) - 1] = ')';
+
+    query = apr_pstrcat(pool, query, " GROUP BY value", NULL);
+
+    /* execute the query */
+    dav_repos_query *q = dbms_prepare(pool, db->db, query);
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+	return dav_new_error(r->pool, HTTP_INTERNAL_SERVER_ERROR, 0,
+                             "Error executing query in "
+                             "dav_repos_deliver_property_stats");
+    }
+
+    /* build XML response */
+    const char *v;
+    char **dbrow;
+    int results_count = dbms_results_count(q);
+    bb = apr_brigade_create(pool, output->c->bucket_alloc);
+    r->status = HTTP_OK;
+    send_xml(bb, output, "<LB:property-stats"
+                    " xmlns:LB=\"http://limebits.com/ns/1.0/\">" DEBUG_CR);
+
+    const char *p = apr_pstrcat(pool, " <LB:prop><ns1:", prop->name, 
+                " xmlns:ns1=\"", ns, "\"/></LB:prop>" DEBUG_CR, NULL);
+
+    send_xml(bb, output, p);
+    send_xml(bb, output, " <LB:sample-set>" DEBUG_CR);
+    
+    int i;
+    for (i=0; i<results_count; i++) {
+        dbrow = dbms_fetch_row_num(db->db, q, pool, i);
+        send_xml(bb, output, "  <LB:stat>" DEBUG_CR);
+        v = apr_pstrcat(pool, "   <LB:value>", dbrow[0], 
+                        "</LB:value>" DEBUG_CR,
+                        "   <LB:", stat->name, ">", dbrow[1],
+                        "</LB:", stat->name, ">" DEBUG_CR, NULL);
+        send_xml(bb, output, v);
+        send_xml(bb, output, "  </LB:stat>" DEBUG_CR);
+    }
+
+    dbms_query_destroy(q);
+
+    send_xml(bb, output, " </LB:sample-set>" DEBUG_CR);
+    send_xml(bb, output, "</LB:property-stats>" DEBUG_CR);
+
+    /* flush the contents of the brigade */
+    ap_fflush(output, bb);
+
+    return NULL;
+}

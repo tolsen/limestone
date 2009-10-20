@@ -151,4 +151,9 @@ const char *prop_attr_lookup(apr_pool_t *ppool, apr_pool_t *pool,
 
 apr_hash_t *get_liveprop_map(apr_pool_t *pool);
 
+dav_error *dav_repos_deliver_property_stats(request_rec * r,
+					    const dav_resource * resource,
+					    const apr_xml_doc * doc,
+					    ap_filter_t * output);
+
 #endif

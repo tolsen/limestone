@@ -1477,21 +1477,32 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
 
     /* build the query */
     char *query = 
-        apr_psprintf(pool, "SELECT value, %s(value) FROM properties"
-                            " WHERE namespace_id = %ld AND name = '%s'"
-                                " AND value IN(", 
+        apr_psprintf(pool, "SELECT value, %s(value) - 1 FROM (("
+                            " SELECT value FROM properties"
+                              " WHERE namespace_id = %ld AND name = '%s')"
+                            " UNION ALL VALUES",
                      stat->name, *ns_id, prop->name);
 
     apr_xml_elem *value;
+    char *value_table, *value_set;
+
+    value_set = apr_psprintf(pool, "(");
+    value_table = apr_psprintf(pool, " ");
     for (value = sample_set->first_child; value; value = value->next) {
-        query = apr_pstrcat(pool, query, "'", dbms_escape(pool, db->db, 
+        value_table = apr_pstrcat(pool, value_table, "('", dbms_escape(pool, 
+                                  db->db, value->first_cdata.first->text),
+                                  "'),", NULL);
+        
+        value_set = apr_pstrcat(pool, value_set, "'", dbms_escape(pool, db->db, 
                             value->first_cdata.first->text), "',", NULL);
     }
 
     /* correct the last ',' */
-    query[strlen(query) - 1] = ')';
+    value_set[strlen(value_set) - 1] = ')';
+    value_table[strlen(value_table) - 1] = ' ';
 
-    query = apr_pstrcat(pool, query, " GROUP BY value", NULL);
+    query = apr_pstrcat(pool, query, value_table, ") props WHERE value IN ", 
+                        value_set, " GROUP BY value", NULL);
 
     /* execute the query */
     dav_repos_query *q = dbms_prepare(pool, db->db, query);

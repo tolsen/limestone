@@ -1474,15 +1474,6 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
     if (!stat_tag || !stat_tag->first_child) { return bad_request; }
 
     apr_xml_elem *stat = stat_tag->first_child;
-
-    /* build the query */
-    char *query = 
-        apr_psprintf(pool, "SELECT value, %s(value) - 1 FROM (("
-                            " SELECT value FROM properties"
-                              " WHERE namespace_id = %ld AND name = '%s')"
-                            " UNION ALL VALUES",
-                     stat->name, *ns_id, prop->name);
-
     apr_xml_elem *value;
     char *value_table, *value_set;
 
@@ -1501,8 +1492,37 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
     value_set[strlen(value_set) - 1] = ')';
     value_table[strlen(value_table) - 1] = ' ';
 
-    query = apr_pstrcat(pool, query, value_table, ") props WHERE value IN ", 
-                        value_set, " GROUP BY value", NULL);
+
+    /* build the query */
+    char *query =
+        apr_psprintf(pool, 
+          "WITH resource_bitmarks AS "
+            "( SELECT resources.id AS resource_id, bitmarks.namespace_id,"
+                " bitmarks.name, bitmarks.value,"
+                " bitmark_resources.name AS bitmark_id"
+             " FROM resources INNER JOIN binds bitmarked_resources"
+               " ON bitmarked_resources.name = resources.uuid"
+             " INNER JOIN binds bitmark_resources"
+               " ON bitmark_resources.collection_id = bitmarked_resources.resource_id"
+             " INNER JOIN properties bitmarks"
+               " ON bitmarks.resource_id = bitmark_resources.resource_id )"
+          " SELECT value, %s(value) - 1"
+            " FROM (SELECT resource_bitmarks.value FROM resources"
+            " LEFT JOIN locks ON resources.id = locks.resource_id"
+            " LEFT JOIN media ON resources.id = media.resource_id"
+            " LEFT JOIN principals ON principals.resource_id = resources.owner_id"
+            " LEFT JOIN binds b4 ON b4.resource_id = resources.id"
+            " INNER JOIN binds b3 ON b4.collection_id = b3.resource_id"
+            " INNER JOIN binds b2 ON b3.collection_id = b2.resource_id"
+            " INNER JOIN binds b1 ON b2.collection_id = b1.resource_id"
+            " LEFT JOIN resource_bitmarks"
+              " ON resource_bitmarks.resource_id = resources.id"
+                " AND resource_bitmarks.namespace_id = %ld"
+                " AND resource_bitmarks.name = '%s'"
+            " WHERE b1.collection_id = 2 AND b1.name = 'home'"
+              " AND b3.name = 'bits' AND ( type = 'Collection' )"
+              " AND resource_bitmarks.value IN %s UNION ALL VALUES %s) values"
+          " GROUP BY value", stat->name, *ns_id, prop->name, value_set, value_table);
 
     /* execute the query */
     dav_repos_query *q = dbms_prepare(pool, db->db, query);

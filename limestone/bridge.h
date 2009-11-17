@@ -300,4 +300,9 @@ void sabridge_put_resource_file(const dav_repos_db *db,
 long sabridge_get_used_bytes(const dav_repos_db *d, dav_repos_resource *r,
                              int prin_only);
 
+dav_error *sabridge_copy_bitmarks(apr_pool_t *pool, const dav_repos_db *d,
+                                  request_rec *r, 
+                                  const dav_repos_resource *src, 
+                                  const dav_repos_resource *dst);
+
 #endif /* STONE_ARCH_BRIDGE_H */

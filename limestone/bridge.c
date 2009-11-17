@@ -476,7 +476,10 @@ dav_error *sabridge_copy_medium(const dav_repos_db *db,
     if (err) return err;
 
     err = sabridge_copy_dead_props(pool, db, r_src->serialno, r_dest->serialno);
-    return err;
+    if (err) return err;
+
+    return sabridge_copy_bitmarks(pool, db, r_src->resource->info->rec, 
+                                  r_src, r_dest);
 }
 
 dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
@@ -514,6 +517,10 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
 
     err = sabridge_copy_dead_props(pool, d, r_src->serialno, r_dst->serialno);
     if (err) return err;
+
+    err = sabridge_copy_bitmarks(pool, d, rec, r_src, r_dst);
+    if (err) return err;
+
     if (depth == DAV_INFINITY)
         err = sabridge_depth_inf_copy_coll(d, r_src, r_dst, rec, response);
     if (err) return err;
@@ -551,7 +558,10 @@ dav_error *sabridge_copy_collection(const dav_repos_db *d,
     }
 
     err = sabridge_copy_dead_props(src->p, d, src->serialno, dst->serialno);
-    return err;
+    if (err) return err;
+
+    return sabridge_copy_bitmarks(src->p, d, src->resource->info->rec,
+                                  src, dst);
 }
 
 dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
@@ -758,6 +768,46 @@ dav_error *sabridge_copy_dead_props(apr_pool_t *pool, const dav_repos_db *d,
 
     err = dbms_copy_dead_props(pool, d, src_id, dest_id);
     return err;
+}
+
+static dav_repos_resource *get_bitmarks_coll(apr_pool_t *pool, 
+                                             const dav_repos_db *d,
+                                             const dav_repos_resource *r)
+{
+    dav_repos_resource *bitmarks_coll = NULL;
+    sabridge_new_dbr_from_dbr(r, &bitmarks_coll);
+    bitmarks_coll->uri = apr_psprintf(pool, "/bitmarks/%s", r->uuid);
+    sabridge_get_property(d, bitmarks_coll);
+
+    return bitmarks_coll;
+}
+
+dav_error *sabridge_copy_bitmarks(apr_pool_t *pool, const dav_repos_db *d,
+                                  request_rec *r, 
+                                  const dav_repos_resource *src, 
+                                  const dav_repos_resource *dst)
+{
+    dav_error *err = NULL;
+    dav_repos_resource *src_bitmarks_coll = NULL;
+    dav_repos_resource *dst_bitmarks_coll = NULL;
+
+    TRACE();
+    
+    /* if src is a bitmark collection, we have nothing to copy */
+    if (src->uri && strlen(src->uri) > 10 
+        && (strncmp("/bitmarks/", src->uri, 10) == 0)) {
+        return err;
+    }
+
+    src_bitmarks_coll = get_bitmarks_coll(pool, d, src);
+    if (!src_bitmarks_coll->serialno)
+        return err;     /* we don't have any bitmarks to copy */
+
+    dst_bitmarks_coll = get_bitmarks_coll(pool, d, dst);
+
+    return sabridge_copy_coll_w_create(d, src_bitmarks_coll, 
+                                       dst_bitmarks_coll, DAV_INFINITY,
+                                       r, NULL);
 }
 
 dav_error *sabridge_create_copy(const dav_repos_db *d,

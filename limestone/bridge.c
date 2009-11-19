@@ -228,8 +228,14 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     if (!r->owner_id)
         r->owner_id = r->creator_id;
 
-    if (!r->displayname)
-        r->displayname = "";
+    if (!r->displayname) {
+        if (r->uri) {
+            r->displayname = apr_pstrdup(pool, basename(r->uri));
+        }
+        else {
+            r->displayname = "";
+        }
+    }
 
     if (r->getcontenttype == NULL)
         r->getcontenttype = apr_pstrdup(pool, "application/octet-stream");

@@ -981,6 +981,7 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
     const void *bm;
     void *value;
     const char *good_bitmarks = NULL, *bad_bitmarks = NULL;
+    char *last = NULL, *next = NULL;
 
     TRACE();
 
@@ -1124,12 +1125,19 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
         }
         
         if (bitmarks && dbrow[j]) {
-            values = apr_hash_get(bitmarks, dbrow[j], APR_HASH_KEY_STRING);
-            if (values) {
-                bitmark *b = apr_array_push(values);
-                b->name = apr_pstrdup(pool, dbrow[j]);
-                b->value = apr_pstrdup(pool, dbrow[j+1]);
-                b->href = apr_pstrdup(pool, dbrow[j+2]);
+            next = apr_strtok(apr_pstrdup(pool, dbrow[j]), ">", &last);
+            while(next) {
+                values = apr_hash_get(bitmarks, next, 
+                                            APR_HASH_KEY_STRING);
+                if (values) {
+                    bitmark *b = apr_array_push(values);
+                    b->name = apr_pstrdup(pool, next);
+                    b->value = apr_pstrdup(pool, 
+                                    apr_strtok(NULL, ">", &last));
+                    b->href = apr_pstrdup(pool, apr_strtok(NULL, ">", &last));
+                }
+
+                next = apr_strtok(NULL, ">", &last);
             }
         }
          
@@ -1282,9 +1290,10 @@ int build_query_select(request_rec *r, search_ctx *sctx)
 
     if (sctx->bitmark_support_req) {
         sctx->select = apr_pstrcat(r->pool, sctx->select, 
-                        ", resource_bitmarks.name, resource_bitmarks.value, "
-                        "'/bitmarks/' || resources.uuid ||"
-                        " '/' || resource_bitmarks.bitmark_id", 
+                        ", concat(resource_bitmarks.name || '>' || "
+                                "resource_bitmarks.value || '>' || "
+                                "'/bitmarks/' || resources.uuid || '/' "
+                                "|| resource_bitmarks.bitmark_id || '>' )", 
                         NULL);
     }
 
@@ -1367,6 +1376,7 @@ int build_query_where(request_rec *r, search_ctx *sctx)
     apr_hash_index_t *hi;
     const void *bind;
     char *temp;
+    void *val;
 
     TRACE();
 
@@ -1403,6 +1413,24 @@ int build_query_where(request_rec *r, search_ctx *sctx)
         /* Add other WHERE conditions */
         sctx->where = apr_pstrcat(r->pool, sctx->where, " AND ", 
                                   sctx->where_cond, NULL);
+    }
+
+    if(sctx->bitmark_support_req) {
+        if (sctx->is_bit_query) {
+            sctx->where = apr_pstrcat(r->pool, sctx->where, 
+                " GROUP BY path", NULL);
+        }
+        else {
+            sctx->where = apr_pstrcat(r->pool, sctx->where, 
+                " GROUP BY binds.id", NULL);
+        }
+
+        for(hi = apr_hash_first(r->pool, sctx->prop_map); hi ; 
+            hi = apr_hash_next(hi)) {
+            apr_hash_this(hi, NULL, NULL, &val);
+            sctx->where = apr_pstrcat(r->pool, sctx->where, ", ",
+                                       (char *)val, NULL);
+        }
     }
 
     return HTTP_OK;

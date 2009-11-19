@@ -20,4 +20,5 @@
   <include file="add_resource_views.xml"/>
   <include file="fix_resource_views.xml"/> 
   <include file="retry_add_bitmarks_collection.xml"/> 
+  <include file="define_concat_aggregate.xml"/>
 </databaseChangeLog>

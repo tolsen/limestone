@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment>Create (namespace_id, name, value) index on properties table</comment>
+    <createIndex tableName="properties" indexName="idx_properties_namespace_id_name_value">
+      <column name="namespace_id"/>
+      <column name="name"/>
+      <column name="value"/>
+    </createIndex>
+  </changeSet>
+</databaseChangeLog>
+

@@ -340,8 +340,9 @@ int parse_select(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
         if (bitmark_elem->first_child) {
             for (propi = bitmark_elem->first_child; propi;
                  propi = propi->next) {
+                ns = get_ns_uri(sctx->doc->namespaces, propi->ns);
                 apr_hash_set(sctx->bitmarks_map, propi->name, 
-                             APR_HASH_KEY_STRING, propi->name);
+                             APR_HASH_KEY_STRING, ns);
             }
 
             sctx->bitmark_support_req = 1;
@@ -1251,8 +1252,12 @@ const dav_hooks_search dav_repos_hooks_search = {
 
 int build_query_select(request_rec *r, search_ctx *sctx)
 {
+    const void *bm;
     apr_hash_index_t *hi;
-    void *val;
+    char *resource_bitmarks_query = NULL;
+    void *val, *ns;
+    long ns_id;
+    char *temp = NULL;
 
     TRACE();
 
@@ -1267,7 +1272,8 @@ int build_query_select(request_rec *r, search_ctx *sctx)
     }
 
     if (sctx->bitmark_support_req) {
-        sctx->select = apr_pstrcat(r->pool, "WITH resource_bitmarks AS ("
+        resource_bitmarks_query = apr_psprintf(r->pool, 
+        "WITH resource_bitmarks AS ("
             " SELECT resources.id AS resource_id, bitmarks.namespace_id,"
                 " bitmarks.name, bitmarks.value,"
                 " bitmark_resources.name AS bitmark_id"
@@ -1277,8 +1283,25 @@ int build_query_select(request_rec *r, search_ctx *sctx)
                 " INNER JOIN binds bitmark_resources"
                     " ON bitmark_resources.collection_id = bitmarked_resources.resource_id"
                 " INNER JOIN properties bitmarks"
-                    " ON bitmarks.resource_id = bitmark_resources.resource_id ) ",
-            sctx->select, NULL);
+                    " ON bitmarks.resource_id = bitmark_resources.resource_id"
+                    " AND (bitmarks.namespace_id, bitmarks.name) IN (");
+
+        for(hi = apr_hash_first(r->pool, sctx->bitmarks_map); hi;
+            hi = apr_hash_next(hi)) {
+            apr_hash_this(hi, &bm, NULL, &ns);
+            ns_id = get_ns_id(r->pool, sctx, (char *)ns);
+            
+            temp = apr_psprintf(r->pool, "(%ld, '%s'),", ns_id, (char *)bm);
+            resource_bitmarks_query = 
+                apr_pstrcat(r->pool, resource_bitmarks_query, temp, NULL);
+        }
+
+        /* correct the last ',' */
+        resource_bitmarks_query[strlen(resource_bitmarks_query) - 1] = ')';
+
+
+        sctx->select = apr_pstrcat(r->pool, resource_bitmarks_query, ") ", 
+                                    sctx->select, NULL);
     }
 
     for(hi = apr_hash_first(r->pool, sctx->prop_map); hi ; 
@@ -1304,7 +1327,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 {
     apr_hash_index_t *hi;
     apr_pool_t *pool = r->pool;
-    const void *prop_key, *bm;
+    const void *prop_key;
     dav_repos_property *prop;
 
     TRACE();
@@ -1353,19 +1376,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     if (sctx->bitmark_support_req) {
         sctx->from = apr_pstrcat(pool, sctx->from,
             " LEFT JOIN resource_bitmarks"
-                " ON resource_bitmarks.resource_id = resources.id"
-                " AND resource_bitmarks.name IN (", NULL);
-
-        for(hi = apr_hash_first(pool, sctx->bitmarks_map); hi;
-            hi = apr_hash_next(hi)) {
-            apr_hash_this(hi, &bm, NULL, NULL);
-            sctx->from = apr_pstrcat(pool, sctx->from, 
-                            "'", (char *)bm, "',", NULL);
-        }
-
-        /* correct the last ',' */
-        sctx->from[strlen(sctx->from) - 1] = ')';
-
+                " ON resource_bitmarks.resource_id = resources.id", NULL);
     }
 
     return HTTP_OK;
@@ -1533,7 +1544,9 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
              " INNER JOIN binds bitmark_resources"
                " ON bitmark_resources.collection_id = bitmarked_resources.resource_id"
              " INNER JOIN properties bitmarks"
-               " ON bitmarks.resource_id = bitmark_resources.resource_id )"
+               " ON bitmarks.resource_id = bitmark_resources.resource_id"
+                " AND bitmarks.namespace_id = %ld"
+                " AND bitmarks.name = '%s' )"
           " SELECT value, %s(value) - 1"
             " FROM (SELECT resource_bitmarks.value FROM resources"
             " LEFT JOIN locks ON resources.id = locks.resource_id"
@@ -1545,12 +1558,10 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
             " INNER JOIN binds b1 ON b2.collection_id = b1.resource_id"
             " LEFT JOIN resource_bitmarks"
               " ON resource_bitmarks.resource_id = resources.id"
-                " AND resource_bitmarks.namespace_id = %ld"
-                " AND resource_bitmarks.name = '%s'"
             " WHERE b1.collection_id = 2 AND b1.name = 'home'"
               " AND b3.name = 'bits' AND ( type = 'Collection' )"
               " AND resource_bitmarks.value IN %s UNION ALL VALUES %s) values"
-          " GROUP BY value", stat->name, *ns_id, prop->name, value_set, value_table);
+          " GROUP BY value", *ns_id, prop->name, stat->name, value_set, value_table);
 
     /* execute the query */
     dav_repos_query *q = dbms_prepare(pool, db->db, query);

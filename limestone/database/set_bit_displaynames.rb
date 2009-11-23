@@ -25,7 +25,7 @@ begin
         INNER JOIN binds b4 ON b4.collection_id = b3.resource_id \
         INNER JOIN resources ON resources.id = b4.resource_id \
      WHERE b1.collection_id = 2 AND b1.name = 'home' \
-        AND b3.name = 'bits' AND resources.displayname IS NULL;");
+        AND b3.name = 'bits' AND resources.displayname = '' OR resources.displayname IS NULL;");
 
   # update displayname to bind name
   rows.each do |row| dbh.do("UPDATE resources SET displayname = '#{row[1]}' WHERE id = #{row[0]}") end if rows

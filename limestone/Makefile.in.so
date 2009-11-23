@@ -56,7 +56,7 @@ libmod_dav_repos.la: $(libmod_dav_repos_DEPS)
 	$(APXS) $(DEFS) -Wc,-Werror -o $@ -c $(libmod_dav_repos_DEPS)
 
 install: libmod_dav_repos.la
-	$(APXS) -i -a -n dav_repos libmod_dav_repos.la
+	$(APXS) -i -n dav_repos libmod_dav_repos.la
 
 clean:
 	-rm -rf *.la *.o *.lo *.slo .libs test

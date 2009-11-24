@@ -792,7 +792,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
         query_str = apr_psprintf
           (pool,
            "SELECT resources.id, created_at, child_binds.name,"
-           " child_binds.updated_at, contentlanguage, owner_id, comment,"
+           " lastmodified, contentlanguage, owner_id, comment,"
            " creator_id, type, size, mimetype, sha1, vcrs.checked_state,"
            " checked_version.number, uuid, vcrs.vhr_id, versions.vcr_id,"
            " vr_vcr.checked_id, vcrs.version_type, principals.name,"
@@ -854,7 +854,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
         query_str = apr_psprintf
           (pool, 
            "SELECT id, "
-           "       created_at, children.name, children.updated_at, "
+           "       created_at, children.name, lastmodified, "
            "       contentlanguage, owner_id, comment, "
            "       creator_id, type, size, "
            "       mimetype, sha1, vcrs.checked_state, "

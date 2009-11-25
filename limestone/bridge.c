@@ -94,9 +94,6 @@ dav_error *sabridge_get_property(const dav_repos_db *d, dav_repos_resource *r)
         
         /* collection contenttype hack */
         r->getcontenttype = apr_pstrdup(r->p, DIR_MAGIC_TYPE);
-
-        err = dbms_get_collection_max_updated_at
-          (pool, d, r->serialno, r->updated_at, &r->updated_at);
         if (err) return err;
     }
 

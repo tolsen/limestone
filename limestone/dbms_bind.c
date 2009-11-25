@@ -49,7 +49,8 @@ dav_error *dbms_lookup_uri(apr_pool_t *pool, const dav_repos_db *d,
 
     i = i + 1;
     select = apr_psprintf(pool, "SELECT b1.resource_id"); 
-    uri_max_updated_at = apr_psprintf(pool, "greatest(b1.updated_at");
+    uri_max_updated_at = apr_psprintf(pool, 
+                                "greatest(lastmodified, b1.updated_at");
     from = apr_psprintf(pool, "FROM binds b1 ");
     where = apr_psprintf(pool, "WHERE b1.collection_id = %d "
                          "AND (b1.name IS NULL OR b1.name = '%s') ", 
@@ -78,6 +79,9 @@ dav_error *dbms_lookup_uri(apr_pool_t *pool, const dav_repos_db *d,
                    uri_max_updated_at, i);
 
     select = apr_pstrcat(pool, select, ", ", uri_max_updated_at, NULL);
+    from = apr_psprintf(pool, 
+                        "%sLEFT OUTER JOIN resources"
+                        " ON resources.id = b%d.resource_id ", from, i);
     query = apr_pstrcat(pool, select, from, where, NULL);
 
     

@@ -21,4 +21,7 @@
   <include file="fix_resource_views.xml"/> 
   <include file="retry_add_bitmarks_collection.xml"/> 
   <include file="add_properties_value_index.xml"/> 
+  <include file="define_concat_aggregate.xml"/>
+  <include file="migrate_name_bitmarks_to_displayname.xml"/>
+  <include file="set_bit_displaynames.xml"/> 
 </databaseChangeLog>

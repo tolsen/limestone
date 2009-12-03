@@ -874,6 +874,10 @@ static dav_error *dav_repos_copy_resource(const dav_resource * src,
 			     "Source and destination are same while copying DBMS.");
     }
 
+    /* copy displayname */
+    db_r_dst->displayname = 
+                        apr_pstrdup(db_r_src->p, db_r_src->displayname);
+
     switch (db_r_src->resourcetype) {
     case dav_repos_RESOURCE:
     case dav_repos_VERSIONED:

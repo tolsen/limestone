@@ -259,7 +259,7 @@ dav_error *dbms_get_media_props(const dav_repos_db *d, dav_repos_resource *r)
         || r->resourcetype == dav_repos_VERSIONED
         || r->resourcetype == dav_repos_VERSION) {
         q = dbms_prepare(pool, d->db,
-                         "SELECT size, mimetype, sha1, updated_at "
+                         "SELECT size, mimetype, sha1 "
                          "FROM media WHERE resource_id = ?");
         dbms_set_int(q, 1, r->serialno);
         
@@ -282,7 +282,6 @@ dav_error *dbms_get_media_props(const dav_repos_db *d, dav_repos_resource *r)
         r->getcontentlength = dbms_get_int(q, 1);
         r->getcontenttype = dbms_get_string(q, 2);
         r->sha1str = dbms_get_string(q, 3);
-        r->updated_at = dbms_get_string(q, 4);
         
         dbms_query_destroy(q);
     }
@@ -787,12 +786,23 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
 
     } while (iter != db_r_tail && NULL != (iter = iter->next));
 
+    const char *updated_at_exp = NULL;
+    if (db_r->updated_at) {
+        updated_at_exp = apr_psprintf(pool, "greatest(lastmodified, '%s',"
+                                            " child_binds.updated_at)", 
+                                            db_r->updated_at);
+    }
+    else {
+        updated_at_exp = apr_psprintf(pool, "greatest(lastmodified,"
+                                            " child_binds.updated_at)");
+    }
+
     if(acl_hooks && acl_priv) {
         /*Create the search command */
         query_str = apr_psprintf
           (pool,
            "SELECT resources.id, created_at, child_binds.name,"
-           " child_binds.updated_at, contentlanguage, owner_id, comment,"
+           " %s, contentlanguage, owner_id, comment,"
            " creator_id, type, size, mimetype, sha1, vcrs.checked_state,"
            " checked_version.number, uuid, vcrs.vhr_id, versions.vcr_id,"
            " vr_vcr.checked_id, vcrs.version_type, principals.name,"
@@ -848,28 +858,23 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
            " LEFT JOIN vcrs AS vr_vcr "
            "ON vr_vcr.checked_id = versions.resource_id"
            " WHERE child_binds.collection_id IN (%s)",
-           principal_id, principal_id, acl_priv, col_ids_str);
+           updated_at_exp, principal_id, principal_id, acl_priv, col_ids_str);
     } else {
         /*Create the search command */
         query_str = apr_psprintf
           (pool, 
-           "SELECT id, "
-           "       created_at, children.name, children.updated_at, "
+           "SELECT resources.id, "
+           "       created_at, child_binds.name, %s, "
            "       contentlanguage, owner_id, comment, "
            "       creator_id, type, size, "
            "       mimetype, sha1, vcrs.checked_state, "
            "       checked_version.number, uuid, vcrs.vhr_id, "
            "       versions.vcr_id, vr_vcr.checked_id, vcrs.version_type, "
-           "       principals.name, versions.number, children.bind_id, "
-           "       vcrs.checkin_on_unlock, children.parent_id, displayname, limebar_state "
+           "       principals.name, versions.number, child_binds.id, "
+           "       vcrs.checkin_on_unlock, child_binds.collection_id, displayname, limebar_state "
            "FROM resources "
-           "      INNER JOIN "
-           "           ( SELECT binds.id as bind_id, resource_id, name, "
-           "                    updated_at, binds.collection_id as parent_id"
-           "              FROM binds "
-           "              WHERE collection_id IN (%s)) "
-           "          children "
-           "          ON children.resource_id = resources.id "
+           "      INNER JOIN binds child_binds"
+           "          ON child_binds.resource_id = resources.id "
            "      LEFT JOIN media ON resources.id = media.resource_id "
            "      LEFT JOIN principals "
            "          ON resources.creator_id = principals.resource_id "
@@ -878,8 +883,9 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
            "          ON checked_version.resource_id = vcrs.checked_id "
            "      LEFT JOIN versions ON versions.resource_id = resources.id "
            "      LEFT JOIN vcrs AS vr_vcr "
-           "          ON vr_vcr.checked_id = versions.resource_id",
-           col_ids_str);
+           "          ON vr_vcr.checked_id = versions.resource_id "
+           "WHERE child_binds.collection_id IN (%s)",
+           updated_at_exp, col_ids_str);
     }
     q = dbms_prepare(pool, d->db, query_str);
     if (dbms_execute(q)) {
@@ -932,7 +938,7 @@ dav_error *dbms_get_collection_resource(const dav_repos_db *d,
           (dbrow[1] == NULL) ? NULL : apr_pstrdup(db_r->p, dbrow[1]);
 
         presult_link_tail->displayname =
-          (dbrow[24] == NULL) ? "" : apr_pstrdup(db_r->p, dbrow[24]);
+          (dbrow[24] == NULL) ? apr_pstrdup(db_r->p, dbrow[2]) : apr_pstrdup(db_r->p, dbrow[24]);
 
         presult_link_tail->updated_at =
           (dbrow[3] == NULL) ? NULL : apr_pstrdup(db_r->p, dbrow[3]);

@@ -72,6 +72,7 @@ sub print_limestone_config ($$$$$$$$$) {
 
   print $config_fh <<EOF
 
+LoadModule dav_repos_module   modules/libmod_dav_repos.so
 # NOTE: The first number in the LogFormat string refers to our internal LogFormat version.
 # Whenever you make a change to LogFormat you should increment the version number.
 LogFormat "3 %h %{Host}i %u %t %D %{LIMESTONE_RESOURCE_UUID}e %{UNIQUE_ID}e \\"%r\\" %{Destination}i %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" limestone

@@ -144,7 +144,8 @@ static dav_prop_insert dav_repos_insert_prop(const dav_resource * resource,
 
     /* Do something according to what */
     if (what == DAV_PROP_INSERT_VALUE)
-	s = apr_psprintf(pool, "<D:%s>%s</D:%s>", name, value, name);
+	s = apr_psprintf(pool, "<D:%s>%s</D:%s>", name, 
+                         apr_xml_quote_string(pool, value, 0), name);
     else if (what == DAV_PROP_INSERT_NAME)
 	s = apr_psprintf(pool, "<D:%s/>" DEBUG_CR, name);
     else  /* assert: what == DAV_PROP_INSERT_SUPPORTED */
@@ -421,7 +422,8 @@ static void dav_repos_insert_all_liveprops(request_rec * r,
 	apr_hash_this(hindex, (void *) &key, &klen, (void *) &val);
         switch (what) {
         case DAV_PROP_INSERT_VALUE:
-            s = apr_psprintf(r->pool, "<D:%s>%s</D:%s>"DEBUG_CR, key, val, key);
+            s = apr_psprintf(r->pool, "<D:%s>%s</D:%s>"DEBUG_CR, key, 
+                             apr_xml_quote_string(r->pool, val, 0), key);
             break;
         case DAV_PROP_INSERT_NAME:
         case DAV_PROP_INSERT_SUPPORTED:

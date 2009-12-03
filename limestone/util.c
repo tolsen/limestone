@@ -152,7 +152,8 @@ const char *dav_repos_mk_href(apr_pool_t * pool, const char *uri)
     if (uri == NULL)
 	return NULL;
 
-    return apr_pstrcat(pool, "<D:href>", uri, "</D:href>", NULL);
+    return apr_pstrcat(pool, "<D:href>", apr_xml_quote_string(pool, uri, 0), 
+                       "</D:href>", NULL);
 }
 
 const char *dav_find_attr(apr_xml_elem *elem, const char *attr_name)

@@ -1227,6 +1227,10 @@ int search_mkresponse(apr_pool_t *pool, search_ctx *sctx, char **dbrow,
                 propval = apr_psprintf(pool, "<D:href>%s</D:href>", 
                                        dav_repos_principal_to_s(owner));
             }
+            else {
+                /* escape propval */
+                propval = (char *)apr_xml_quote_string(pool, propval, 0);
+            }
         }
 
         if(!*good_props) {
@@ -1591,7 +1595,8 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
     for (i=0; i<results_count; i++) {
         dbrow = dbms_fetch_row_num(db->db, q, pool, i);
         send_xml(bb, output, "  <LB:stat>" DEBUG_CR);
-        v = apr_pstrcat(pool, "   <LB:value>", dbrow[0], 
+        v = apr_pstrcat(pool, "   <LB:value>", 
+                        apr_xml_quote_string(pool, dbrow[0], 0), 
                         "</LB:value>" DEBUG_CR,
                         "   <LB:", stat->name, ">", dbrow[1],
                         "</LB:", stat->name, ">" DEBUG_CR, NULL);

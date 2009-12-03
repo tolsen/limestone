@@ -154,7 +154,8 @@ int dav_repos_is_allow(const dav_principal * principal,
                                 "    <D:href>%s</D:href>"DEBUG_CR
                                 "    <D:privilege><D:%s/></D:privilege>"DEBUG_CR
                                "  </D:resource>"DEBUG_CR, 
-                               resource->uri, privilege_name);
+                               apr_xml_quote_string(pool, resource->uri, 0), 
+                               privilege_name);
 
         const char *errormsg =
             apr_psprintf(pool, "Principal:%s needs %s privilege to access %s",
@@ -356,12 +357,15 @@ char *acl_build_propfind_output(const dav_resource * resource)
             } 
             else if(strstr(principal_url, PRINCIPAL_USER_PREFIX) ||
                     strstr(principal_url, PRINCIPAL_GROUP_PREFIX)) {
-                str_acehead = apr_psprintf(db_r->p, "<D:ace>" DEBUG_CR
-				           "<D:principal>" DEBUG_CR
-				           "<D:href>%s</D:href>" DEBUG_CR
-				           "</D:principal>" DEBUG_CR
-				           "<D:%s>",
-				           principal_url, grant_deny);
+                str_acehead = 
+                    apr_psprintf(db_r->p, 
+                        "<D:ace>" DEBUG_CR
+			"<D:principal>" DEBUG_CR
+			"<D:href>%s</D:href>" DEBUG_CR
+			"</D:principal>" DEBUG_CR
+			"<D:%s>",
+			apr_xml_quote_string(db_r->p, principal_url, 0), 
+                        grant_deny);
             }
             else {
                 str_acehead = apr_psprintf(db_r->p, "<D:ace>" DEBUG_CR
@@ -396,13 +400,14 @@ char *acl_build_propfind_output(const dav_resource * resource)
 	    inherited = dav_get_ace_inherited(ace);
 	    if ((inherited == NULL) || (strcmp(inherited, "") == 0))
 		str_acebody = apr_psprintf(db_r->p, "</D:ace>");
-	    else str_acebody = apr_psprintf(db_r->p,
-                                            "<D:inherited>" DEBUG_CR
-                                            "<D:href>%s%s</D:href>" DEBUG_CR
-                                            "</D:inherited>" DEBUG_CR
-                                            "</D:ace>",
-                                            principal_href_prefix(r), 
-                                            inherited);
+	    else str_acebody = 
+                apr_psprintf(db_r->p, 
+                    "<D:inherited>" DEBUG_CR
+                    "<D:href>%s%s</D:href>" DEBUG_CR
+                    "</D:inherited>" DEBUG_CR
+                    "</D:ace>",
+                    principal_href_prefix(r), 
+                    apr_xml_quote_string(db_r->p, inherited, 0));
 
 	    str_xml_acl =
 		apr_pstrcat(db_r->p, str_xml_acl, str_acehead, str_acepriv,
@@ -691,7 +696,8 @@ dav_error *dav_repos_deliver_acl_principal_prop_set(request_rec * r,
 			     APR_HASH_KEY_STRING);
 	    const char *str =
 		apr_psprintf(pool, "<D:%s>%s</D:%s>" DEBUG_CR,
-			     props->name, val, props->name);
+			     props->name, apr_xml_quote_string(pool, val, 0), 
+                             props->name);
 	    send_xml(bb, output, str);
 	}
 
@@ -761,7 +767,7 @@ dav_error *dav_repos_deliver_principal_match(request_rec * r,
 	    send_xml(bb, output, "<D:response>");
 	    const char *str =
 		apr_psprintf(pool, "<D:href>%s</D:href>"
-			     DEBUG_CR, db_r->uri);
+			     DEBUG_CR, apr_xml_quote_string(pool, db_r->uri, 0));
 	    send_xml(bb, output, str);
 	    send_xml(bb, output,
 		     "<D:status>HTTP/1.1 200 OK</D:status>" DEBUG_CR);
@@ -840,7 +846,9 @@ dav_error *dav_repos_deliver_principal_property_search(request_rec * r,
 				 APR_HASH_KEY_STRING);
 		const char *str =
 		    apr_psprintf(pool, "<D:%s>%s</D:%s>" DEBUG_CR,
-				 props->name, val, props->name);
+				 props->name, 
+                                 apr_xml_quote_string(pool, val, 0), 
+                                 props->name);
 		send_xml(bb, output, str);
 	    }
 

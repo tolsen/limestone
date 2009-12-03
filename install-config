@@ -91,6 +91,8 @@ PidFile "$LOGS_DIR/httpd.pid"
 
 CoreDumpDirectory $LOGS_DIR
 
+MaxMemFree 262144
+
 DAVLimestoneIndexCSS  http://www.$host_domain${port_part_of_host}/css/style.css
 DAVDBMSTmpDir $TMP_DIR
 DAVDBMSFileDir $FILES_DIR

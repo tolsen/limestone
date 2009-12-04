@@ -160,9 +160,9 @@ static dav_prop_insert dav_acl_insert_prop(const dav_resource * resource,
     case DAV_PROPID_principal_collection_set:
         if (db_r->resourcetype != dav_repos_GROUP)
             return DAV_PROP_INSERT_NOTSUPP;
-        val = apr_pstrcat(pool, "<D:href>%s%s</D:href><D:href>%s%s</D:href>",
-                          principal_href_prefix(r), PRINCIPAL_USER_PREFIX,
-                          principal_href_prefix(r), PRINCIPAL_GROUP_PREFIX,NULL);
+        val = apr_psprintf(pool, "<D:href>%s%s</D:href><D:href>%s%s</D:href>",
+                           principal_href_prefix(r), PRINCIPAL_USER_PREFIX,
+                           principal_href_prefix(r), PRINCIPAL_GROUP_PREFIX);
         break;
     case DAV_PROPID_group_member_set:
         val = get_group_member_set(resource);

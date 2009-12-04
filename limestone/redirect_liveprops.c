@@ -93,7 +93,8 @@ static dav_prop_insert dav_redirect_insert_prop(const dav_resource * resource,
             propval = db_r->redirect_lifetime == DAV_REDIRECTREF_PERMANENT ? "<D:permanent/>" : "<D:temporary/>";
             break;
         case DAV_PROPID_reftarget:
-            propval = apr_psprintf(pool, "<D:href>%s</D:href>", db_r->reftarget);
+            propval = apr_psprintf(pool, "<D:href>%s</D:href>", 
+                        apr_xml_quote_string(db_r->p, db_r->reftarget, 0));
             break;
         }
         s = apr_psprintf(pool, "<D:%s>%s</D:%s>", name, propval, name);

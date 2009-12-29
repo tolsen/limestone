@@ -503,7 +503,7 @@ endif
 
 create-test-users: create-test-users-$(1)
 create-test-users-$(1): stamps/create-test-users-$(1)
-stamps/create-test-users-$(1): stamps/stampdir $(ADDUSER)
+stamps/create-test-users-$(1): stamps/stampdir apache-start $(ADDUSER)
 	$(ADDUSER) -e -h $(LIMESTONE_HOST_DOMAIN) -P $$(REAL_$(1)_VHOST_PORT) -d$(TEST_USER1) -pqwerty $(TEST_USER1)
 	$(ADDUSER) -e -h $(LIMESTONE_HOST_DOMAIN) -P $$(REAL_$(1)_VHOST_PORT) -d$(TEST_USER2) -pqwerty $(TEST_USER2)
 	touch $$@

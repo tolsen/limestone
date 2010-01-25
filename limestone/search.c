@@ -1057,7 +1057,11 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
                                 good_bitmarks = apr_pstrcat(pool, 
                                     good_bitmarks,
                                     "<bitmark>" DEBUG_CR
-                                    " <href>", b[k].href, "</href>" DEBUG_CR
+                                    " <href>", 
+                                    dav_get_response_href(
+                                        sctx->db_r->resource->info->rec, 
+                                        b[k].href),
+                                    "</href>" DEBUG_CR
                                     " <", b[k].name, ">", b[k].value,
                                     "</", b[k].name, ">" DEBUG_CR
                                     "</bitmark>" DEBUG_CR, NULL );

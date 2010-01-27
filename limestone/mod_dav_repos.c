@@ -63,6 +63,7 @@ static void *dav_repos_create_server_config(apr_pool_t * p, server_rec *s)
 
     /* defaults */
     conf->quota = 10*1024*1024; /* 10 MB */
+    conf->keep_files = 1;
     return conf;
 }
 
@@ -226,7 +227,7 @@ static const command_rec dav_repos_cmds[] = {
                     "Enable the Garbage Collection in a separate thread"),
 
     AP_INIT_FLAG("DAVLimestoneKeepFiles", dav_repos_keep_files_cmd, NULL, RSRC_CONF,
-                    "disable deletion of unaccessible files"),
+                    "Control deletion of unreachable files (default is On)"),
 
     AP_INIT_TAKE1("DAVLimestoneIndexCSS", 
                   dav_repos_IndexCSS_cmd, NULL, RSRC_CONF, 

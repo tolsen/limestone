@@ -7,6 +7,7 @@ Dependencies
   - PostgreSQL JDBC driver (libpg-java package in debian)
   - shared-mime-info library
   - See RubyDAV README for more dependencies
+  - Ruby/DBI with Postgres driver (libdbi-ruby and libdbd-pg-ruby1.8 packages)
 
 
 Checkout

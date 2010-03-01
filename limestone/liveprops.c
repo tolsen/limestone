@@ -279,8 +279,9 @@ static dav_error * dav_repos_patch_validate(const dav_resource * resource,
     *context = (void *)get_livepropspec_from_id(dav_repos_props, priv->propid);
     switch(priv->propid) {
     case DAV_PROPID_displayname:
-        if (elem->first_cdata.first->text == NULL ||
-            strlen(elem->first_cdata.first->text) > DAV_DISPLAYNAME_LIMIT)
+        if (elem->first_cdata.first &&
+            (elem->first_cdata.first->text == NULL ||
+            strlen(elem->first_cdata.first->text) > DAV_DISPLAYNAME_LIMIT))
             return dav_new_error(pool, HTTP_CONFLICT, 0,
                                  "Invalid value specified");
         break;

@@ -413,7 +413,7 @@ stamps/apache-start: stamps/stampdir
 			echo Run \"make database-migrate\" to upgrade database; \
 			echo  or \"make force-apache-start\" to start anyway; \
 		fi
-			
+
 force-apache-start:
 	$(force-start-apache)
 
@@ -461,6 +461,9 @@ database-migrate: limestone-stop
 database-reset-and-limestone-start: database-reset stamps/stampdir
 	sleep 1
 	$(start-apache)
+
+liquibase-clear-checksums:
+	$(LIQUIBASE_PGSQL) clearCheckSums
 
 liquibase-status:
 	$(LIQUIBASE_PGSQL) status

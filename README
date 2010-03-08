@@ -1,10 +1,43 @@
 README for Limestone server 
 
-0. Dependencies:
-  - PostgreSQL >= 8.2
-  - PostgreSQL JDBC driver (libpg-java package in debian)
+Dependencies
+------------
 
-1. Simple file description
+  - PostgreSQL >= 8.4
+  - PostgreSQL JDBC driver (libpg-java package in debian)
+  - shared-mime-info library
+  - See RubyDAV README for more dependencies
+  - Ruby/DBI with Postgres driver (libdbi-ruby and libdbd-pg-ruby1.8 packages)
+
+
+Checkout
+--------
+
+LimeStone depends on a variety of other software that we keep in git.
+All of the git repositories must be checked out into the same
+directory.  
+
+You have probably already checked out LimeStone:
+
+git clone git://github.com/tolsen/limestone
+
+Now checkout the all the dependencies:
+
+git clone git://github.com/tolsen/limestone-httpd apache
+git clone git://github.com/tolsen/limestone-apr apr
+git clone git://github.com/tolsen/limestone-apr-util apr-util
+git clone git://github.com/tolsen/httpauth better_httpauth
+git clone git://github.com/tolsen/env-engine
+git clone git://github.com/tolsen/inspector
+git clone git://github.com/tolsen/liquibase
+git clone git://github.com/tolsen/litmus
+git clone git://github.com/tolsen/Prestan
+git clone git://github.com/tolsen/rubydav
+
+
+Simple file description (Somewhat out of date)
+----------------------------------------------
+
   - mod_dav_repos - apache module hooker
   - repos.c      - repository interface
   - props.c      - properties interface
@@ -16,76 +49,80 @@ README for Limestone server
   - dbms_api.h   - API for performing database queries 
   - dbms_dbd.[ch]- Implements the API using mod_dbd
 
-2. Set up a mysql/pgsql database with its own user and password.
-Notes for pgsql:
+
+Postgres setup
+--------------
+
+Set up a pgsql database with its own user and password.
+
 Ensure that the user can add/drop schemas to the database -
 GRANT ALL ON DATABASE $LIMESTONE_DB TO $LIMESTONE_USER;
 
-3. Set the following environment variables: 
-LIMESTONE_HOST_DOMAIN - The domain of the server. Make sure that *.domain.com also resolves to domain.com
-                        If configured correctly, users can use username.domain.com to access their home directory
 
-LIMESTONE_PGSQL_VHOST_PORT, 
-LIMESTONE_PGSQL_DB_HOST, LIMESTONE_PGSQL_DB_PORT,
-LIMESTONE_PGSQL_DB_USER, LIMESTONE_PGSQL_DB_PASS, LIMESTONE_PGSQL_DB_NAME
-and six more similar variables with MYSQL substituted for PGSQL. MYSQL also has
-the additional variable LIMESTONE_MYSQL_DB_SOCK
+Environment Variables
+---------------------
 
- See 4 for descriptions of the variables.
+Set the following environment variables:
 
-4. To build:
+LIMESTONE_HOST_DOMAIN : server hostname
+LIMESTONE_PGSQL_VHOST_PORT : server port to listen on
+LIMESTONE_PGSQL_DB_HOST : database hostname
+LIMESTONE_PGSQL_DB_PORT : database port
+LIMESTONE_PGSQL_DB_USER : database username
+LIMESTONE_PGSQL_DB_PASS : database password
+LIMESTONE_PGSQL_DB_NAME : database name
+
+If you prefer not to set environment variables, you can create a
+.lime-config file with lines consisting of "ENV_VAR : value"
+
+
+Build
+-----
+
     a. autoconf
-    b. ./configure [--with-mysql=PATH] [--with-pgsql=PATH]
-        Ubuntu defaults for PATH: /usr in case of mysql and /usr/include in case of pgsql
+    b. ./configure --with-pgsql[=PATH]
+        Ubuntu defaults for PATH: /usr/include
 
-        --with-mysql configures a virtual host with a mysql backed DAV
-         location. This virtual host is configured using the following
-         environment variables:
-
-                LIMESTONE_MYSQL_VHOST_PORT    - port on which the virtual server listens
-                LIMESTONE_MYSQL_DB_HOST - The Mysql server address
-                LIMESTONE_MYSQL_DB_PORT - port to connect to on sql server
-                LIMESTONE_MYSQL_DB_SOCK - use unix_socket instead of TCP connection
-                LIMESTONE_MYSQL_DB_USER - username of the mysql account to use
-                LIMESTONE_MYSQL_DB_PASS - corresponding password
-                LIMESTONE_MYSQL_DB_NAME - name of the database
-
-        --with-pgsql configures a virtual host which uses pgsql backed
-         DAV location.  Substitute MYSQL for PGSQL in the above
-         variables to configure this Vhost.  There is no
-         LIMESTONE_PGSQL_DB_SOCK variable. If want to use a unix
-         socket to connect to the server, you must specify the
-         directory in DB_HOST and the socket file name in DB_PORT
-         variables
-
-        You can opt for only one virtual server or for both.
     c. make
     
     This builds apache and limestone
 
-5. To run litmus tests, type "make tests"
 
-6. How to start Apache
+Tests
+-----
 
-./aproot/bin/apachectl start
+type "make tests"
 
-7. Create a user
+
+How to start Apache
+-------------------
+
+make apache-start
+
+
+Create a user
+-------------
 
 ./limestone/adduser -p test1 test1
 
-8. How to connect to WebDAV server running at localhost:
+
+How to connect to WebDAV server running at localhost
+----------------------------------------------------
 
 - Open the home directory ( localhost/limespot is not accessible to user directly )
   	
-	open http://localhost:8080/limespot/test1 
+	open http://localhost:8080/home/test1 
 
 - Provide authentication details
   	
 	Login: 		test1
 	Password:	test1
 
-9. How to DEBUG apache
-cd /usr/local/apache2/bin/
+
+How to DEBUG apache
+-------------------
+
+cd aproot/bin/
 % gdb httpd
 ...
 ...
@@ -93,14 +130,19 @@ cd /usr/local/apache2/bin/
 (gdb) run -X -d ..   [ if you are in apache/bin or give full path ]
 (gdb) "Enjoy!!"
 
-10. Developer mailing list :
 
-- limestone@limewire.co.in
+Developer mailing list
+----------------------
+TBA
 
-11. For a static build of limestone, type "make static"
 
-12. To build limestone for profiling with gprof, type "make gprof"
+THE FOLLOWING MAY NO LONGER WORK
+--------------------------------
 
-13. To run Prestan benchmarks, type "make benchmarks"
+- For a static build of limestone, type "make static"
 
-14. To quickly rebuild changes made *only* in limestone & mod_dav modules, type "make reinstall"
+- To build limestone for profiling with gprof, type "make gprof"
+
+- To run Prestan benchmarks, type "make benchmarks"
+
+- To quickly rebuild changes made *only* in limestone & mod_dav modules, type "make reinstall"

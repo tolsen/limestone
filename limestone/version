@@ -4,7 +4,7 @@ require File.dirname(__FILE__) + '/../../rubydav/lib/limebits_version'
 
 
 def detect_vcs
-  dir = File.dirname(__FILE__) + '/..'
+  dir = File.dirname(__FILE__) + '/../..'
 
   return [:svn, :git, :hg].detect { |vcs| File.directory? "#{dir}/.#{vcs}" }
 end

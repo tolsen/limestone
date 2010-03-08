@@ -23,5 +23,6 @@
   <include file="add_properties_value_index.xml"/> 
   <include file="define_concat_aggregate.xml"/>
   <include file="migrate_name_bitmarks_to_displayname.xml"/>
-  <include file="set_bit_displaynames.xml"/> 
+  <include file="set_bit_displaynames.xml"/>
+  <include file="add_media_sha1_index.xml"/>
 </databaseChangeLog>

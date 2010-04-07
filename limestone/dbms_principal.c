@@ -85,7 +85,7 @@ dav_error *dbms_set_principal_email(apr_pool_t *pool, const dav_repos_db *d,
     TRACE();
 
     q = dbms_prepare(pool, d->db, 
-                     "UPDATE principals SET email = ? WHERE resource_id= ?");
+                     "UPDATE users SET email = ? WHERE principal_id= ?");
     dbms_set_string(q, 1, email);
     dbms_set_int(q, 2, principal_id);
 
@@ -107,7 +107,7 @@ const char *dbms_get_principal_email(apr_pool_t *pool, const dav_repos_db *d,
     TRACE();
 
     q = dbms_prepare (pool, d->db,
-                      "SELECT email FROM principals WHERE resource_id = ?");
+                      "SELECT email FROM users WHERE principal_id = ?");
     dbms_set_int(q, 1, principal_id);
 
     dbms_execute(q);

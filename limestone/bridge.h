@@ -305,4 +305,19 @@ dav_error *sabridge_copy_bitmarks(apr_pool_t *pool, const dav_repos_db *d,
                                   const dav_repos_resource *src, 
                                   const dav_repos_resource *dst);
 
+/**
+ * Verifies that email is not already taken
+ */
+dav_error *sabridge_verify_user_email_unique(apr_pool_t *pool,
+                                             const dav_repos_db *d,
+                                             const char *email);
+
+/**
+ * Tries to set email for principal, checking if it is already taken
+ */
+dav_error *sabridge_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                                   long principal_id, const char *email);
+
+
+
 #endif /* STONE_ARCH_BRIDGE_H */

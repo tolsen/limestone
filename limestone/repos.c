@@ -370,6 +370,10 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     if (email_elem) {
         apr_xml_to_text(pool, email_elem, APR_XML_X2T_INNER, 
                         doc->namespaces, NULL, &email, NULL);
+
+        if ((err = sabridge_verify_user_email_unique(pool, db, email))) {
+            return err;
+        }
     }
 
     if (stream->inserted) {
@@ -406,7 +410,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
                 err = dav_repos_update_password(resource, passwd);
 
             if (email_elem != NULL)
-                dbms_set_principal_email(pool, db, db_r->serialno, email);
+                dbms_set_user_email(pool, db, db_r->serialno, email);
         }
     }
 
@@ -417,7 +421,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     }
 
     apr_file_close(stream->file);
-    return NULL;
+    return err;
 }
 
 /**

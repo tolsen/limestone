@@ -253,7 +253,7 @@ const char *dbms_get_domain_path(apr_pool_t *pool, dav_repos_db *d, const char *
 
 /* Create an entry in users table */
 dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
-                            const char *pwhash)
+                            const char *pwhash, const char *email)
 {
     dav_repos_query *q = NULL;
     apr_pool_t *pool = r->p;
@@ -262,10 +262,11 @@ dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
     TRACE();
 
     q = dbms_prepare(pool, d->db, 
-                     "INSERT INTO users (principal_id, pwhash) "
-                     "VALUES (?, ?)");
+                     "INSERT INTO users (principal_id, pwhash, email) "
+                     "VALUES (?, ?, ?)");
     dbms_set_int(q, 1, r->serialno);
     dbms_set_string(q, 2, pwhash);
+    dbms_set_string(q, 3, email);
 
     if (dbms_execute(q)) {
         dbms_query_destroy(q);

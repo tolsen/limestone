@@ -26,4 +26,5 @@
   <include file="set_bit_displaynames.xml"/>
   <include file="add_media_sha1_index.xml"/>
   <include file="move_email_to_users_table.xml"/>
+  <include file="set_null_emails_to_be_bogus.xml"/> 
 </databaseChangeLog>

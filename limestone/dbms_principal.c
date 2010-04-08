@@ -117,6 +117,25 @@ const char *dbms_get_principal_email(apr_pool_t *pool, const dav_repos_db *d,
     return email;
 }
 
+int dbms_is_email_available(apr_pool_t *pool, const dav_repos_db *d, const char *email)
+{
+    dav_repos_query *q = NULL;
+    int ret = 1;
+
+    TRACE();
+
+    q = dbms_prepare(pool, d->db, "SELECT principal_id FROM users WHERE email = ?");
+    dbms_set_string(q, 1, email);
+
+    dbms_execute(q);
+    if (dbms_next(q) == 1) {
+        ret = 0;
+    }
+
+    dbms_query_destroy(q);
+    return ret;
+}
+
 apr_hash_t *dbms_get_domain_map(apr_pool_t *pool, const dav_repos_db *d,
                                 long principal_id)
 {

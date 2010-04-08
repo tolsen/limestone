@@ -92,4 +92,6 @@ dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
                                         apr_hash_t *new_members,
                                         apr_array_header_t **members_to_remove);
 
+int dbms_is_email_available(apr_pool_t *pool, const dav_repos_db *d, const char *email);
+
 #endif /* DBMS_PRINCIPAL_H */

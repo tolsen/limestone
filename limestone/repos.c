@@ -410,11 +410,11 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
         const char *email = NULL;
         apr_xml_to_text (pool, email_elem, APR_XML_X2T_INNER, 
                          doc->namespaces, NULL, &email, NULL);
-        dbms_set_principal_email(pool, db, db_r->serialno, email);
+        err = sabridge_set_principal_email(pool, db, db_r->serialno, email);
     }
 
     apr_file_close(stream->file);
-    return NULL;
+    return err;
 }
 
 /**

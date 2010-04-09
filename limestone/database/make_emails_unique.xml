@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  
+  <changeSet author="tolsen" id="1">
+    <comment>differentiate duplicate emails by add +n to the local part</comment>
+    <executeCommand executable="./differentiate_emails.rb"/>
+  </changeSet>
+
+  <changeSet author="tolsen" id="2">
+    <comment>add unique index to email field</comment>
+    
+    <createIndex tableName="users" indexName="idx_users_email" unique="true">
+      <column name="email"/>
+    </createIndex>
+    
+  </changeSet>
+  
+</databaseChangeLog>

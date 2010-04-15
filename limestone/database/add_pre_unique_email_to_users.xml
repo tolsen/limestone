@@ -2,16 +2,16 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
 
   <changeSet author="tolsen" id="1">
-    <comment>Add was_incremented field to users table</comment>
+    <comment>Add pre_unique_email field to users table</comment>
 
     <addColumn tableName="users">
-      <column name="email_incremented" type="BOOLEAN" defaultValue="false">
-        <constraints nullable="false"/>
-      </column>
+      <column name="pre_unique_email" type="varchar(255)"/>
     </addColumn>
 
     <sql>
-      COMMENT ON COLUMN users.email_incremented IS 'Was +n added by us to the local part of the email?'
+      UPDATE users u
+           SET pre_unique_email = (SELECT email FROM users u2
+                                   WHERE u.principal_id = u2.principal_id)
     </sql>
 
   </changeSet>

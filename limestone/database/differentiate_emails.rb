@@ -14,7 +14,7 @@ db_connect do |dbh|
       raise "email should have exactly one @: #{email}" unless email_parts.size == 2
       local_part, domain = email_parts
       new_email = "#{local_part}+#{old_count}@#{domain}" 
-      dbh.do("UPDATE users SET email = '#{new_email}', email_incremented = TRUE " +
+      dbh.do("UPDATE users SET email = '#{new_email}' " +
              "WHERE principal_id = #{row['principal_id']}")
       emails[email] += 1
     else

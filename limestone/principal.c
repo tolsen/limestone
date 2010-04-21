@@ -97,7 +97,8 @@ dav_error *sabridge_rem_prin_frm_grp(apr_pool_t *pool,
 /* Assumes that an entry has already been made in the resources table.
  * Sets the password, updates group memberships, and creates a home folder */
 dav_error *dav_repos_create_user(dav_resource *resource,
-                                 const char* passwd)
+                                 const char *passwd,
+                                 const char *email)
 {
     dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
@@ -110,7 +111,8 @@ dav_error *dav_repos_create_user(dav_resource *resource,
 
     TRACE();
 
-    err = dbms_insert_user(db, db_r, get_password_hash(db_r->p, user, passwd));
+    err = dbms_insert_user(db, db_r,
+                           get_password_hash(db_r->p, user, passwd), email);
     if (err) return err;
 
     /* Change owner or principal resource to self */

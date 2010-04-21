@@ -350,6 +350,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     apr_xml_doc *doc = NULL;
     apr_xml_elem *passwd_elem = NULL, *displayname_elem = NULL, *email_elem = NULL;
     const char *passwd = NULL;
+    const char *email = NULL;
 
     TRACE();
 
@@ -366,6 +367,15 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
         apr_xml_to_text(pool, passwd_elem, APR_XML_X2T_INNER, 
                         doc->namespaces, NULL, &passwd, NULL);
 
+    if (email_elem) {
+        apr_xml_to_text(pool, email_elem, APR_XML_X2T_INNER, 
+                        doc->namespaces, NULL, &email, NULL);
+
+        if ((err = sabridge_verify_user_email_unique(pool, db, email))) {
+            return err;
+        }
+    }
+
     if (stream->inserted) {
         if (passwd_elem == NULL)
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
@@ -377,7 +387,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "displayname required for new user");
 
-        err =  dav_repos_create_user(resource, passwd);
+        err =  dav_repos_create_user(resource, passwd, email);
     } else {
         if (passwd_elem != NULL || email_elem != NULL) {
             /* Existing user trying to change password or email */
@@ -398,6 +408,9 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
 
             if (passwd_elem != NULL)
                 err = dav_repos_update_password(resource, passwd);
+
+            if (email_elem != NULL)
+                dbms_set_user_email(pool, db, db_r->serialno, email);
         }
     }
 
@@ -406,15 +419,9 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
                         doc->namespaces, NULL, &db_r->displayname, NULL);
         dbms_set_property(db, db_r);
     }
-    if (email_elem) {
-        const char *email = NULL;
-        apr_xml_to_text (pool, email_elem, APR_XML_X2T_INNER, 
-                         doc->namespaces, NULL, &email, NULL);
-        dbms_set_principal_email(pool, db, db_r->serialno, email);
-    }
 
     apr_file_close(stream->file);
-    return NULL;
+    return err;
 }
 
 /**

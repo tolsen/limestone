@@ -76,8 +76,8 @@ dav_error *dbms_insert_principal(const dav_repos_db *d,
     return err;
 }
 
-dav_error *dbms_set_principal_email(apr_pool_t *pool, const dav_repos_db *d,
-                                    long principal_id, const char *email)
+dav_error *dbms_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                               long principal_id, const char *email)
 {
     dav_repos_query *q = NULL;
     dav_error *err = NULL;
@@ -85,7 +85,7 @@ dav_error *dbms_set_principal_email(apr_pool_t *pool, const dav_repos_db *d,
     TRACE();
 
     q = dbms_prepare(pool, d->db, 
-                     "UPDATE principals SET email = ? WHERE resource_id= ?");
+                     "UPDATE users SET email = ? WHERE principal_id= ?");
     dbms_set_string(q, 1, email);
     dbms_set_int(q, 2, principal_id);
 
@@ -99,15 +99,15 @@ dav_error *dbms_set_principal_email(apr_pool_t *pool, const dav_repos_db *d,
     return err;
 }
 
-const char *dbms_get_principal_email(apr_pool_t *pool, const dav_repos_db *d,
-                                     long principal_id)
+const char *dbms_get_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                                long principal_id)
 {
     dav_repos_query *q = NULL;
     const char *email = NULL;
     TRACE();
 
     q = dbms_prepare (pool, d->db,
-                      "SELECT email FROM principals WHERE resource_id = ?");
+                      "SELECT email FROM users WHERE principal_id = ?");
     dbms_set_int(q, 1, principal_id);
 
     dbms_execute(q);
@@ -115,6 +115,25 @@ const char *dbms_get_principal_email(apr_pool_t *pool, const dav_repos_db *d,
         email = dbms_get_string(q, 1);
     dbms_query_destroy(q);
     return email;
+}
+
+int dbms_is_email_available(apr_pool_t *pool, const dav_repos_db *d, const char *email)
+{
+    dav_repos_query *q = NULL;
+    int ret = 1;
+
+    TRACE();
+
+    q = dbms_prepare(pool, d->db, "SELECT principal_id FROM users WHERE email = ?");
+    dbms_set_string(q, 1, email);
+
+    dbms_execute(q);
+    if (dbms_next(q) == 1) {
+        ret = 0;
+    }
+
+    dbms_query_destroy(q);
+    return ret;
 }
 
 apr_hash_t *dbms_get_domain_map(apr_pool_t *pool, const dav_repos_db *d,
@@ -253,7 +272,7 @@ const char *dbms_get_domain_path(apr_pool_t *pool, dav_repos_db *d, const char *
 
 /* Create an entry in users table */
 dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
-                            const char *pwhash)
+                            const char *pwhash, const char *email)
 {
     dav_repos_query *q = NULL;
     apr_pool_t *pool = r->p;
@@ -262,10 +281,11 @@ dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
     TRACE();
 
     q = dbms_prepare(pool, d->db, 
-                     "INSERT INTO users (principal_id, pwhash) "
-                     "VALUES (?, ?)");
+                     "INSERT INTO users (principal_id, pwhash, email) "
+                     "VALUES (?, ?, ?)");
     dbms_set_int(q, 1, r->serialno);
     dbms_set_string(q, 2, pwhash);
+    dbms_set_string(q, 3, email);
 
     if (dbms_execute(q)) {
         dbms_query_destroy(q);

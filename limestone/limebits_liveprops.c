@@ -149,7 +149,7 @@ static dav_prop_insert dav_limebits_insert_prop(const dav_resource * resource,
         if (propid == LB_PROPID_email_id) {
             if (!is_allow_read_private_properties(resource))
                 return DAV_PROP_INSERT_FORBIDDEN;
-            s = dbms_get_principal_email(db_r->p, db, db_r->serialno);
+            s = dbms_get_user_email(db_r->p, db, db_r->serialno);
         }
         else if (propid == LB_PROPID_domain_map) {
             apr_hash_t *domain_map = dbms_get_domain_map(db_r->p, db, db_r->serialno);
@@ -348,13 +348,13 @@ static dav_error *dav_limebits_patch_exec(const dav_resource * resource,
     *rollback_ctx = rollback_info;
 
     if (spec->propid == LB_PROPID_email_id) {
-        const char *email = dbms_get_principal_email(db_r->p, db, db_r->serialno);
+        const char *email = dbms_get_user_email(db_r->p, db, db_r->serialno);
         rollback_info->rollback_data = (char *)email;
         
         if (operation == DAV_PROP_OP_SET) {
             apr_xml_to_text (db_r->p, elem, APR_XML_X2T_INNER, 
                              NULL, NULL, &email, NULL);
-            err = dbms_set_principal_email(db_r->p, db, db_r->serialno, email);
+            err = sabridge_set_user_email(db_r->p, db, db_r->serialno, email);
         }
     }
     else if (spec->propid == LB_PROPID_domain_map) {
@@ -450,8 +450,8 @@ static dav_error *dav_limebits_patch_rollback(const dav_resource * resource,
     TRACE();
 
     if (rollback_ctx->spec->propid == LB_PROPID_email_id) {
-        err = dbms_set_principal_email(db_r->p, db, db_r->serialno, 
-                                       rollback_ctx->rollback_data);
+        err = sabridge_set_user_email(db_r->p, db, db_r->serialno, 
+                                      rollback_ctx->rollback_data);
     }
     else if (rollback_ctx->spec->propid == LB_PROPID_domain_map) {
         err = dbms_set_domain_map(db_r->p, db, db_r->serialno, 

@@ -1,6 +1,8 @@
+# PLEASE KEEP THE FOLLOWING LINES SORTED
 *.lo
 *.o
 *.slo
+*~
 .libs
 .lime-config-generated.mk
 Makefile

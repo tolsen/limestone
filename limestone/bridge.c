@@ -1175,3 +1175,37 @@ long sabridge_get_used_bytes(const dav_repos_db *d, dav_repos_resource *r,
 
     return used_bytes;
 }
+
+dav_error *sabridge_verify_user_email_unique(apr_pool_t *pool,
+                                             const dav_repos_db *d,
+                                             const char *email)
+{
+    const char *errmsg = apr_pstrcat(pool, "email conflict for ", email, NULL);
+    dav_error *err = dav_new_error_tag(pool, HTTP_CONFLICT, 0 /* error_id */,
+                                       errmsg, "http://limebits.com/ns/1.0/", 
+                                       "email-available", NULL /* content */, 
+                                       NULL /* prolog */);
+
+    TRACE();
+
+    if (dbms_is_email_available(pool, d, email)) {
+        return NULL;
+    }
+
+    return err;
+}
+
+/**
+ * Tries to set email for user, checking if it is already taken
+ */
+dav_error *sabridge_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                                   long principal_id, const char *email)
+{
+    dav_error *err = sabridge_verify_user_email_unique(pool, d, email);
+
+    if (err) {
+        return err;
+    }
+
+    return dbms_set_user_email(pool, d, principal_id, email);
+}

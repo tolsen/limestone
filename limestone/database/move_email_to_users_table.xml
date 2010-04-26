@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+
+  <changeSet author="tolsen" id="1">
+    <comment>Move emails to users table</comment>
+    
+    <addColumn tableName="users">
+      <column name="email" type="varchar(255)"/>
+    </addColumn>
+    
+    <sql>
+      UPDATE users u
+           SET email = (SELECT p.email FROM principals p
+                         WHERE p.resource_id = u.principal_id)
+    </sql>
+
+    <dropColumn tableName="principals" columnName="email"/>
+  </changeSet>
+
+</databaseChangeLog>

@@ -29,11 +29,11 @@ dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db 
 dav_error *dbms_insert_principal(const dav_repos_db *d,
                                  dav_repos_resource *r, const char *name);
 
-dav_error *dbms_set_principal_email(apr_pool_t *pool, const dav_repos_db *d,
-                                    long principal_id, const char *email);
+dav_error *dbms_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                               long principal_id, const char *email);
 
-const char *dbms_get_principal_email(apr_pool_t *pool, const dav_repos_db *d,
-                                     long principal_id);
+const char *dbms_get_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                                long principal_id);
 
 apr_hash_t *dbms_get_domain_map(apr_pool_t *pool, const dav_repos_db *d,
                                 long principal_id);
@@ -44,7 +44,7 @@ dav_error *dbms_set_domain_map(apr_pool_t *pool, const dav_repos_db *d,
                                long principal_id, apr_hash_t *domain_map);
 
 dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
-                            const char *pwhash);
+                            const char *pwhash, const char *email);
 
 dav_error *dbms_update_user(const dav_repos_db *d, dav_repos_resource *r,
                             const char *pwhash);
@@ -91,5 +91,7 @@ dav_error *dbms_calculate_group_changes(const dav_repos_db *db,
                                         const dav_repos_resource *group_dbr,
                                         apr_hash_t *new_members,
                                         apr_array_header_t **members_to_remove);
+
+int dbms_is_email_available(apr_pool_t *pool, const dav_repos_db *d, const char *email);
 
 #endif /* DBMS_PRINCIPAL_H */

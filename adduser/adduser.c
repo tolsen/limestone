@@ -132,7 +132,7 @@ char *new_user_put_body(const char *name, const char *password, const char *disp
                      "<lb:user xmlns:lb='http://limebits.com/ns/1.0/' xmlns:D='DAV:'>\n"
                      "  <lb:name>", escaped_name, "</lb:name>\n"
                      "  <lb:password>", escaped_password, "</lb:password>\n",
-                     "  <lb:email>", "anon@anon.com", "</lb:email>\n",
+                     "  <lb:email>", escaped_name, "@limebits.com</lb:email>\n",
                      NULL);
 
     free(escaped_name);

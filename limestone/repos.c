@@ -375,8 +375,8 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     }
 
     if (email_elem) {
-        apr_xml_to_text (pool, email_elem, APR_XML_X2T_INNER, 
-                         doc->namespaces, NULL, &email, NULL);
+        apr_xml_to_text(pool, email_elem, APR_XML_X2T_INNER, 
+                        doc->namespaces, NULL, &email, NULL);
     }
 
     if (stream->inserted) {
@@ -401,7 +401,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
             return err;
         }
 
-        err =  dav_repos_create_user(resource, passwd);
+        err =  dav_repos_create_user(resource, passwd, email);
     } else {
         if (passwd_elem != NULL || email_elem != NULL) {
             /* Existing user trying to change password or email */
@@ -422,18 +422,18 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
 
             if (passwd_elem != NULL)
                 err = dav_repos_update_password(resource, passwd);
+
+            if (email_elem != NULL)
+                dbms_set_user_email(pool, db, db_r->serialno, email);
         }
     }
 
     if (displayname_elem) {
         dbms_set_property(db, db_r);
     }
-    if (email_elem) {
-        dbms_set_principal_email(pool, db, db_r->serialno, email);
-    }
 
     apr_file_close(stream->file);
-    return NULL;
+    return err;
 }
 
 /**

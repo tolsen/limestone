@@ -106,6 +106,22 @@ typedef struct dav_repos_dbms dav_repos_dbms;
 #endif
 
 typedef struct {
+    long id;
+    const char *email;
+    const char *username;
+    const char *password;
+    void *ctx;
+} dav_repos_user_profile;
+
+typedef struct {
+    dav_error *(*create)(
+        request_rec *r,
+        const dav_repos_user_profile *p
+    );
+    void *ctx;
+} dav_repos_profile_provider;
+
+typedef struct {
     const char *tmp_dir;
     const char *file_dir;
 
@@ -117,7 +133,9 @@ typedef struct {
     int keep_files;
     const char *css_uri;
     const char *xsl_403_uri;
-    int quota; 
+    int quota;
+
+    const dav_repos_profile_provider *profile_provider;
 
     dav_repos_dbms *db;
 } dav_repos_server_conf;
@@ -154,5 +172,10 @@ dav_error *dav_repos_create_resource(dav_resource *resource, int params);
 
 dav_error *dav_repos_new_resource(request_rec *r, const char *root_path, 
                                   dav_resource **result_resource);
+
+void dav_repos_register_profile_provider(apr_pool_t *p, const char *name, 
+                                         const dav_repos_profile_provider *hooks);
+
+const dav_repos_profile_provider *dav_repos_lookup_profile_provider(const char *name);
 
 #endif

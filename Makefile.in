@@ -253,6 +253,8 @@ $(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
        --enable-deflate \
        --enable-unique-id \
        --enable-info \
+       --enable-proxy \
+       --enable-proxy-http \
        @APACHE_CONF_FLAGS@
 
 APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')

@@ -104,7 +104,6 @@ DAVDepthInfinity on
   DAV repos
   ModMimeUsePathInfo on
 
-  DAVUnauthenticatedAccess on
   DAVResponseRewriteCond Request-URI          /\\!lime/root.*
   DAVResponseRewriteRule (.*)                 /!lime/root\$1
 

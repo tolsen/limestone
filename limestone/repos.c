@@ -377,13 +377,18 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     if (email_elem) {
         apr_xml_to_text(pool, email_elem, APR_XML_X2T_INNER, 
                         doc->namespaces, NULL, &email, NULL);
+
+        if ((err = sabridge_verify_user_email_unique(pool, db, email))) {
+            return err;
+        }
+
     }
 
     if (stream->inserted) {
         if (passwd_elem == NULL)
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "password required for new user");
-        if (email_elem == NULL)
+        if (email_elem == NULL) 
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "email required for new user");
         if (displayname_elem == NULL)
@@ -397,7 +402,8 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
         profile->id = db_r->serialno;
 
         /* request the profile provider to create the profile */
-        if ((err = db->profile_provider->create(resource->info->rec, profile))) {
+        if (db->profile_provider && db->profile_provider->create &&
+            (err = db->profile_provider->create(resource->info->rec, profile))) {
             return err;
         }
 

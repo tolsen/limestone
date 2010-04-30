@@ -351,7 +351,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     apr_xml_elem *passwd_elem = NULL, *displayname_elem = NULL, *email_elem = NULL;
     const char *passwd = NULL;
     const char *email = NULL;
-    dav_repos_user_profile *profile;
+    dav_repos_user_profile *profile = apr_pcalloc(pool, sizeof(*profile));
 
     TRACE();
 
@@ -395,7 +395,6 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "displayname required for new user");
 
-        profile = apr_pcalloc(pool, sizeof(*profile));
         profile->username = basename(db_r->uri);
         profile->email = email;
         profile->password = passwd;
@@ -426,7 +425,16 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
                                          "password did not match");
             }
 
-            if (passwd_elem != NULL)
+            profile->password = passwd;
+            profile->email = email;
+            profile->id = db_r->serialno;
+
+            if (db->profile_provider && db->profile_provider->update &&
+                (err = db->profile_provider->update(resource->info->rec, profile))) {
+                return err;
+            }
+
+            if (passwd_elem != NULL) 
                 err = dav_repos_update_password(resource, passwd);
 
             if (email_elem != NULL)

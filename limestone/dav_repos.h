@@ -118,6 +118,12 @@ typedef struct {
         request_rec *r,
         const dav_repos_user_profile *p
     );
+
+    dav_error *(*update)(
+        request_rec *r,
+        const dav_repos_user_profile *p
+    );
+
     void *ctx;
 } dav_repos_profile_provider;
 

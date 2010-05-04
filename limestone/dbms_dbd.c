@@ -159,65 +159,65 @@ int dbms_execute(dav_repos_query * query)
     full_length = query_string_length = strlen(query->query_string);
 
     for (i = 0; i < query->param_count; i++) {
-	if (!query->parameters[i])
-	    return 0;		/* parameter was never set */
-	full_length += strlen(query->parameters[i]) - 1;	/* dont count orig ? */
+        if (!query->parameters[i])
+            return 0;		/* parameter was never set */
+        full_length += strlen(query->parameters[i]) - 1;	/* dont count orig ? */
     }
 
     if (query->param_count == 0) {
-	escquery = apr_pstrdup(query->pool, query->query_string);
+        escquery = apr_pstrdup(query->pool, query->query_string);
     } else {
 
-	/* make space for the trailing '\0' */
-	escquery = apr_pcalloc(query->pool, full_length + 1);
+        /* make space for the trailing '\0' */
+        escquery = apr_pcalloc(query->pool, full_length + 1);
 
-	for (i = 0, j = 0, k = 0; i < query_string_length; i++) {
+        for (i = 0, j = 0, k = 0; i < query_string_length; i++) {
 
-	    if (query->query_string[i] == '?') {
-		strcpy(escquery + j, query->parameters[k]);
-		j += strlen(query->parameters[k++]);
-	    } else {
-		escquery[j++] = query->query_string[i];
-	    }
-	}
-	escquery[j] = 0;
+            if (query->query_string[i] == '?') {
+                strcpy(escquery + j, query->parameters[k]);
+                j += strlen(query->parameters[k++]);
+            } else {
+                escquery[j++] = query->query_string[i];
+            }
+        }
+        escquery[j] = 0;
     }
 
     //DBG2("[%d]Query to execute: %s\n", getpid(), escquery);
     DBG1("Query to execute: %s\n", escquery);
 
     if (!strncasecmp("select", escquery, 6) || !strncasecmp("with", escquery, 4)) {
-	query->is_select = 1;
-	error =
-	    apr_dbd_select(query->db->ap_dbd_dbms->driver, query->pool,
-			   query->db->ap_dbd_dbms->handle, &(query->results),
-			   escquery, 1);
-	if (error) {
+        query->is_select = 1;
+        error =
+          apr_dbd_select(query->db->ap_dbd_dbms->driver, query->pool,
+                         query->db->ap_dbd_dbms->handle, &(query->results),
+                         escquery, 1);
+        if (error) {
             const char *message = dbms_error(query->pool, query->db);
-	    DBG2("Error Code %d returned in apr_dbd_select: %s", error, message);
+            DBG2("Error Code %d returned in apr_dbd_select: %s", error, message);
             if (query->db->rec && strstr(message, "could not serialize access"))
                 apr_table_setn(query->db->rec->notes, "xaction_error", "1");
 
-	    query->state = DAV_REPOS_STATE_ERROR;
-	    return error;
-	}
+            query->state = DAV_REPOS_STATE_ERROR;
+            return error;
+        }
 
-	query->colcount =
-	    apr_dbd_num_cols(query->db->ap_dbd_dbms->driver, query->results);
+        query->colcount =
+          apr_dbd_num_cols(query->db->ap_dbd_dbms->driver, query->results);
     } else {
-	error =
-	    apr_dbd_query(query->db->ap_dbd_dbms->driver, 
-                          query->db->ap_dbd_dbms->handle,
-			  &(query->nrows), escquery);
-	if (error) {
+        error =
+          apr_dbd_query(query->db->ap_dbd_dbms->driver, 
+                        query->db->ap_dbd_dbms->handle,
+                        &(query->nrows), escquery);
+        if (error) {
             const char *message = dbms_error(query->pool, query->db);
-	    DBG2("Error Code %d returned in apr_dbd_query: %s", error, message);
+            DBG2("Error Code %d returned in apr_dbd_query: %s", error, message);
             if (query->db->rec && strstr(message, "could not serialize access"))
                 apr_table_setn(query->db->rec->notes, "xaction_error", "1");
 
-	    query->state = DAV_REPOS_STATE_ERROR;
-	    return error;
-	}
+            query->state = DAV_REPOS_STATE_ERROR;
+            return error;
+        }
     }
 
     query->state = DAV_REPOS_STATE_EXECUTED;

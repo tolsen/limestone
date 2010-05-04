@@ -59,7 +59,7 @@ static dav_error *dav_repos_set_option_head(request_rec * r)
        apr_table_addn(r->headers_out, "DASL",  "<http://akuma.com/syntax2>");
      */
     apr_table_addn(r->headers_out, "DASL", "<DAV:basicsearch>");
-    apr_table_addn(r->headers_out, "DASL", "<limebits:basicsearch xmlns:limebits=\"http://limebits.com/ns/1.0\">");
+    apr_table_addn(r->headers_out, "DASL", "<limebits:basicsearch xmlns:limebits=\"" LIMEBITS_NS "\">");
     return NULL;
 }
 
@@ -1072,7 +1072,7 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
 
                 if (good_bitmarks) {
                     apr_text_append(pool, &hdr, "<bitmarkstat "
-                    "xmlns=\"http://limebits.com/ns/1.0/\">" DEBUG_CR);
+                    "xmlns=\"" LIMEBITS_NS "\">" DEBUG_CR);
 
                     apr_text_append(pool, &hdr, good_bitmarks);
 
@@ -1085,7 +1085,7 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
 
                 if (bad_bitmarks) {
                     apr_text_append(pool, &hdr, "<bitmarkstat "
-                    "xmlns=\"http://limebits.com/ns/1.0/\">" DEBUG_CR
+                    "xmlns=\"" LIMEBITS_NS "\">" DEBUG_CR
                     "  <bitmark>" DEBUG_CR);
 
                     apr_text_append(pool, &hdr, bad_bitmarks);
@@ -1587,7 +1587,7 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
     bb = apr_brigade_create(pool, output->c->bucket_alloc);
     r->status = HTTP_OK;
     send_xml(bb, output, "<LB:property-stats"
-                    " xmlns:LB=\"http://limebits.com/ns/1.0/\">" DEBUG_CR);
+                    " xmlns:LB=\"" LIMEBITS_NS "\">" DEBUG_CR);
 
     const char *p = apr_pstrcat(pool, " <LB:prop><ns1:", prop->name, 
                 " xmlns:ns1=\"", ns, "\"/></LB:prop>" DEBUG_CR, NULL);

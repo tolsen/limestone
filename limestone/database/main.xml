@@ -29,4 +29,5 @@
   <include file="set_null_emails_to_be_bogus.xml"/>
   <include file="add_pre_unique_email_to_users.xml"/>
   <include file="make_emails_unique.xml"/>
+  <include file="add_email_regex_constraint.xml"/>
 </databaseChangeLog>

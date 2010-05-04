@@ -137,7 +137,7 @@ dav_error *dav_repos_update_password(const dav_resource *resource,
     dav_repos_db *db = resource->info->db;
     dav_repos_resource *db_r = (dav_repos_resource *) resource->info->db_r;
     const char *user = basename(db_r->uri);
-    return dbms_update_user(db, db_r, get_password_hash(db_r->p, user, passwd));
+    return dbms_set_user_pwhash(db, db_r, get_password_hash(db_r->p, user, passwd));
 }
 
 dav_error *dav_repos_create_group(const dav_resource *resource,

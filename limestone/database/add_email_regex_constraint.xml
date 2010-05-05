@@ -5,7 +5,7 @@
     <comment>Add regular expression check to email</comment>
 
     <sql>
-      ALTER TABLE users ADD CONSTRAINT users_email_valid_check CHECK (email ~ E'^(?=.{1,254}$)(?=.{1,64}@.+$)[[:alnum:]!#$%&amp;\'*+\\/=?^_`{|}~-]+(\.[[:alnum:]!#$%&amp;\'*+\\/=?^_`{|}~-]+)*@([[:alnum:]]+([-[:alnum:]]+[[:alnum:]])?\.)+[[:alnum:]]+([-[:alnum:]]+[[:alnum:]])?\.?$')
+      ALTER TABLE users ADD CONSTRAINT users_email_valid_check CHECK (email ~ E'^(?=.{1,254}$)(?=.{1,64}@.+$)[A-Za-z0-9!#$%&amp;\'*+/=?^_`{|}~-]+(\\.[A-Za-z0-9!#$%&amp;\'*+/=?^_`{|}~-]+)*@([A-Za-z0-9]+([-A-Za-z0-9]+[A-Za-z0-9])?\\.)+[A-Za-z0-9]+([-A-Za-z0-9]+[A-Za-z0-9])?\\.?$')
     </sql>
 
   </changeSet>

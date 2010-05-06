@@ -22,6 +22,8 @@
 #include "bridge.h"             /* for sabridge_new_dbr_from_dbr */
 #include "acl.h"
 
+#define DB_INSERT_USERS_INVALID_EMAIL "ERROR:  new row for relation \"users\" violates check constraint \"users_email_valid_check\"\n"
+
 dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db *d,
                                            const char *name, long *p_prin_id)
 {
@@ -74,47 +76,6 @@ dav_error *dbms_insert_principal(const dav_repos_db *d,
     }
     dbms_query_destroy(q);
     return err;
-}
-
-dav_error *dbms_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
-                               long principal_id, const char *email)
-{
-    dav_repos_query *q = NULL;
-    dav_error *err = NULL;
-
-    TRACE();
-
-    q = dbms_prepare(pool, d->db, 
-                     "UPDATE users SET email = ? WHERE principal_id= ?");
-    dbms_set_string(q, 1, email);
-    dbms_set_int(q, 2, principal_id);
-
-    if (dbms_execute(q)) {
-        dbms_query_destroy(q);
-    	db_error_message(pool, d->db, "dbms_execute error");
-        err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
-                            "Couldn't set principal email");
-    }
-    dbms_query_destroy(q);
-    return err;
-}
-
-const char *dbms_get_user_email(apr_pool_t *pool, const dav_repos_db *d,
-                                long principal_id)
-{
-    dav_repos_query *q = NULL;
-    const char *email = NULL;
-    TRACE();
-
-    q = dbms_prepare (pool, d->db,
-                      "SELECT email FROM users WHERE principal_id = ?");
-    dbms_set_int(q, 1, principal_id);
-
-    dbms_execute(q);
-    if (dbms_next(q) == 1)
-        email = dbms_get_string(q, 1);
-    dbms_query_destroy(q);
-    return email;
 }
 
 int dbms_is_email_available(apr_pool_t *pool, const dav_repos_db *d, const char *email)
@@ -270,6 +231,21 @@ const char *dbms_get_domain_path(apr_pool_t *pool, dav_repos_db *d, const char *
     return NULL;
 }
 
+static dav_error *dbms_check_for_email_errors(apr_pool_t *pool, const char *db_err,
+                                              const char* email)
+{
+    dav_error *err = NULL;
+
+    if (0 == strcmp(DB_INSERT_USERS_INVALID_EMAIL, db_err)) {
+        const char *errmsg = apr_psprintf(pool, "\"%s\" is an invalid email", email);
+        err = dav_new_error_tag(pool, HTTP_CONFLICT, 0,
+                                errmsg, LIMEBITS_NS, "email-valid",
+                                NULL, NULL);
+    }
+
+    return err;
+}
+
 /* Create an entry in users table */
 dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
                             const char *pwhash, const char *email)
@@ -288,17 +264,65 @@ dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
     dbms_set_string(q, 3, email);
 
     if (dbms_execute(q)) {
-        dbms_query_destroy(q);
     	db_error_message(r->p, d->db, "dbms_execute error");
-        err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
-                            "Couldn't insert user");
+
+        if (!(err = dbms_check_for_email_errors(pool,
+                                                dbms_error(r->p, d->db),
+                                                email))) {
+            err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR,
+                                0, "Couldn't insert user");
+        }
     }
     dbms_query_destroy(q);
     return err;
 }
 
-dav_error *dbms_update_user(const dav_repos_db *d, dav_repos_resource *r,
-                            const char *pwhash)
+dav_error *dbms_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                               long principal_id, const char *email)
+{
+    dav_repos_query *q = NULL;
+    dav_error *err = NULL;
+
+    TRACE();
+
+    q = dbms_prepare(pool, d->db, 
+                     "UPDATE users SET email = ? WHERE principal_id= ?");
+    dbms_set_string(q, 1, email);
+    dbms_set_int(q, 2, principal_id);
+
+    if (dbms_execute(q)) {
+    	db_error_message(pool, d->db, "dbms_execute error");
+        if (!(err = dbms_check_for_email_errors(pool,
+                                                dbms_error(pool, d->db),
+                                                email))) {
+            err = dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
+                                "Couldn't set principal email");
+        }
+    }
+    dbms_query_destroy(q);
+    return err;
+}
+
+const char *dbms_get_user_email(apr_pool_t *pool, const dav_repos_db *d,
+                                long principal_id)
+{
+    dav_repos_query *q = NULL;
+    const char *email = NULL;
+    TRACE();
+
+    q = dbms_prepare (pool, d->db,
+                      "SELECT email FROM users WHERE principal_id = ?");
+    dbms_set_int(q, 1, principal_id);
+
+    dbms_execute(q);
+    if (dbms_next(q) == 1)
+        email = dbms_get_string(q, 1);
+    dbms_query_destroy(q);
+    return email;
+}
+
+dav_error *dbms_set_user_pwhash(const dav_repos_db *d, dav_repos_resource *r,
+                                const char *pwhash)
 {
     dav_repos_query *q = NULL;
     apr_pool_t *pool = r->p;

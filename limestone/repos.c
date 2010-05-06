@@ -410,7 +410,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
                 err = dav_repos_update_password(resource, passwd);
 
             if (email_elem != NULL)
-                dbms_set_user_email(pool, db, db_r->serialno, email);
+                err = dbms_set_user_email(pool, db, db_r->serialno, email);
         }
     }
 

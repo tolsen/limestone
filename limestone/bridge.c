@@ -16,6 +16,7 @@
  * ====================================================================
  */
 
+#include "dav_repos.h"
 #include "bridge.h"
 #include "dbms.h"
 #include "dbms_bind.h"
@@ -1182,8 +1183,8 @@ dav_error *sabridge_verify_user_email_unique(apr_pool_t *pool,
 {
     const char *errmsg = apr_pstrcat(pool, "email conflict for ", email, NULL);
     dav_error *err = dav_new_error_tag(pool, HTTP_CONFLICT, 0 /* error_id */,
-                                       errmsg, "http://limebits.com/ns/1.0/", 
-                                       "email-available", NULL /* content */, 
+                                       errmsg, LIMEBITS_NS, "email-available",
+                                       NULL /* content */, 
                                        NULL /* prolog */);
 
     TRACE();

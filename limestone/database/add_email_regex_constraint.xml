@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+
+  <changeSet author="tolsen" id="1">
+    <comment>Add regular expression check to email</comment>
+
+    <sql>
+      ALTER TABLE users ADD CONSTRAINT users_email_valid_check CHECK (email ~ E'^(?=.{1,254}$)(?=.{1,64}@.+$)[A-Za-z0-9!#$%&amp;\'*+/=?^_`{|}~-]+(\\.[A-Za-z0-9!#$%&amp;\'*+/=?^_`{|}~-]+)*@([A-Za-z0-9]+([-A-Za-z0-9]+[A-Za-z0-9])?\\.)+[A-Za-z0-9]+([-A-Za-z0-9]+[A-Za-z0-9])?\\.?$')
+    </sql>
+
+  </changeSet>
+</databaseChangeLog>

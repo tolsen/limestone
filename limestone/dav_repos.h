@@ -63,6 +63,8 @@
 #define ROOT_COLLECTION_ID  2
 /** Updated_at for the root directory */
 #define ROOT_UPDATED_AT "2006-07-14 13:15:49"
+/** LimeBits XML namespace */
+#define LIMEBITS_NS "http://limebits.com/ns/1.0/"
 
 #define TRACE() DBG1("\n- TRACE : %s\n",  __func__ )
 

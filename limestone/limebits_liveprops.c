@@ -1,3 +1,4 @@
+#include "dav_repos.h"
 #include "liveprops.h"
 #include "dbms_acl.h"
 #include "dbms_principal.h"
@@ -13,7 +14,7 @@ static const dav_hooks_liveprop dav_hooks_limebits_liveprop;
 */
 static const char *const dav_limebits_namespace_uris[] = {
     "DAV:",
-    "http://limebits.com/ns/1.0/",
+    LIMEBITS_NS,
     NULL			/* sentinel */
 };
 

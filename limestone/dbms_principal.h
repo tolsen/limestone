@@ -46,8 +46,8 @@ dav_error *dbms_set_domain_map(apr_pool_t *pool, const dav_repos_db *d,
 dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
                             const char *pwhash, const char *email);
 
-dav_error *dbms_update_user(const dav_repos_db *d, dav_repos_resource *r,
-                            const char *pwhash);
+dav_error *dbms_set_user_pwhash(const dav_repos_db *d, dav_repos_resource *r,
+                                const char *pwhash);
 
 const char *dbms_get_user_pwhash(apr_pool_t *pool, const dav_repos_db *d,
                                  long principal_id);

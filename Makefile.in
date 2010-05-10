@@ -256,6 +256,7 @@ $(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
        --enable-proxy \
        --enable-proxy-http \
        @APACHE_CONF_FLAGS@
+	touch $@
 
 APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')
 

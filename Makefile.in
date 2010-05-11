@@ -253,7 +253,10 @@ $(APACHE_CONFIGURE_OUT): $(APACHE_BUILDCONF_OUT)
        --enable-deflate \
        --enable-unique-id \
        --enable-info \
+       --enable-proxy \
+       --enable-proxy-http \
        @APACHE_CONF_FLAGS@
+	touch $@
 
 APACHE_SOURCES = $(shell find $(APACHE_DIR) -name '*.[ch]')
 
@@ -287,6 +290,7 @@ APACHE_BUILD_OUT = $(APACHE_DIR)/httpd $(shell find $(APACHE_DIR) -name '*.la')
 apache-build: $(APACHE_BUILD_OUT)
 $(APACHE_BUILD_OUT): $(APACHE_CONFIGURE_OUT) $(APACHE_BUILD_DEPS)
 	cd $(APACHE_DIR) && $(MAKE)
+	touch $@
 
 ORIGINAL_HTTPD_CONF = $(APROOT)/conf/original/httpd.conf
 

@@ -43,11 +43,12 @@
 #include <stdlib.h>
 
 #include "scoreboard.h"      /* for pre_mpm hook */
-
 #include "dav_repos.h"
 #include "dbms.h"
 #include "liveprops.h"
 #include "gc.h"
+
+#include "ap_provider.h"        /* for ap_lookup_provider */
 
 #define INHERIT_VALUE(parent, child, field) \
   ((child)->field ? (child)->field : (parent)->field)
@@ -205,6 +206,25 @@ static const char *dav_repos_quota_cmd(cmd_parms *cmd, void *config,
     return NULL;
 }
 
+static const char *dav_repos_profile_cmd(cmd_parms *cmd, void *config, 
+                                         const char *arg1)
+{
+    dav_repos_server_conf *conf = 
+      ap_get_module_config(cmd->server->module_config, &dav_repos_module);
+
+    if(arg1) {
+        conf->profile_provider = ap_lookup_provider("dav-repos-profile", arg1, "0");
+    }
+
+    return NULL;
+}
+
+void dav_repos_register_profile_provider(apr_pool_t *p, const char *name,
+                                         const dav_repos_profile_provider *provider)
+{
+    ap_register_provider(p, "dav-repos-profile", name, "0", provider); 
+}
+
 static const command_rec dav_repos_cmds[] = {
     /* per directory/location */
     /* how can I make it mandatory */
@@ -240,6 +260,9 @@ static const command_rec dav_repos_cmds[] = {
     AP_INIT_TAKE1("DAVLimestoneUserQuota", 
                   dav_repos_quota_cmd, NULL, RSRC_CONF, 
                   "specify per user quota"),
+
+    AP_INIT_TAKE1("DAVLimestoneProfileProvider", dav_repos_profile_cmd, NULL,
+                  RSRC_CONF, "specify a profile provider"),
     {NULL}
 };
 

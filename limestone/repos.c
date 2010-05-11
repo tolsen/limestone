@@ -351,6 +351,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     apr_xml_elem *passwd_elem = NULL, *displayname_elem = NULL, *email_elem = NULL;
     const char *passwd = NULL;
     const char *email = NULL;
+    dav_repos_user_profile *profile = apr_pcalloc(pool, sizeof(*profile));
 
     TRACE();
 
@@ -363,9 +364,15 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     email_elem = dav_find_child_no_ns(doc->root, "email");
     displayname_elem = dav_find_child_no_ns(doc->root, "displayname");
 
-    if (passwd_elem)
+    if (passwd_elem) {
         apr_xml_to_text(pool, passwd_elem, APR_XML_X2T_INNER, 
                         doc->namespaces, NULL, &passwd, NULL);
+    }
+
+    if (displayname_elem) {
+        apr_xml_to_text(pool, displayname_elem, APR_XML_X2T_INNER, 
+                        doc->namespaces, NULL, &db_r->displayname, NULL);
+    }
 
     if (email_elem) {
         apr_xml_to_text(pool, email_elem, APR_XML_X2T_INNER, 
@@ -374,18 +381,30 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
         if ((err = sabridge_verify_user_email_unique(pool, db, email))) {
             return err;
         }
+
     }
 
     if (stream->inserted) {
         if (passwd_elem == NULL)
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "password required for new user");
-        if (email_elem == NULL)
+        if (email_elem == NULL) 
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "email required for new user");
         if (displayname_elem == NULL)
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "displayname required for new user");
+
+        profile->username = basename(db_r->uri);
+        profile->email = email;
+        profile->password = passwd;
+        profile->id = db_r->serialno;
+
+        /* request the profile provider to create the profile */
+        if (db->profile_provider && db->profile_provider->create &&
+            (err = db->profile_provider->create(resource->info->rec, profile))) {
+            return err;
+        }
 
         err =  dav_repos_create_user(resource, passwd, email);
     } else {
@@ -406,7 +425,16 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
                                          "password did not match");
             }
 
-            if (passwd_elem != NULL)
+            profile->password = passwd;
+            profile->email = email;
+            profile->id = db_r->serialno;
+
+            if (db->profile_provider && db->profile_provider->update &&
+                (err = db->profile_provider->update(resource->info->rec, profile))) {
+                return err;
+            }
+
+            if (passwd_elem != NULL) 
                 err = dav_repos_update_password(resource, passwd);
 
             if (email_elem != NULL)
@@ -415,8 +443,6 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     }
 
     if (displayname_elem) {
-        apr_xml_to_text(pool, displayname_elem, APR_XML_X2T_INNER, 
-                        doc->namespaces, NULL, &db_r->displayname, NULL);
         dbms_set_property(db, db_r);
     }
 

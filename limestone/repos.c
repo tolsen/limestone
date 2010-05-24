@@ -351,6 +351,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     apr_xml_elem *passwd_elem = NULL, *displayname_elem = NULL, *email_elem = NULL;
     const char *passwd = NULL;
     const char *email = NULL;
+    const char *passwd_hash = NULL;
     dav_repos_user_profile *profile = apr_pcalloc(pool, sizeof(*profile));
 
     TRACE();
@@ -367,6 +368,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     if (passwd_elem) {
         apr_xml_to_text(pool, passwd_elem, APR_XML_X2T_INNER, 
                         doc->namespaces, NULL, &passwd, NULL);
+        passwd_hash = get_password_hash(pool, basename(db_r->uri), passwd);
     }
 
     if (displayname_elem) {
@@ -397,7 +399,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
 
         profile->username = basename(db_r->uri);
         profile->email = email;
-        profile->password = passwd;
+        profile->password_hash = passwd_hash;
         profile->id = db_r->serialno;
 
         /* request the profile provider to create the profile */
@@ -406,7 +408,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
             return err;
         }
 
-        err =  dav_repos_create_user(resource, passwd, email);
+        err =  dav_repos_create_user(resource, passwd_hash, email);
     } else {
         if (passwd_elem != NULL || email_elem != NULL) {
             /* Existing user trying to change password or email */
@@ -425,7 +427,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
                                          "password did not match");
             }
 
-            profile->password = passwd;
+            profile->password_hash = passwd_hash;
             profile->email = email;
             profile->id = db_r->serialno;
 
@@ -435,7 +437,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
             }
 
             if (passwd_elem != NULL) 
-                err = dav_repos_update_password(resource, passwd);
+                err = dav_repos_update_password(resource, passwd_hash);
 
             if (email_elem != NULL)
                 err = dbms_set_user_email(pool, db, db_r->serialno, email);

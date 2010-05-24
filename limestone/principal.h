@@ -25,11 +25,12 @@
 #define USER_PATH       PREPEND_ROOT_PATH("/users")
 #define GROUP_PATH      PREPEND_ROOT_PATH("/groups")
 
-dav_error *dav_repos_create_user(dav_resource *resource, const char *passwd,
+dav_error *dav_repos_create_user(dav_resource *resource,
+                                 const char *passwd_hash,
                                  const char *email);
 
 dav_error *dav_repos_update_password(const dav_resource *resource,
-                                     const char *passwd);
+                                     const char *passwd_hash);
 
 dav_error *dav_repos_create_group(const dav_resource *resource,
                                   const char *created);

@@ -1,24 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
   <changeSet author="paritosh" id="1">
-    <comment>Create lime_profile_tokens table</comment>
-    <createTable tableName="lime_profile_tokens">
+    <comment>Create lime_profiles table</comment>
+    <createTable tableName="lime_profiles">
         <column name="principal_id" type="bigint"/>
-        <column name="token" type="varchar(255)">
+        <column name="url" type="varchar(255)">
+          <constraints nullable="false"/>
+        </column>
+        <column name="cas_user_id" type="bigint">
           <constraints nullable="false"/>
         </column>
     </createTable>
-    <comment>Add FK check on lime_profile_tokens.principal_id to principals.resource_id</comment>
+    <comment>Add FK check on lime_profiles.principal_id to principals.resource_id</comment>
     <addForeignKeyConstraint 
-        constraintName="fk_lime_profile_tokens_principals" 
-        baseTableName="lime_profile_tokens" 
+        constraintName="fk_lime_profiles_principals" 
+        baseTableName="lime_profiles" 
         baseColumnNames="principal_id" 
         referencedTableName="principals"
         referencedColumnNames="resource_id"
         deferrable="true"
         deleteCascade="true" 
     />
-    <comment>Add "unique" constraint on principal_id for lime_profile_tokens table</comment>
-    <addUniqueConstraint tableName="lime_profile_tokens" columnNames="principal_id" constraintName="uk_lime_profile_tokens_principal_id"/>
+    <comment>Add "unique" constraint on principal_id for lime_profiles table</comment>
+    <addUniqueConstraint tableName="lime_profiles" columnNames="principal_id" constraintName="uk_lime_profiles_principal_id"/>
   </changeSet>
 </databaseChangeLog>

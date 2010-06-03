@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.5 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.5.xsd">
+  <changeSet author="paritosh" id="1">
+    <comment>add digest_username_type datatype</comment>
+    <sql>CREATE TYPE digest_username_type AS ENUM ('Email', 'Username')</sql>
+  </changeSet>
+  <changeSet author="paritosh" id="2">
+    <comment>Add pwhash_digest_username_type to users table</comment>
+    <addColumn tableName="users">
+      <column name="pwhash_digest_username_type" type="digest_username_type" defaultValue="Email"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="paritosh" id="3">
+    <comment>Set Username as pwhash_digest_username_type for existing users</comment>
+    <update tableName="users">
+        <column name="pwhash_digest_username_type" value="Username"/>
+    </update>
+  </changeSet>
+</databaseChangeLog>

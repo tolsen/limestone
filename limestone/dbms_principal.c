@@ -24,6 +24,48 @@
 
 #define DB_INSERT_USERS_INVALID_EMAIL "ERROR:  new row for relation \"users\" violates check constraint \"users_email_valid_check\"\n"
 
+const char *dbms_get_canonical_username(apr_pool_t *pool, const dav_repos_db *d,
+                                        const char *username) 
+{
+    dav_repos_query *q = NULL;
+    int i, lookup_required = 0;
+    const char *canonical = NULL;
+
+    TRACE();
+
+    if (!username) {
+        return NULL;
+    }
+
+    for (i=0; i<strlen(username); i++) {
+        if (username[i] == '@') {
+            lookup_required = 1;    
+        }
+    }
+
+    if (!lookup_required) {
+        return username;    
+    }
+
+    q = dbms_prepare(pool, d->db,
+                     "SELECT name FROM principals INNER JOIN users"
+                     " ON principals.resource_id = users.principal_id"
+                     " WHERE email = ?");
+    dbms_set_string(q, 1, username);
+
+    if (dbms_execute(q)) {
+        dbms_query_destroy(q);
+    	db_error_message(pool, d->db, "dbms_execute error");
+        return NULL;
+    }
+
+    if (dbms_next(q) == 1)
+        canonical = dbms_get_string(q, 1);
+
+    dbms_query_destroy(q);
+    return canonical;
+}
+
 dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db *d,
                                            const char *name, long *p_prin_id)
 {
@@ -33,8 +75,11 @@ dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db 
     TRACE();
 
     q = dbms_prepare(pool, d->db,
-                     "SELECT resource_id FROM principals "
-                     "WHERE name = ?");
+                     "WITH entered AS ( SELECT ?::text as username )"
+                     " SELECT p.resource_id FROM principals p, users u, entered e"
+                     " WHERE p.resource_id = u.principal_id"
+                     " AND (p.name = e.username OR u.email = e.username)");
+
     dbms_set_string(q, 1, name);
     if (dbms_execute(q)) {
         dbms_query_destroy(q);
@@ -331,7 +376,8 @@ dav_error *dbms_set_user_pwhash(const dav_repos_db *d, dav_repos_resource *r,
     TRACE();
 
     q = dbms_prepare(pool, d->db, 
-                     "UPDATE users SET pwhash = ? WHERE principal_id= ?");
+                     "UPDATE users SET pwhash = ?, pwhash_digest_username_type='Email'"
+                     " WHERE principal_id= ?");
     dbms_set_string(q, 1, pwhash);
     dbms_set_int(q, 2, r->serialno);
 
@@ -345,23 +391,27 @@ dav_error *dbms_set_user_pwhash(const dav_repos_db *d, dav_repos_resource *r,
     return err;
 }
 
-const char *dbms_get_user_pwhash(apr_pool_t *pool, const dav_repos_db *d,
-                                 long principal_id)
+dav_error *dbms_get_user_pwhash(apr_pool_t *pool, const dav_repos_db *d,
+                                 long principal_id, const char **pwhash,
+                                 const char **pwhash_type)
 {
     dav_repos_query *q = NULL;
-    const char *pwhash = NULL;
+    dav_error *err = NULL;
+
     TRACE();
 
     q = dbms_prepare (pool, d->db,
-                      "SELECT pwhash FROM users WHERE principal_id = ?");
+                      "SELECT pwhash, pwhash_digest_username_type FROM users WHERE principal_id = ?");
     dbms_set_int(q, 1, principal_id);
 
     dbms_execute(q);
-    if (dbms_next(q) == 1)
-        pwhash = dbms_get_string(q, 1);
+    if (dbms_next(q) == 1) {
+        *pwhash = dbms_get_string(q, 1);
+        *pwhash_type = dbms_get_string(q, 2);
+    }
 
     dbms_query_destroy(q);
-    return pwhash;
+    return err;
 }
 
 dav_error *dbms_add_prin_to_group(apr_pool_t *pool, const dav_repos_db *d,

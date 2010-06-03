@@ -31,4 +31,5 @@
   <include file="make_emails_unique.xml"/>
   <include file="add_email_regex_constraint.xml"/>
   <include file="add_lime_profiles_table.xml"/>
+  <include file="add_pwhash_digest_username_type.xml"/>
 </databaseChangeLog>

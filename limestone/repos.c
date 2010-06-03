@@ -42,6 +42,7 @@
 #include <apr_hash.h>
 #include <apr_tables.h>
 #include <apr_file_io.h>
+#include <apr_base64.h>
 
 #include "dav_repos.h"
 #include "dbms.h"
@@ -368,7 +369,6 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     if (passwd_elem) {
         apr_xml_to_text(pool, passwd_elem, APR_XML_X2T_INNER, 
                         doc->namespaces, NULL, &passwd, NULL);
-        passwd_hash = get_password_hash(pool, basename(db_r->uri), passwd);
     }
 
     if (displayname_elem) {
@@ -397,6 +397,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "displayname required for new user");
 
+        passwd_hash = get_password_hash(pool, email, passwd);
         profile->username = basename(db_r->uri);
         profile->email = email;
         profile->password_hash = passwd_hash;
@@ -412,22 +413,39 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     } else {
         if (passwd_elem != NULL || email_elem != NULL) {
             /* Existing user trying to change password or email */
+            const char *cur_email = dbms_get_user_email(pool, db, db_r->serialno);
+            const char *type = NULL, *pwhash = NULL, *cur_pwhash = NULL, *cur_passwd_encoded = NULL;
+            char *cur_passwd = NULL;
+
             apr_xml_elem *cur_passwd_elem = dav_find_child_no_ns(doc->root, "cur_password");
             if (cur_passwd_elem == NULL) {
                 return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                      "current password not provided");
             } else {
-                const char *cur_passwd;
+
                 apr_xml_to_text (pool, cur_passwd_elem, APR_XML_X2T_INNER, 
-                                 doc->namespaces, NULL, &cur_passwd, NULL);
-                const char *cur_pwhash = dbms_get_user_pwhash(pool, db, db_r->serialno);
-                const char *pwhash = get_password_hash(pool, basename(db_r->uri), cur_passwd);
+                                 doc->namespaces, NULL, &cur_passwd_encoded, NULL);
+
+                cur_passwd = apr_pcalloc(pool, apr_base64_decode_len(cur_passwd_encoded) + 1);
+                apr_base64_decode(cur_passwd, cur_passwd_encoded);
+
+                dbms_get_user_pwhash(pool, db, db_r->serialno, &cur_pwhash, &type);
+
+                if (strcmp(type, "Email") == 0) {
+                    pwhash = get_password_hash(pool, cur_email, cur_passwd);
+                }
+                else {
+                    pwhash = get_password_hash(pool, basename(db_r->uri), cur_passwd);
+                }
+
                 if (!(cur_pwhash && pwhash && !strcmp(cur_pwhash, pwhash)))
                     return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                          "password did not match");
             }
-
-            profile->password_hash = passwd_hash;
+        
+            passwd_hash = get_password_hash(pool, email ? email : cur_email, 
+                                                  passwd ? passwd : cur_passwd);
+            profile->password_hash = passwd ? passwd_hash : NULL;
             profile->email = email;
             profile->id = db_r->serialno;
 

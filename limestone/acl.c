@@ -46,9 +46,11 @@ dav_principal *dav_repos_get_prin_by_name(request_rec *r, const char *name)
     else if(!strcmp(name, "unauthenticated"))
         principal->type = PRINCIPAL_UNAUTHENTICATED;
     else {
+        name = dbms_get_canonical_username(r->pool, dav_repos_get_db(r), name);
+
         int resource_type = dbms_get_principal_type_from_name
           (r->pool, dav_repos_get_db(r), name);
-            
+
         principal = dav_principal_make_from_url
           (r, apr_pstrcat(r->pool, principal_href_prefix(r), 
                           resource_type == dav_repos_GROUP ?

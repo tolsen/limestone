@@ -142,8 +142,7 @@ DAVDepthInfinity on
   #(note: DBD drivers recognise both stdio-like %s and native syntax)
   #Digest Authentication with mod_authn_dbd *requires* the query to have 2 parameters - user and realm.
   #We dont store the realm in database, hence the useless construct ' name != %s ' to dummify realm !
-   AuthDBDUserRealmQuery "SELECT pwhash FROM principals INNER JOIN users ON principals.resource_id = users.principal_id WHERE name = %s and name != %s"
-
+   AuthDBDUserRealmQuery "WITH entered AS ( SELECT %s::text as username ) SELECT u.pwhash FROM principals p, users u, entered e WHERE p.resource_id = u.principal_id AND (p.name = e.username OR u.email = e.username) AND e.username != %s"
 
   # gzip content-encoding
   SetOutputFilter DEFLATE

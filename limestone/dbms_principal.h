@@ -23,6 +23,10 @@
 #include <apr_tables.h>
 
 /* Principal Functions */
+
+const char *dbms_get_canonical_username(apr_pool_t *pool, const dav_repos_db *d,
+                                        const char *username);
+
 dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db *d,
                                            const char *name, long *prin_id);
 
@@ -49,8 +53,9 @@ dav_error *dbms_insert_user(const dav_repos_db *d, dav_repos_resource *r,
 dav_error *dbms_set_user_pwhash(const dav_repos_db *d, dav_repos_resource *r,
                                 const char *pwhash);
 
-const char *dbms_get_user_pwhash(apr_pool_t *pool, const dav_repos_db *d,
-                                 long principal_id);
+dav_error *dbms_get_user_pwhash(apr_pool_t *pool, const dav_repos_db *d,
+                                 long principal_id, const char **pwhash,
+                                 const char **pwhash_type);
 
 int dbms_is_prin_in_grp(apr_pool_t *pool, const dav_repos_db *d,
                         long prin_id, long grp_id);

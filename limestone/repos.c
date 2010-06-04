@@ -42,7 +42,6 @@
 #include <apr_hash.h>
 #include <apr_tables.h>
 #include <apr_file_io.h>
-#include <apr_base64.h>
 
 #include "dav_repos.h"
 #include "dbms.h"
@@ -414,8 +413,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
         if (passwd_elem != NULL || email_elem != NULL) {
             /* Existing user trying to change password or email */
             const char *cur_email = dbms_get_user_email(pool, db, db_r->serialno);
-            const char *type = NULL, *pwhash = NULL, *cur_pwhash = NULL, *cur_passwd_encoded = NULL;
-            char *cur_passwd = NULL;
+            const char *type = NULL, *pwhash = NULL, *cur_pwhash = NULL, *cur_passwd = NULL;
 
             apr_xml_elem *cur_passwd_elem = dav_find_child_no_ns(doc->root, "cur_password");
             if (cur_passwd_elem == NULL) {
@@ -424,10 +422,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
             } else {
 
                 apr_xml_to_text (pool, cur_passwd_elem, APR_XML_X2T_INNER, 
-                                 doc->namespaces, NULL, &cur_passwd_encoded, NULL);
-
-                cur_passwd = apr_pcalloc(pool, apr_base64_decode_len(cur_passwd_encoded) + 1);
-                apr_base64_decode(cur_passwd, cur_passwd_encoded);
+                                 doc->namespaces, NULL, &cur_passwd, NULL);
 
                 dbms_get_user_pwhash(pool, db, db_r->serialno, &cur_pwhash, &type);
 

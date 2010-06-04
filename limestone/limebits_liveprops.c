@@ -51,7 +51,7 @@ static const dav_liveprop_spec dav_limebits_props[] = {
      dav_repos_URI_LB,
      "email",
      LB_PROPID_email_id,
-     1},
+     0},
 
     {
      dav_repos_URI_LB,
@@ -236,16 +236,7 @@ static dav_error *dav_limebits_patch_validate(const dav_resource * resource,
     TRACE();
 
     *context = (void *)get_livepropspec_from_id(dav_limebits_props, priv->propid);
-    if (priv->propid == LB_PROPID_email_id) {
-        if (operation == DAV_PROP_OP_DELETE && db_r->resourcetype == dav_repos_USER)
-            return dav_new_error(resource->pool, HTTP_FORBIDDEN,
-                                 0, "lb:email can't be deleted on principals");
-        if (!is_allow_read_private_properties(resource))
-            return dav_new_error(resource->pool, 
-                                 dav_get_permission_denied_status(resource->info->rec),
-                                 0, "lb:read-private-propertes privilege needed");
-    }
-    else if (priv->propid == LB_PROPID_domain_map) {
+    if (priv->propid == LB_PROPID_domain_map) {
         if (operation == DAV_PROP_OP_DELETE && db_r->resourcetype == dav_repos_USER)
             return dav_new_error(resource->pool, HTTP_FORBIDDEN,
                                  0, "lb:domain_map can't be deleted on principals");
@@ -348,17 +339,7 @@ static dav_error *dav_limebits_patch_exec(const dav_resource * resource,
     rollback_info->operation = operation;
     *rollback_ctx = rollback_info;
 
-    if (spec->propid == LB_PROPID_email_id) {
-        const char *email = dbms_get_user_email(db_r->p, db, db_r->serialno);
-        rollback_info->rollback_data = (char *)email;
-        
-        if (operation == DAV_PROP_OP_SET) {
-            apr_xml_to_text (db_r->p, elem, APR_XML_X2T_INNER, 
-                             NULL, NULL, &email, NULL);
-            err = sabridge_set_user_email(db_r->p, db, db_r->serialno, email);
-        }
-    }
-    else if (spec->propid == LB_PROPID_domain_map) {
+    if (spec->propid == LB_PROPID_domain_map) {
         /* fetch the current value in case we need to rollback later */
         apr_hash_t *domain_map = dbms_get_domain_map(db_r->p, db, db_r->serialno);
         rollback_info->rollback_data = domain_map;

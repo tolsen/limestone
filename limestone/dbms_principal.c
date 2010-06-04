@@ -75,11 +75,8 @@ dav_error *dbms_get_principal_id_from_name(apr_pool_t *pool, const dav_repos_db 
     TRACE();
 
     q = dbms_prepare(pool, d->db,
-                     "WITH entered AS ( SELECT ?::text as username )"
-                     " SELECT p.resource_id FROM principals p, users u, entered e"
-                     " WHERE p.resource_id = u.principal_id"
-                     " AND (p.name = e.username OR u.email = e.username)");
-
+                     "SELECT resource_id FROM principals "
+                     "WHERE name = ?");
     dbms_set_string(q, 1, name);
     if (dbms_execute(q)) {
         dbms_query_destroy(q);

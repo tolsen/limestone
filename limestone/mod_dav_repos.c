@@ -45,6 +45,7 @@
 #include "scoreboard.h"      /* for pre_mpm hook */
 #include "dav_repos.h"
 #include "dbms.h"
+#include "dbms_principal.h"     /* for get_canonical_username */
 #include "liveprops.h"
 #include "gc.h"
 
@@ -373,12 +374,18 @@ static int dav_repos_create_request(request_rec *r)
     return OK;
 }
 
+static int dav_repos_fixups(request_rec *r)
+{
+    r->user = (char *)dbms_get_canonical_username(r->pool, dav_repos_get_db(r), r->user);
+    return OK;
+}
+
 static void register_hooks(apr_pool_t * p)
 {
     /* apache hooks */
     ap_hook_post_config(dav_repos_post_config, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_pre_mpm(dav_repos_pre_mpm, NULL, NULL, APR_HOOK_MIDDLE);
-
+    ap_hook_fixups(dav_repos_fixups, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_create_request(dav_repos_create_request, NULL, NULL, APR_HOOK_MIDDLE);
 
     /* live property handling */

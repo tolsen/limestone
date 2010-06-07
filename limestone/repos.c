@@ -449,7 +449,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
                 return err;
             }
 
-            if (passwd_elem != NULL) 
+            if (passwd_elem != NULL || email_elem != NULL) 
                 err = dav_repos_update_password(resource, passwd_hash);
 
             if (email_elem != NULL)

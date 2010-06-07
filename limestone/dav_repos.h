@@ -123,7 +123,7 @@ typedef struct {
 
     dav_error *(*update)(
         request_rec *r,
-        const dav_repos_user_profile *p
+        dav_repos_user_profile *p
     );
 
     void *ctx;

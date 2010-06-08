@@ -32,4 +32,5 @@
   <include file="add_email_regex_constraint.xml"/>
   <include file="add_lime_profiles_table.xml"/>
   <include file="add_pwhash_digest_username_type.xml"/>
+  <include file="set_login_to_all_domains.xml"/>
 </databaseChangeLog>

@@ -126,6 +126,8 @@ typedef struct {
         dav_repos_user_profile *p
     );
 
+    char *(*get_username)(request_rec *r, long user_id);
+
     void *ctx;
 } dav_repos_profile_provider;
 

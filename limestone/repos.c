@@ -380,6 +380,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
 
 
     passwd = dav_repos_xml_get_element_no_ns_text(pool, doc, "password");
+    passwd_hash = dav_repos_xml_get_element_no_ns_text(pool, doc, "password-hash");
     email = dav_repos_xml_get_element_no_ns_text(pool, doc, "email");
     displayname = dav_repos_xml_get_element_no_ns_text(pool, doc, "displayname");
 
@@ -388,9 +389,6 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
     }
 
     if (stream->inserted) {
-        if (!passwd)
-            return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
-                                 "password required for new user");
         if (!email) 
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "email required for new user");
@@ -398,7 +396,15 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "displayname required for new user");
 
-        passwd_hash = get_password_hash(pool, email, passwd);
+        if (!passwd_hash) {
+            if (!passwd) {
+                return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
+                                     "password required for new user");
+            }
+
+            passwd_hash = get_password_hash(pool, email, passwd);
+        }
+            
         profile->username = basename(db_r->uri);
         profile->email = email;
         profile->password_hash = passwd_hash;

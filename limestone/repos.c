@@ -339,7 +339,24 @@ static dav_error *dav_repos_check_dst_parent(dav_resource *dst,
     return err;
 }
 
-static dav_error *dav_repos_put_user(dav_stream *stream) {
+/* returns NULL if element not found */
+static const char *dav_repos_xml_get_element_no_ns_text(apr_pool_t *pool,
+                                                        apr_xml_doc *doc,
+                                                        const char *element_name)
+{
+    apr_xml_elem *elem = dav_find_child_no_ns(doc->root, element_name);
+    const char *text = NULL;
+
+    if (elem) {
+        apr_xml_to_text(pool, elem, APR_XML_X2T_INNER, doc->namespaces,
+                        NULL, &text, NULL);
+    }
+
+    return text;
+}
+
+static dav_error *dav_repos_put_user(dav_stream *stream)
+{
     apr_pool_t *pool = stream->p;
     dav_repos_resource *db_r = stream->db_r;
     dav_repos_db *db = stream->db;
@@ -348,10 +365,9 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
 
     apr_xml_parser *parser = NULL;
     apr_xml_doc *doc = NULL;
-    apr_xml_elem *passwd_elem = NULL, *displayname_elem = NULL, *email_elem = NULL;
-    const char *passwd = NULL;
-    const char *email = NULL;
+    const char *passwd = NULL, *email = NULL, *displayname = NULL;
     const char *passwd_hash = NULL;
+    
     dav_repos_user_profile *profile = apr_pcalloc(pool, sizeof(*profile));
 
     TRACE();
@@ -361,38 +377,24 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
     if (!doc || !dav_validate_root_no_ns(doc, "user"))
         return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                              stream->path);
-    passwd_elem = dav_find_child_no_ns(doc->root, "password");
-    email_elem = dav_find_child_no_ns(doc->root, "email");
-    displayname_elem = dav_find_child_no_ns(doc->root, "displayname");
 
-    if (passwd_elem) {
-        apr_xml_to_text(pool, passwd_elem, APR_XML_X2T_INNER, 
-                        doc->namespaces, NULL, &passwd, NULL);
-    }
 
-    if (displayname_elem) {
-        apr_xml_to_text(pool, displayname_elem, APR_XML_X2T_INNER, 
-                        doc->namespaces, NULL, &db_r->displayname, NULL);
-    }
+    passwd = dav_repos_xml_get_element_no_ns_text(pool, doc, "password");
+    email = dav_repos_xml_get_element_no_ns_text(pool, doc, "email");
+    displayname = dav_repos_xml_get_element_no_ns_text(pool, doc, "displayname");
 
-    if (email_elem) {
-        apr_xml_to_text(pool, email_elem, APR_XML_X2T_INNER, 
-                        doc->namespaces, NULL, &email, NULL);
-
-        if ((err = sabridge_verify_user_email_unique(pool, db, email))) {
-            return err;
-        }
-
+    if (email && (err = sabridge_verify_user_email_unique(pool, db, email))) {
+        return err;
     }
 
     if (stream->inserted) {
-        if (passwd_elem == NULL)
+        if (!passwd)
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "password required for new user");
-        if (email_elem == NULL) 
+        if (!email) 
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "email required for new user");
-        if (displayname_elem == NULL)
+        if (!displayname)
             return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
                                  "displayname required for new user");
 
@@ -409,55 +411,53 @@ static dav_error *dav_repos_put_user(dav_stream *stream) {
         }
 
         err =  dav_repos_create_user(resource, passwd_hash, email);
-    } else {
-        if (passwd_elem != NULL || email_elem != NULL) {
-            /* Existing user trying to change password or email */
-            const char *cur_email = dbms_get_user_email(pool, db, db_r->serialno);
-            const char *type = NULL, *pwhash = NULL, *cur_pwhash = NULL, *cur_passwd = NULL;
+    }
+    else if (passwd || email) {
+        /* Existing user trying to change password or email */
+        const char *cur_email = dbms_get_user_email(pool, db, db_r->serialno);
+        const char *type = NULL, *pwhash = NULL, *cur_pwhash = NULL;
+            
+        const char *cur_passwd =
+          dav_repos_xml_get_element_no_ns_text(pool, doc, "cur_password");
 
-            apr_xml_elem *cur_passwd_elem = dav_find_child_no_ns(doc->root, "cur_password");
-            if (cur_passwd_elem == NULL) {
-                return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
-                                     "current password not provided");
-            } else {
+        if (!cur_passwd) {
+            return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
+                                 "current password not provided");
+        } 
 
-                apr_xml_to_text (pool, cur_passwd_elem, APR_XML_X2T_INNER, 
-                                 doc->namespaces, NULL, &cur_passwd, NULL);
+        dbms_get_user_pwhash(pool, db, db_r->serialno, &cur_pwhash, &type);
 
-                dbms_get_user_pwhash(pool, db, db_r->serialno, &cur_pwhash, &type);
-
-                if (strcmp(type, "Email") == 0) {
-                    pwhash = get_password_hash(pool, cur_email, cur_passwd);
-                }
-                else {
-                    pwhash = get_password_hash(pool, basename(db_r->uri), cur_passwd);
-                }
-
-                if (!(cur_pwhash && pwhash && !strcmp(cur_pwhash, pwhash)))
-                    return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
-                                         "password did not match");
-            }
-        
-            passwd_hash = get_password_hash(pool, email ? email : cur_email, 
-                                                  passwd ? passwd : cur_passwd);
-            profile->password_hash = passwd ? passwd_hash : NULL;
-            profile->email = email;
-            profile->id = db_r->serialno;
-
-            if (db->profile_provider && db->profile_provider->update &&
-                (err = db->profile_provider->update(resource->info->rec, profile))) {
-                return err;
-            }
-
-            if (passwd_elem != NULL || email_elem != NULL) 
-                err = dav_repos_update_password(resource, passwd_hash);
-
-            if (email_elem != NULL)
-                err = dbms_set_user_email(pool, db, db_r->serialno, email);
+        if (strcmp(type, "Email") == 0) {
+            pwhash = get_password_hash(pool, cur_email, cur_passwd);
         }
+        else {
+            pwhash = get_password_hash(pool, basename(db_r->uri), cur_passwd);
+        }
+
+        if (0 != strcmp(cur_pwhash, pwhash))
+            return dav_new_error(pool, HTTP_BAD_REQUEST, 0,
+                                 "password did not match");
+        
+        passwd_hash = get_password_hash(pool, email ? email : cur_email, 
+                                        passwd ? passwd : cur_passwd);
+        profile->password_hash = passwd ? passwd_hash : NULL;
+        profile->email = email;
+        profile->id = db_r->serialno;
+
+        if (db->profile_provider && db->profile_provider->update &&
+            (err = db->profile_provider->update(resource->info->rec, profile))) {
+            return err;
+        }
+
+        if (passwd || email)
+            err = dav_repos_update_password(resource, passwd_hash);
+
+        if (email)
+            err = dbms_set_user_email(pool, db, db_r->serialno, email);
     }
 
-    if (displayname_elem) {
+    if (displayname) {
+        db_r->displayname = displayname;
         dbms_set_property(db, db_r);
     }
 

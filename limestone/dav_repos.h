@@ -112,6 +112,7 @@ typedef struct {
     const char *email;
     const char *username;
     const char *password_hash;
+    const char *displayname;
     void *ctx;
 } dav_repos_user_profile;
 

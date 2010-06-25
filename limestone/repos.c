@@ -408,6 +408,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
         profile->username = basename(db_r->uri);
         profile->email = email;
         profile->password_hash = passwd_hash;
+        profile->displayname = displayname;
         profile->id = db_r->serialno;
 
         /* request the profile provider to create the profile */

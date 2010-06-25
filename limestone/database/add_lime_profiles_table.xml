@@ -4,9 +4,6 @@
     <comment>Create lime_profiles table</comment>
     <createTable tableName="lime_profiles">
         <column name="principal_id" type="bigint"/>
-        <column name="url" type="varchar(255)">
-          <constraints nullable="false"/>
-        </column>
         <column name="cas_user_id" type="bigint">
           <constraints nullable="false"/>
         </column>

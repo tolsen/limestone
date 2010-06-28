@@ -339,6 +339,24 @@ static dav_error *dav_repos_check_dst_parent(dav_resource *dst,
     return err;
 }
 
+static dav_repos_user_profile *dav_repos_new_user_profile(apr_pool_t *pool,
+                                                          long id,
+                                                          const char *email,
+                                                          const char *username,
+                                                          const char *password_hash,
+                                                          const char *displayname)
+{
+    dav_repos_user_profile *profile = apr_pcalloc(pool, sizeof(*profile));
+
+    profile->id = id;
+    profile->email = email;
+    profile->username = username;
+    profile->password_hash = password_hash;
+    profile->displayname = displayname;
+
+    return profile;
+}
+      
 /* returns NULL if element not found */
 static const char *dav_repos_xml_get_element_no_ns_text(apr_pool_t *pool,
                                                         apr_xml_doc *doc,
@@ -368,7 +386,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
     const char *passwd = NULL, *email = NULL, *displayname = NULL;
     const char *passwd_hash = NULL;
     
-    dav_repos_user_profile *profile = apr_pcalloc(pool, sizeof(*profile));
+    dav_repos_user_profile *profile = NULL;
 
     TRACE();
 
@@ -405,12 +423,10 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
             passwd_hash = get_password_hash(pool, email, passwd);
         }
             
-        profile->username = basename(db_r->uri);
-        profile->email = email;
-        profile->password_hash = passwd_hash;
-        profile->displayname = displayname;
-        profile->id = db_r->serialno;
-
+        profile = dav_repos_new_user_profile(pool, db_r->serialno, email,
+                                             basename(db_r->uri), passwd_hash,
+                                             displayname);
+                                             
         /* request the profile provider to create the profile */
         if (db->profile_provider && db->profile_provider->create &&
             (err = db->profile_provider->create(resource->info->rec, profile))) {
@@ -447,9 +463,10 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
         
         passwd_hash = get_password_hash(pool, email ? email : cur_email, 
                                         passwd ? passwd : cur_passwd);
-        profile->password_hash = passwd ? passwd_hash : NULL;
-        profile->email = email;
-        profile->id = db_r->serialno;
+
+        profile = dav_repos_new_user_profile(pool, db_r->serialno, email, NULL,
+                                             (passwd ? passwd_hash : NULL),
+                                             NULL);
 
         if (db->profile_provider && db->profile_provider->update &&
             (err = db->profile_provider->update(resource->info->rec, profile))) {

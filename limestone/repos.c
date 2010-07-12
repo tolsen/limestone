@@ -332,8 +332,7 @@ static dav_error *dav_repos_check_dst_parent(dav_resource *dst,
     }
 
     if ((*dst_parent)->exists == 0 || (*dst_parent)->collection == 0) {
-	err = dav_new_error(pool, HTTP_CONFLICT, 0,
-			     "No parent collection.");
+        err = dav_new_error(pool, HTTP_CONFLICT, 0, "No parent collection.");
     }
 
     return err;
@@ -384,7 +383,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
     apr_xml_parser *parser = NULL;
     apr_xml_doc *doc = NULL;
     const char *passwd = NULL, *email = NULL, *displayname = NULL;
-    const char *passwd_hash = NULL;
+    const char *passwd_hash = NULL, *no_profile = NULL;
     
     dav_repos_user_profile *profile = NULL;
 
@@ -401,6 +400,8 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
     passwd_hash = dav_repos_xml_get_element_no_ns_text(pool, doc, "password-hash");
     email = dav_repos_xml_get_element_no_ns_text(pool, doc, "email");
     displayname = dav_repos_xml_get_element_no_ns_text(pool, doc, "displayname");
+    no_profile = dav_repos_xml_get_element_no_ns_text(pool, doc, "no-profile");
+    
 
     if (email && (err = sabridge_verify_user_email_unique(pool, db, email))) {
         return err;
@@ -428,7 +429,8 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
                                              displayname);
                                              
         /* request the profile provider to create the profile */
-        if (db->profile_provider && db->profile_provider->create &&
+        if (!no_profile && db->profile_provider &&
+            db->profile_provider->create &&
             (err = db->profile_provider->create(resource->info->rec, profile))) {
             return err;
         }
@@ -468,7 +470,8 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
                                              (passwd ? passwd_hash : NULL),
                                              NULL);
 
-        if (db->profile_provider && db->profile_provider->update &&
+        if (!no_profile && db->profile_provider &&
+            db->profile_provider->update &&
             (err = db->profile_provider->update(resource->info->rec, profile))) {
             return err;
         }

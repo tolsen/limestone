@@ -467,8 +467,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
                                         passwd ? passwd : cur_passwd);
 
         profile = dav_repos_new_user_profile(pool, db_r->serialno, email, NULL,
-                                             (passwd ? passwd_hash : NULL),
-                                             NULL);
+                                             passwd_hash, NULL);
 
         if (!no_profile && db->profile_provider &&
             db->profile_provider->update &&

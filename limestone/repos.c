@@ -343,7 +343,8 @@ static dav_repos_user_profile *dav_repos_new_user_profile(apr_pool_t *pool,
                                                           const char *email,
                                                           const char *username,
                                                           const char *password_hash,
-                                                          const char *displayname)
+                                                          const char *displayname,
+                                                          const char *otp)
 {
     dav_repos_user_profile *profile = apr_pcalloc(pool, sizeof(*profile));
 
@@ -352,6 +353,7 @@ static dav_repos_user_profile *dav_repos_new_user_profile(apr_pool_t *pool,
     profile->username = username;
     profile->password_hash = password_hash;
     profile->displayname = displayname;
+    profile->otp = otp;
 
     return profile;
 }
@@ -383,7 +385,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
     apr_xml_parser *parser = NULL;
     apr_xml_doc *doc = NULL;
     const char *passwd = NULL, *email = NULL, *displayname = NULL;
-    const char *passwd_hash = NULL, *no_profile = NULL;
+    const char *passwd_hash = NULL, *no_profile = NULL, *otp = NULL;
     
     dav_repos_user_profile *profile = NULL;
 
@@ -401,6 +403,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
     email = dav_repos_xml_get_element_no_ns_text(pool, doc, "email");
     displayname = dav_repos_xml_get_element_no_ns_text(pool, doc, "displayname");
     no_profile = dav_repos_xml_get_element_no_ns_text(pool, doc, "no-profile");
+    otp = dav_repos_xml_get_element_no_ns_text(pool, doc, "otp");
     
 
     if (email && (err = sabridge_verify_user_email_unique(pool, db, email))) {
@@ -426,7 +429,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
             
         profile = dav_repos_new_user_profile(pool, db_r->serialno, email,
                                              basename(db_r->uri), passwd_hash,
-                                             displayname);
+                                             displayname, otp);
                                              
         /* request the profile provider to create the profile */
         if (!no_profile && db->profile_provider &&
@@ -467,7 +470,7 @@ static dav_error *dav_repos_put_user(dav_stream *stream)
                                         passwd ? passwd : cur_passwd);
 
         profile = dav_repos_new_user_profile(pool, db_r->serialno, email, NULL,
-                                             passwd_hash, NULL);
+                                             passwd_hash, NULL, NULL);
 
         if (!no_profile && db->profile_provider &&
             db->profile_provider->update &&

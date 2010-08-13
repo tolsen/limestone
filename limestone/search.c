@@ -408,12 +408,8 @@ apr_hash_t *get_liveprop_map(apr_pool_t *pool)
                      APR_HASH_KEY_STRING, "mimetype");
         apr_hash_set(liveprop_map, "getcontentlength", 
                      APR_HASH_KEY_STRING, "size");
-        apr_hash_set(liveprop_map, "getlastmodified", 
-                     APR_HASH_KEY_STRING, "media.updated_at");
         apr_hash_set(liveprop_map, "getetag", 
                      APR_HASH_KEY_STRING, "sha1");
-        apr_hash_set(liveprop_map, "lockdiscovery", 
-                     APR_HASH_KEY_STRING, "locks.uuid");
         apr_hash_set(liveprop_map, "resourcetype", 
                      APR_HASH_KEY_STRING, "type");
         apr_hash_set(liveprop_map, "resource-id", 
@@ -1345,8 +1341,6 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     sctx->from = 
         apr_psprintf(pool, 
                      " FROM resources "
-                     " LEFT JOIN locks ON resources.id = locks.resource_id " 
-                     " LEFT JOIN media ON resources.id = media.resource_id "
                      " LEFT JOIN principals ON "
                      "principals.resource_id = resources.owner_id ");
 
@@ -1557,8 +1551,6 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
                 " AND bitmarks.name = '%s' )"
           " SELECT value, %s(value) - 1"
             " FROM (SELECT resource_bitmarks.value FROM resources"
-            " LEFT JOIN locks ON resources.id = locks.resource_id"
-            " LEFT JOIN media ON resources.id = media.resource_id"
             " LEFT JOIN principals ON principals.resource_id = resources.owner_id"
             " LEFT JOIN binds b4 ON b4.resource_id = resources.id"
             " INNER JOIN binds b3 ON b4.collection_id = b3.resource_id"

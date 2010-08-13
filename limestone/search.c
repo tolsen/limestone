@@ -1288,6 +1288,7 @@ int build_query_select(request_rec *r, search_ctx *sctx)
                     " ON bitmark_resources.collection_id = bitmarked_resources.resource_id"
                 " INNER JOIN properties bitmarks"
                     " ON bitmarks.resource_id = bitmark_resources.resource_id"
+                    " AND bitmarks.value != ''"
                     " AND (bitmarks.namespace_id, bitmarks.name) IN (");
 
         for(hi = apr_hash_first(r->pool, sctx->bitmarks_map); hi;

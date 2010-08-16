@@ -330,7 +330,7 @@ int parse_select(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
             ns = get_ns_uri(sctx->doc->namespaces, propi->ns);
             ns_id = get_ns_id(pool, sctx, ns);
             prop_key = get_prop_key(pool, propi->name, ns_id);
-            attr = prop_attr_lookup(ppool, pool, propi, prop_key);
+            attr = prop_attr_lookup(ppool, pool, propi, prop_key, sctx);
             apr_hash_set(sctx->prop_map, prop_key, 
                          APR_HASH_KEY_STRING, attr);
         }
@@ -362,6 +362,7 @@ int parse_select(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
                                           get_ns_id(pool, sctx, "DAV:"));
             apr_hash_set(sctx->prop_map, prop_key,
                          APR_HASH_KEY_STRING, (char *)attr);
+            sctx->media_props_req = 1;
         }
     }
 
@@ -378,13 +379,16 @@ int parse_select(request_rec * r, search_ctx * sctx, apr_xml_elem *select_elem)
 }
 
 const char *prop_attr_lookup(apr_pool_t *ppool, apr_pool_t *pool,
-                             apr_xml_elem *prop, char *prop_key)
+                             apr_xml_elem *prop, char *prop_key, search_ctx *sctx)
 {
     char *attr = NULL;
     if(prop->ns == APR_XML_NS_DAV_ID) {
         apr_hash_t *liveprop_map = get_liveprop_map(ppool);
         attr = apr_hash_get(liveprop_map, prop->name, 
                             APR_HASH_KEY_STRING);
+        if (strstr(attr, "media.")) {
+            sctx->media_props_req = 1;    
+        }
     }
     else {
         /* dead property attribute = prop_key */
@@ -405,15 +409,13 @@ apr_hash_t *get_liveprop_map(apr_pool_t *pool)
         apr_hash_set(liveprop_map, "getcontentlanguage", 
                      APR_HASH_KEY_STRING, "contentlanguage");
         apr_hash_set(liveprop_map, "getcontenttype", 
-                     APR_HASH_KEY_STRING, "mimetype");
+                     APR_HASH_KEY_STRING, "media.mimetype");
         apr_hash_set(liveprop_map, "getcontentlength", 
-                     APR_HASH_KEY_STRING, "size");
+                     APR_HASH_KEY_STRING, "media.size");
         apr_hash_set(liveprop_map, "getlastmodified", 
                      APR_HASH_KEY_STRING, "media.updated_at");
         apr_hash_set(liveprop_map, "getetag", 
-                     APR_HASH_KEY_STRING, "sha1");
-        apr_hash_set(liveprop_map, "lockdiscovery", 
-                     APR_HASH_KEY_STRING, "locks.uuid");
+                     APR_HASH_KEY_STRING, "media.sha1");
         apr_hash_set(liveprop_map, "resourcetype", 
                      APR_HASH_KEY_STRING, "type");
         apr_hash_set(liveprop_map, "resource-id", 
@@ -704,7 +706,7 @@ int parse_comp_ops(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
         attr = apr_psprintf(pool, "value");
     }
     else {
-        attr = prop_attr_lookup(ppool, pool, prop, prop_key);
+        attr = prop_attr_lookup(ppool, pool, prop, prop_key, sctx);
     }
 
     op = apr_hash_get(get_comp_ops_map(ppool), cur_elem->name, 
@@ -831,7 +833,7 @@ int parse_is_defined(request_rec *r, apr_xml_elem *cur_elem, search_ctx *sctx)
     const char *ns = get_ns_uri(sctx->doc->namespaces, prop->ns);
     long ns_id = get_ns_id(pool, sctx, ns);
     char *prop_key = get_prop_key(pool, prop->name, ns_id);
-    const char *attr = prop_attr_lookup(ppool, pool, prop, prop_key); 
+    const char *attr = prop_attr_lookup(ppool, pool, prop, prop_key, sctx); 
 
     apr_hash_set(sctx->prop_map, prop_key, APR_HASH_KEY_STRING, attr);
 
@@ -907,7 +909,7 @@ int parse_order(request_rec *r, search_ctx *sctx, apr_xml_elem *order_elem)
             long ns_id = get_ns_id(r->pool, sctx, ns);
             char *prop_key = 
                 get_prop_key(r->pool, prop->name, ns_id);
-            attr = prop_attr_lookup(ppool, r->pool, prop, prop_key); 
+            attr = prop_attr_lookup(ppool, r->pool, prop, prop_key, sctx); 
             sctx->orderby = apr_pstrcat(r->pool, sctx->orderby, attr, NULL);
         }
         else
@@ -1342,14 +1344,17 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     TRACE();
 
     /* Live property tables */
-    /* FIXME: JOIN relevant tables only, in case of liveprops */
     sctx->from = 
         apr_psprintf(pool, 
                      " FROM resources "
-                     " LEFT JOIN locks ON resources.id = locks.resource_id " 
-                     " LEFT JOIN media ON resources.id = media.resource_id "
                      " LEFT JOIN principals ON "
                      "principals.resource_id = resources.owner_id ");
+
+    if (sctx->media_props_req) {
+        sctx->from = apr_pstrcat(pool, sctx->from, 
+                                " LEFT JOIN media ON resources.id = media.resource_id ", 
+                                NULL);
+    }
 
     if (sctx->is_bit_query) {
         sctx->from = apr_pstrcat(pool, sctx->from, 
@@ -1558,8 +1563,6 @@ dav_error *dav_repos_deliver_property_stats(request_rec * r,
                 " AND bitmarks.name = '%s' )"
           " SELECT value, %s(value) - 1"
             " FROM (SELECT resource_bitmarks.value FROM resources"
-            " LEFT JOIN locks ON resources.id = locks.resource_id"
-            " LEFT JOIN media ON resources.id = media.resource_id"
             " LEFT JOIN principals ON principals.resource_id = resources.owner_id"
             " LEFT JOIN binds b4 ON b4.resource_id = resources.id"
             " INNER JOIN binds b3 ON b4.collection_id = b3.resource_id"

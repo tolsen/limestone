@@ -386,7 +386,7 @@ const char *prop_attr_lookup(apr_pool_t *ppool, apr_pool_t *pool,
         apr_hash_t *liveprop_map = get_liveprop_map(ppool);
         attr = apr_hash_get(liveprop_map, prop->name, 
                             APR_HASH_KEY_STRING);
-        if (strstr(attr, "media.")) {
+        if (attr && strstr(attr, "media.")) {
             sctx->media_props_req = 1;    
         }
     }

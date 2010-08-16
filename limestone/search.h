@@ -72,6 +72,7 @@ typedef struct {
     apr_hash_t *bitmarks_map;	/* Bitmarks:Attribute map */
     apr_hash_t *namespace_map;	/* ns_id:namespace map */
     apr_xml_doc *doc;
+    int media_props_req;        /* set if media properties where queried */
     int is_bit_query;           /* set if WHERE clause filters on is-bit */
     int bitmark_support_req;    /* set if bitmarks support required */
     const char *b4_name;        /* set to name of bind 4 in is-bit query */
@@ -147,7 +148,7 @@ int build_query_limit(request_rec *r, search_ctx *sctx);
 int build_query_offset(request_rec *r, search_ctx *sctx);
 
 const char *prop_attr_lookup(apr_pool_t *ppool, apr_pool_t *pool, 
-                             apr_xml_elem *prop, char *prop_key);
+                             apr_xml_elem *prop, char *prop_key, search_ctx *sctx);
 
 apr_hash_t *get_liveprop_map(apr_pool_t *pool);
 

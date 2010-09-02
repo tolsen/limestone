@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="tolsen" id="1">
+    <comment>Create indices on auth_root and cas_cookie columns of auth_user_cookies table</comment>
+    <createIndex tableName="auth_user_cookies" indexName="idx_auth_user_cookies_auth_root">
+      <column name="auth_root"/>
+    </createIndex>
+    <createIndex tableName="auth_user_cookies" indexName="idx_auth_user_cookies_cas_cookie">
+      <column name="cas_cookie"/>
+    </createIndex>
+  </changeSet>
+</databaseChangeLog>

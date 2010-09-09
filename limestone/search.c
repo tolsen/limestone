@@ -547,11 +547,19 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
             }
         }
 
-        if (uri_depth > 1 && strncmp(uri, "/home", 5) == 0) {
+        int is_bang_lime = (strncmp(uri, "/!lime/root", 11) == 0);
+
+        if (uri_depth > 1 && 
+            ((strncmp(uri, "/home", 5) == 0) || strncmp(uri, "/!lime/root/home", 16) == 0)) {
             int d = 3;
+
+            if (is_bang_lime) {
+                d = 5;    
+            }
+
             i = 0;
 
-            if (uri_depth == 4 && strstr(uri, "/bits/")) {
+            if (uri_depth == 4 && strstr(uri, "/bits/") && !is_bang_lime) {
                 sctx->b4_name = apr_pstrdup(r->pool, basename(uri));
             }
 

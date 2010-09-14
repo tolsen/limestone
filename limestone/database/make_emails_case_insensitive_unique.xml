@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  
+  <changeSet author="tolsen" id="1">
+    <comment>differentiate non-uploaded emails by add +1 to the local part</comment>
+    <executeCommand executable="./differentiate_non_uploaded_emails.rb"/>
+  </changeSet>
+
+  <changeSet author="tolsen" id="2">
+    <comment>add unique index on email field to be case insensitive</comment>
+
+    <dropIndex indexName="idx_users_email" tableName="users"/>
+
+    <sql>CREATE UNIQUE INDEX idx_users_email ON users (lower(email))</sql>
+  </changeSet>
+  
+</databaseChangeLog>

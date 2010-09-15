@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="tolsen" id="1">
+    <comment>Add created_at column to auth_user_cookies table</comment>
+
+    <!-- Using custom sql so that we can use default of CURRENT_TIMESTAMP -->
+    <sql>
+      ALTER TABLE auth_user_cookies
+        ADD COLUMN created_at timestamp DEFAULT CURRENT_TIMESTAMP
+    </sql>
+
+    <createIndex tableName="auth_user_cookies" indexName="idx_auth_user_cookies_created_at">
+      <column name="created_at"/>
+    </createIndex>
+      
+  </changeSet>
+</databaseChangeLog>

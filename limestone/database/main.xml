@@ -35,6 +35,7 @@
   <include file="set_login_to_all_domains.xml"/>
   <include file="add_cas_cookie_to_auth_user_cookies.xml"/>
   <include file="add_auth_root_and_cas_cookie_indices_to_auth_user_cookies.xml"/>
+  <include file="add_created_at_to_auth_user_cookies.xml"/>
   <include file="migrate_tags_to_properties.xml"/>
   <include file="migrate_description_to_properties.xml"/>
 </databaseChangeLog>

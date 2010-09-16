@@ -36,6 +36,7 @@ rescue DBI::DatabaseError => e
   puts "An error occurred"
   puts "Error code: #{e.err}"
   puts "Error message: #{e.errstr}"
+  raise e
 ensure
   # disconnect from server
   dbh.disconnect if dbh

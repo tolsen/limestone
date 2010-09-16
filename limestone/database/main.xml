@@ -37,4 +37,6 @@
   <include file="add_auth_root_and_cas_cookie_indices_to_auth_user_cookies.xml"/>
   <include file="add_created_at_to_auth_user_cookies.xml"/>
   <include file="make_emails_case_insensitive_unique.xml"/>
+  <include file="migrate_tags_to_properties.xml"/>
+  <include file="migrate_description_to_properties.xml"/>
 </databaseChangeLog>

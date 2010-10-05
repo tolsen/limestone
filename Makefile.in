@@ -44,7 +44,7 @@ apacheextracleantargets= \
 		$(APACHE_DIR)/srclib/apr-util/build/find_apr.m4 \
 		$(APACHE_DIR)/srclib/apr-util/build/apr_common.m4 \
 		$(APACHE_DIR)/srclib/apr-util/build/get-version.sh \
-		$(APACHE_DIR)/srclib/apr-util/xml/expat/config.h.in \
+		$(APACHE_DIR)/srclib/apr-util/xml/expat/expat_config.h.in \
 		$(APACHE_DIR)/srclib/apr-util/xml/expat/configure \
 		$(APACHE_DIR)/srclib/apr-util/xml/expat/aclocal.m4 \
 		$(APACHE_DIR)/srclib/apr-util/xml/expat/conftools/ltmain.sh \
@@ -97,8 +97,6 @@ APACHE_BUILDCONF_DEPS = \
 
 APACHE_BUILDCONF_OUT = \
 	$(APACHE_DIR)/srclib/pcre/configure \
-	$(APACHE_DIR)/srclib/apr-util/xml/expat/aclocal.m4 \
-	$(APACHE_DIR)/srclib/apr-util/xml/expat/config.h.in \
 	$(APACHE_DIR)/srclib/apr-util/xml/expat/configure \
 	$(APACHE_DIR)/srclib/apr-util/configure \
 	$(APACHE_DIR)/srclib/apr-util/include/private/apu_config.h.in \

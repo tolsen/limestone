@@ -196,6 +196,9 @@ struct dav_repos_resource {
     /** redirect reftarget */
     const char *reftarget;
 
+    /* parent collection for this resource */
+    struct dav_repos_resource *parent;
+
     /* next link in a chain of resources */
     struct dav_repos_resource *next;	
 

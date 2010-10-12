@@ -201,16 +201,18 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     apr_pool_t *pool = r->p;
     dav_error *err = NULL;
     const dav_hooks_acl *acl_hooks = dav_get_acl_hooks(rec);
-    dav_repos_resource *parent = NULL;
 
-    if (r->parent_id > 0) {
-        sabridge_new_dbr_from_dbr(r, &parent);
-        parent->serialno = r->parent_id;
-        err = dbms_get_resource(d, parent);
-        err = dbms_get_collection_props(d, parent);
-        if (err) goto error;
-    } else if (r->uri)
-        sabridge_retrieve_parent(r, &parent);
+    if (!r->parent) {
+        if (r->parent_id > 0) {
+            sabridge_new_dbr_from_dbr(r, &r->parent);
+            r->parent->serialno = r->parent_id;
+            err = dbms_get_resource(d, r->parent);
+            err = dbms_get_collection_props(d, r->parent);
+            if (err) goto error;
+        } else if (r->uri) {
+            sabridge_retrieve_parent(r, &r->parent);
+        }
+    }
 
     /* Get a new UUID */
     r->uuid = get_new_plain_uuid(r->p);
@@ -238,8 +240,8 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
     if (r->getcontenttype == NULL)
         r->getcontenttype = apr_pstrdup(pool, "application/octet-stream");
 
-    if (parent)
-        r->limebar_state = parent->limebar_state;
+    if (r->parent)
+        r->limebar_state = r->parent->limebar_state;
 
     /* Create a 'resources' table entry */
     if((err = dbms_insert_resource(d, r)))
@@ -254,7 +256,7 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
 
     if (r->resourcetype == dav_repos_COLLECTION
         || r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
-        r->av_new_children = parent->av_new_children;
+        r->av_new_children = r->parent->av_new_children;
         err = dbms_insert_collection(d, r);
         if (err) goto error;
     }
@@ -275,8 +277,8 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
 
     /* Create the bind if url is set */
     if (r->uri && (params & SABRIDGE_DELAY_BIND) == 0) {
-        err = dbms_insert_bind(pool, d, r->serialno,
-                               parent->serialno, basename(r->uri));
+        err = dbms_insert_bind(pool, d, r->serialno, 
+                                r->parent->serialno, basename(r->uri));
         if (err) goto error;
     }
 
@@ -514,6 +516,10 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
 
     if (create_dest) {
         r_dst->resourcetype = dav_repos_COLLECTION;
+        err = sabridge_retrieve_parent(r_dst, &dst_parent);
+        if (err) return err;
+        r_dst->parent_id = dst_parent->serialno;
+
         err = sabridge_insert_resource(d, r_dst, rec, SABRIDGE_DELAY_BIND);
         if (err) return err;
     }
@@ -830,6 +836,7 @@ dav_error *sabridge_create_copy(const dav_repos_db *d,
 
     sabridge_new_dbr_from_dbr(db_r, &copy);
     copy->parent_id = copy_parent->serialno;
+    copy->parent = copy_parent;
     copy->displayname = db_r->displayname;
     copy->uri = NULL;
 
@@ -858,8 +865,7 @@ dav_error *sabridge_create_copy(const dav_repos_db *d,
                db_r->resourcetype == dav_repos_VERSIONED_COLLECTION) {
         /* No autoversioning for now */
         copy->resourcetype = dav_repos_COLLECTION;
-        dav_repos_create_resource
-          (copy->resource, SABRIDGE_DELAY_BIND );
+        dav_repos_create_resource(copy->resource, SABRIDGE_DELAY_BIND );
         err = sabridge_copy_collection(d, db_r, copy);
         if (err) return err;
     }

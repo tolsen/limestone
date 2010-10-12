@@ -86,7 +86,7 @@ dav_error *dbms_update_principal_property_aces(dav_repos_db *d,
                                                const char *prop_name,
                                                int principal_id);
 
-int dbms_get_privilege_id(const dav_repos_db *d, apr_pool_t *pool, 
+int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r, 
                           const dav_privilege *privilege);
 
 dav_error *dbms_change_acl_parent(dav_repos_db *d,

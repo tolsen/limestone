@@ -156,6 +156,11 @@ typedef struct {
 typedef dav_repos_server_conf dav_repos_db;
 
 
+typedef struct {
+    apr_hash_t *principal_type; // user or group
+    apr_hash_t *namespaces; 
+} dav_repos_cache;
+
 /* our hooks structures; these are gathered into a dav_provider */
 extern const dav_hooks_repository       dav_repos_hooks_repos;
 extern const dav_hooks_propdb           dav_repos_hooks_propdb;

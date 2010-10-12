@@ -1250,7 +1250,7 @@ dav_error *dbms_get_ns_id(const dav_repos_db * d, dav_repos_resource * db_r,
         }
     }
 
-    err = dbms_get_namespace_id(pool, d, namespace, ns_id);
+    err = sabridge_get_namespace_id(d, db_r, namespace, ns_id);
     if (err) return err;
 
     if (*ns_id == 0)

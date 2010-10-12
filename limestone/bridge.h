@@ -319,5 +319,8 @@ dav_error *sabridge_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
                                    long principal_id, const char *email);
 
 
+dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_resource *db_r,
+                                     const char *namespace, long *ns_id);
 
+dav_repos_cache *sabridge_get_cache(request_rec *r);
 #endif /* STONE_ARCH_BRIDGE_H */

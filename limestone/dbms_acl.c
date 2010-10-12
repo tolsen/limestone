@@ -209,7 +209,7 @@ int dbms_add_ace_privilege(const dav_repos_db * d,
 
     TRACE();
 
-    int privilege_id = dbms_get_privilege_id(d, r->p, privilege);
+    int privilege_id = dbms_get_privilege_id(d, r, privilege);
     if(privilege_id < 1)
         /* Unknown privilege */
         return HTTP_FORBIDDEN;
@@ -776,17 +776,18 @@ dav_error *dbms_update_principal_property_aces(dav_repos_db *d,
  * @param privilege the privilege
  * @return privilege_id
  */
-int dbms_get_privilege_id(const dav_repos_db *d, apr_pool_t *pool, 
+int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r, 
                           const dav_privilege *privilege)
 {
     int privilege_id = 0;
     dav_repos_query *q = NULL;
     long priv_ns_id = 0;
     const char *privilege_name = dav_get_privilege_name(privilege);
+    apr_pool_t *pool = db_r->p;
     TRACE();
 
-    dbms_get_namespace_id
-      (pool, d, dav_get_privilege_namespace(privilege), &priv_ns_id);
+    sabridge_get_namespace_id(d, db_r, dav_get_privilege_namespace(privilege), 
+                            &priv_ns_id);
 
     q = dbms_prepare(pool, d->db, 
                      "SELECT id FROM acl_privileges WHERE name = ? AND priv_namespace_id = ?");

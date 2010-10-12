@@ -25,6 +25,8 @@
 #include "liveprops.h"          /* for dav_repos_build_lpr_hash */
 #include "dbms_principal.h"     /* for dbms_get_principal_id_from_name */
 
+#define AHKS APR_HASH_KEY_STRING
+
 /* FIXME: This should correspond with DB */
 #define PRINCIPAL_ALL_ID                3
 #define PRINCIPAL_AUTHENTICATED_ID      4
@@ -46,11 +48,22 @@ dav_principal *dav_repos_get_prin_by_name(request_rec *r, const char *name)
     else if(!strcmp(name, "unauthenticated"))
         principal->type = PRINCIPAL_UNAUTHENTICATED;
     else {
-        int resource_type = dbms_get_principal_type_from_name
-          (r->pool, dav_repos_get_db(r), name);
-            
-        principal = dav_principal_make_from_url
-          (r, apr_pstrcat(r->pool, principal_href_prefix(r), 
+        dav_repos_cache *cache = sabridge_get_cache(r);
+        int *value, resource_type;
+
+        if (!(value = (int *)apr_hash_get(cache->principal_type, name, AHKS))) {
+            resource_type = dbms_get_principal_type_from_name(r->pool, 
+                    dav_repos_get_db(r), name);
+            value = apr_pcalloc(r->pool, sizeof(*value));
+            *value = resource_type;
+            apr_hash_set(cache->principal_type, name, AHKS, value);
+        }
+        else {
+            resource_type = *value;    
+        }
+
+        principal = dav_principal_make_from_url(r, 
+                          apr_pstrcat(r->pool, principal_href_prefix(r), 
                           resource_type == dav_repos_GROUP ?
                           PRINCIPAL_GROUP_PREFIX : PRINCIPAL_USER_PREFIX,
                           name, NULL));
@@ -143,7 +156,8 @@ int dav_repos_is_allow(const dav_principal * principal,
     const char *privilege_name =
 	apr_pstrdup(pool, dav_get_privilege_name(privilege));
     long priv_ns_id;
-    dbms_get_namespace_id(pool, db, dav_get_privilege_namespace(privilege), &priv_ns_id);
+
+    sabridge_get_namespace_id(db, db_r, dav_get_privilege_namespace(privilege), &priv_ns_id);
 
     retVal = dbms_is_allow(db, priv_ns_id, privilege_name, principal, db_r);
 

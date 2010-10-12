@@ -98,7 +98,7 @@ static int is_allow_read_private_properties(const dav_resource *resource) {
     request_rec *r = resource->info->rec;
     long priv_ns_id;
     dav_principal *principal = dav_repos_get_prin_by_name(r, r->user);
-    dbms_get_namespace_id(db_r->p, db, dav_limebits_namespace_uris[1], &priv_ns_id);
+    sabridge_get_namespace_id(db, db_r, dav_limebits_namespace_uris[1], &priv_ns_id);
     int is_allow = dbms_is_allow(db, priv_ns_id, "read-private-properties",
                                  principal, db_r);
     return is_allow;

@@ -275,8 +275,6 @@ dav_error *sabridge_insert_resource(const dav_repos_db *d,
 
     /* Create the bind if url is set */
     if (r->uri && (params & SABRIDGE_DELAY_BIND) == 0) {
-        dav_repos_resource *parent = NULL;
-        sabridge_retrieve_parent(r, &parent);
         err = dbms_insert_bind(pool, d, r->serialno,
                                parent->serialno, basename(r->uri));
         if (err) goto error;
@@ -480,10 +478,14 @@ dav_error *sabridge_copy_medium(const dav_repos_db *db,
     if (err) return err;
 
     err = sabridge_copy_dead_props(pool, db, r_src->serialno, r_dest->serialno);
+
+    /*
     if (err) return err;
 
     return sabridge_copy_bitmarks(pool, db, r_src->resource->info->rec, 
-                                  r_src, r_dest);
+                                  r_src, r_dest);*/
+
+    return err;
 }
 
 dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
@@ -512,9 +514,6 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
 
     if (create_dest) {
         r_dst->resourcetype = dav_repos_COLLECTION;
-        err = sabridge_retrieve_parent(r_dst, &dst_parent);
-        if (err) return err;
-        r_dst->parent_id = dst_parent->serialno;
         err = sabridge_insert_resource(d, r_dst, rec, SABRIDGE_DELAY_BIND);
         if (err) return err;
     }
@@ -522,8 +521,9 @@ dav_error *sabridge_copy_coll_w_create(const dav_repos_db *d,
     err = sabridge_copy_dead_props(pool, d, r_src->serialno, r_dst->serialno);
     if (err) return err;
 
+    /*
     err = sabridge_copy_bitmarks(pool, d, rec, r_src, r_dst);
-    if (err) return err;
+    if (err) return err;*/
 
     if (depth == DAV_INFINITY)
         err = sabridge_depth_inf_copy_coll(d, r_src, r_dst, rec, response);
@@ -562,10 +562,13 @@ dav_error *sabridge_copy_collection(const dav_repos_db *d,
     }
 
     err = sabridge_copy_dead_props(src->p, d, src->serialno, dst->serialno);
+
+    return err;
+    /*
     if (err) return err;
 
     return sabridge_copy_bitmarks(src->p, d, src->resource->info->rec,
-                                  src, dst);
+                                  src, dst);*/
 }
 
 dav_error *sabridge_copy_if_compatible(const dav_repos_db *d,
@@ -1209,4 +1212,37 @@ dav_error *sabridge_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
     }
 
     return dbms_set_user_email(pool, d, principal_id, email);
+}
+
+#define AHKS APR_HASH_KEY_STRING
+
+dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_resource *db_r,
+                                     const char *namespace, long *ns_id)
+{
+    dav_repos_cache *cache = sabridge_get_cache(db_r->resource->info->rec);
+    long *value;
+
+    if (!(value = (long *)apr_hash_get(cache->namespaces, namespace, AHKS))) {
+        dav_error *err = dbms_get_namespace_id(db_r->p, d, namespace, ns_id);
+        if (err) {
+            return err;    
+        }
+
+        value = apr_pcalloc(db_r->p, sizeof(*value));
+        *value = *ns_id;
+        apr_hash_set(cache->namespaces, namespace, AHKS, value);
+    }
+    
+    *ns_id = *value;
+    return NULL;
+}
+
+dav_repos_cache *sabridge_get_cache(request_rec *r)
+{
+    request_rec *root = r;
+    while(root->main) {
+        root = root->main;    
+    }
+    
+    return (dav_repos_cache *)apr_table_get(root->notes, "dav_repos_cache");
 }

@@ -53,7 +53,7 @@ dav_error *dbms_lookup_uri(apr_pool_t *pool, const dav_repos_db *d,
                                 "greatest(lastmodified, b1.updated_at");
     from = apr_psprintf(pool, "FROM binds b1 ");
     where = apr_psprintf(pool, "WHERE b1.collection_id = %d "
-                         "AND (b1.name IS NULL OR b1.name = '%s') ", 
+                         "AND b1.name = '%s' ", 
                          ROOT_COLLECTION_ID,
                          dbms_escape(pool, d->db, next));
 
@@ -65,11 +65,10 @@ dav_error *dbms_lookup_uri(apr_pool_t *pool, const dav_repos_db *d,
         uri_max_updated_at = apr_psprintf(pool, "%s, b%d.updated_at", 
                                           uri_max_updated_at, i);
         from = apr_psprintf(pool, "%sLEFT OUTER JOIN binds b%d "
-                            "ON b%d.resource_id = b%d.collection_id ", 
-                            from, i, i-1, i);
-        where = apr_psprintf(pool, 
-                             "%sAND (b%d.name IS NULL OR b%d.name = '%s') ",
-                             where, i, i, dbms_escape(pool, d->db, next));
+                            "ON (b%d.resource_id = b%d.collection_id "
+                            "AND b%d.name = '%s') ", 
+                            from, i, i-1, i, i,
+                            dbms_escape(pool, d->db, next));
         next = apr_strtok(NULL, "/", &last);
     }
 

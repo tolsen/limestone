@@ -662,7 +662,6 @@ dav_error *dbms_inherit_parent_aces(const dav_repos_db *d,
                                     const dav_repos_resource *db_r, 
                                     int parent)
 {
-    const char *parent_path;
     dav_error *err = NULL;
     dav_repos_query *q = NULL;
     apr_pool_t *pool = db_r->p;
@@ -687,36 +686,15 @@ dav_error *dbms_inherit_parent_aces(const dav_repos_db *d,
     }
     dbms_query_destroy(q);
 
-    /* Get the parent path */
-    q = dbms_prepare(pool, d->db, "SELECT path FROM acl_inheritance "
-                                  "WHERE resource_id = ?");
-    dbms_set_int(q, 1, parent);
-    if(dbms_execute(q)) {
-        dbms_query_destroy(q);
-        return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
-                             "DBMS Error during select "
-                             "on acl_inheritance");
-    }
-
-    if(dbms_next(q) > 0) {
-        parent_path = dbms_get_string(q, 1);
-        dbms_query_destroy(q);
-    }
-    else {
-        dbms_query_destroy(q);
-        return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
-                             "DBMS Error: select on acl_inheritance"
-                             " returned no results");
-    }
-
-    const char *path = apr_psprintf(pool, "%s,%ld", parent_path, db_r->serialno);
-
     /* Insert the new entry (resource, parent) with proper lft & rgt values */
     q = dbms_prepare(pool, d->db,
                      "INSERT INTO acl_inheritance (resource_id, path)"
-                     "VALUES (?, ?)");
+                     " SELECT ?, a.path || ',' || ?"
+                     " FROM acl_inheritance a WHERE a.resource_id = ?");
     dbms_set_int(q, 1, db_r->serialno);
-    dbms_set_string(q, 2, path);
+    dbms_set_int(q, 2, db_r->serialno);
+    dbms_set_int(q, 3, parent);
+
     if(dbms_execute(q))
         err =  dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
                              "DBMS Error during update "
@@ -771,6 +749,8 @@ dav_error *dbms_update_principal_property_aces(dav_repos_db *d,
     return err;
 }
 
+#define AHKS APR_HASH_KEY_STRING
+
 /**
  * Get the privilege id
  * @param d database handle
@@ -786,10 +766,19 @@ int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r,
     long priv_ns_id = 0;
     const char *privilege_name = dav_get_privilege_name(privilege);
     apr_pool_t *pool = db_r->p;
+    dav_repos_cache *cache = sabridge_get_cache(db_r->resource->info->rec);
+    int *value;
+
     TRACE();
 
     sabridge_get_namespace_id(d, db_r, dav_get_privilege_namespace(privilege), 
                             &priv_ns_id);
+
+    const char *key = apr_psprintf(db_r->p, "%ld:%s", priv_ns_id, privilege_name);
+
+    if ((value = (int *)apr_hash_get(cache->privileges, key, AHKS))) {
+        return *value;
+    }
 
     q = dbms_prepare(pool, d->db, 
                      "SELECT id FROM acl_privileges WHERE name = ? AND priv_namespace_id = ?");
@@ -803,6 +792,10 @@ int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r,
 	privilege_id = dbms_get_int(q, 1);
 	dbms_query_destroy(q);
     }
+
+    value = apr_pcalloc(db_r->p, sizeof(*value));
+    *value = privilege_id;
+    apr_hash_set(cache->privileges, key, AHKS, value);
 
     return privilege_id;
 }

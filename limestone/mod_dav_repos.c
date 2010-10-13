@@ -376,6 +376,7 @@ static int dav_repos_create_request(request_rec *r)
     dav_repos_cache *cache = (dav_repos_cache *)apr_pcalloc(r->pool, sizeof(*cache));
     cache->principal_type = apr_hash_make(r->pool);
     cache->namespaces = apr_hash_make(r->pool);
+    cache->privileges = apr_hash_make(r->pool);
     apr_table_setn(r->notes, "dav_repos_cache", (char *)cache);
 
     return OK;

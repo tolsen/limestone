@@ -310,7 +310,7 @@ dav_error *dbms_insert_lock(dav_lockdb *lockdb,
        "VALUES(?,?,"
        "           (SELECT principals.resource_id FROM principals "
        "           WHERE principals.name=?),"
-       "       ?,?,?,?,?)");
+       "       ?,?,?,?,?) RETURNING id");
     dbms_set_string(q, 1, lock->locktoken->char_uuid);
     dbms_set_int(q, 2, db_r->serialno);
     dbms_set_string(q, 3, lock->auth_user);
@@ -325,7 +325,9 @@ dav_error *dbms_insert_lock(dav_lockdb *lockdb,
         return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
                              "Couldn't insert direct locks");
     }
-    lock->info->lock_id = dbms_insert_id(d->db, "locks", pool);
+
+    dbms_next(q);
+    lock->info->lock_id = dbms_get_int(q, 1);
     dbms_query_destroy(q);
 
     return NULL;

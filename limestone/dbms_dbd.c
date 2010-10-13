@@ -186,7 +186,8 @@ int dbms_execute(dav_repos_query * query)
     //DBG2("[%d]Query to execute: %s\n", getpid(), escquery);
     DBG1("Query to execute: %s\n", escquery);
 
-    if (!strncasecmp("select", escquery, 6) || !strncasecmp("with", escquery, 4)) {
+    if (!strncasecmp("select", escquery, 6) || !strncasecmp("with", escquery, 4) 
+        || strstr(escquery, " RETURNING ")) {
         query->is_select = 1;
         error =
           apr_dbd_select(query->db->ap_dbd_dbms->driver, query->pool,
@@ -278,22 +279,6 @@ int dbms_query_destroy(dav_repos_query * query)
     DBG1("QUERY DESTROYED: %d\n", query_count);
 #endif
     return 0;
-}
-
-long dbms_insert_id(const dav_repos_dbms * db, const char *table, 
-                    apr_pool_t * pool)
-{
-    dav_repos_query *q;
-    long id;
-    char *id_query = apr_psprintf(pool, "SELECT CURRVAL('%s_id_seq')", table);
-    
-    q = dbms_prepare(pool, db, id_query);
-    dbms_execute(q);
-    dbms_next(q);
-    id = dbms_get_int(q, 1);
-    dbms_query_destroy(q);
-
-    return id;
 }
 
 char **dbms_fetch_row(const dav_repos_dbms * db,

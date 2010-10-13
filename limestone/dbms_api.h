@@ -190,16 +190,6 @@ char *dbms_get_string(dav_repos_query * query, int column);
 int dbms_query_destroy(dav_repos_query * query);
 
 /** 
- * Utility function that retrieves the ID of the last insert to a given table
- * @param db - handle to the database
- * @param table - The table for which to get last insert id.
- * @param pool - pool to make the required query
- * @return ID of the last insert
- */
-long dbms_insert_id(const dav_repos_dbms * db, const char *table, 
-                    apr_pool_t * pool);
-
-/** 
  * Fetches the next row of results
  * @deprecated Use dbms_next and dbms_get_* functions instead
  * @param db - handle to the database

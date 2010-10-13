@@ -264,7 +264,7 @@ dav_error *dbms_add_ace(const dav_repos_db * d, dav_repos_resource * r,
     q = dbms_prepare(pool, d->db,
 		     "INSERT INTO aces(grantdeny, resource_id, principal_id, protected, "
                                       "property_namespace_id, property_name) "
-                     "VALUES(?, ?, ?, ?, ?, ?)");
+                     "VALUES(?, ?, ?, ?, ?, ?) RETURNING id");
 
     dbms_set_string(q, 1, is_deny ? ACL_DENY : ACL_GRANT);
     dbms_set_int(q, 2, r->serialno);
@@ -273,9 +273,11 @@ dav_error *dbms_add_ace(const dav_repos_db * d, dav_repos_resource * r,
     dbms_set_int(q, 5, ns_id);
     dbms_set_string(q, 6, ace_property ? ace_property->name : NULL);
     dbms_execute(q);
+    dbms_next(q);
+    long ace_id = dbms_get_int(q, 1);
+
     dbms_query_destroy(q);
 
-    long ace_id = dbms_insert_id(d->db, "aces", pool);
     if(!ace_id) {
 	return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0,
                              "DBMS error while inserting into 'aces'");

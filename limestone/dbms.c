@@ -359,7 +359,7 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
                      "INSERT INTO resources (uuid, created_at, owner_id, "
                      "creator_id, type, displayname, "
                      "contentlanguage, limebar_state, lastmodified ) "
-                     "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? ) ");
+                     "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id");
     dbms_set_string(q, 1, r->uuid);
     dbms_set_string(q, 2, r->created_at);
     dbms_set_int(q, 3, r->owner_id);
@@ -372,12 +372,16 @@ dav_error *dbms_insert_resource(const dav_repos_db * d, dav_repos_resource * r)
     dbms_set_string(q, 9, time_apr_to_str(pool, apr_time_now()));
     
     isql_result = dbms_execute(q);
-    dbms_query_destroy(q);
-    if (isql_result)
+    if (isql_result) {
+        dbms_query_destroy(q);
         return dav_new_error(pool, HTTP_INTERNAL_SERVER_ERROR, 0, 
                              "DBMS error during insert to 'resources'");
+    }
     
-    r->serialno = dbms_insert_id(d->db, "resources", pool);
+    dbms_next(q);
+    r->serialno = dbms_get_int(q, 1); 
+    dbms_query_destroy(q);
+
     return err;
 }
 
@@ -1164,7 +1168,7 @@ static long dbms_insert_ns(const dav_repos_db * d,
 
     /* We need to add name space to DB and fill hash */
     q = dbms_prepare(pool, d->db,
-                     "INSERT INTO namespaces (name) VALUES (?)");
+                     "INSERT INTO namespaces (name) VALUES (?) RETURNING id");
     dbms_set_string(q, 1, namespace);
 
     if (dbms_execute(q)) {
@@ -1172,7 +1176,9 @@ static long dbms_insert_ns(const dav_repos_db * d,
         dbms_query_destroy(q);
         return 0;
     }
-    id = dbms_insert_id(d->db, "namespaces", pool);
+
+    dbms_next(q);
+    id = dbms_get_int(q, 1);
     dbms_query_destroy(q);
 
     return id;

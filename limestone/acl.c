@@ -48,7 +48,7 @@ dav_principal *dav_repos_get_prin_by_name(request_rec *r, const char *name)
     else if(!strcmp(name, "unauthenticated"))
         principal->type = PRINCIPAL_UNAUTHENTICATED;
     else {
-        dav_repos_cache *cache = dav_repos_get_db(r)->cache;
+        dav_repos_cache *cache = sabridge_get_cache(r);
         int *value, resource_type;
 
         if (!(value = (int *)apr_hash_get(cache->principal_type, name, AHKS))) {

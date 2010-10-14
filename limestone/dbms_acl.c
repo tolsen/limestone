@@ -766,7 +766,7 @@ int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r,
     long priv_ns_id = 0;
     const char *privilege_name = dav_get_privilege_name(privilege);
     apr_pool_t *pool = db_r->p;
-    dav_repos_cache *cache = d->cache;
+    dav_repos_cache *cache = sabridge_get_cache(db_r->resource->info->rec);
     int *value;
 
     TRACE();

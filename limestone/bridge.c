@@ -1225,7 +1225,7 @@ dav_error *sabridge_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
 dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_resource *db_r,
                                      const char *namespace, long *ns_id)
 {
-    dav_repos_cache *cache = d->cache;
+    dav_repos_cache *cache = sabridge_get_cache(db_r->resource->info->rec);
     long *value;
 
     if (!(value = (long *)apr_hash_get(cache->namespaces, namespace, AHKS))) {
@@ -1249,6 +1249,6 @@ dav_repos_cache *sabridge_get_cache(request_rec *r)
     while(root->main) {
         root = root->main;    
     }
-    
-    return (dav_repos_cache *)apr_table_get(root->notes, "dav_repos_cache");
+   
+    return dav_repos_get_db(root)->cache;
 }

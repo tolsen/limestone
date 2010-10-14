@@ -1225,7 +1225,7 @@ dav_error *sabridge_set_user_email(apr_pool_t *pool, const dav_repos_db *d,
 dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_resource *db_r,
                                      const char *namespace, long *ns_id)
 {
-    dav_repos_cache *cache = sabridge_get_cache(db_r->resource->info->rec);
+    dav_repos_cache *cache = d->cache;
     long *value;
 
     if (!(value = (long *)apr_hash_get(cache->namespaces, namespace, AHKS))) {
@@ -1234,7 +1234,7 @@ dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_reso
             return err;    
         }
 
-        value = apr_pcalloc(db_r->p, sizeof(*value));
+        value = apr_pcalloc(cache->pool, sizeof(*value));
         *value = *ns_id;
         apr_hash_set(cache->namespaces, namespace, AHKS, value);
     }

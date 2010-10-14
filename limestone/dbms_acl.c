@@ -766,7 +766,7 @@ int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r,
     long priv_ns_id = 0;
     const char *privilege_name = dav_get_privilege_name(privilege);
     apr_pool_t *pool = db_r->p;
-    dav_repos_cache *cache = sabridge_get_cache(db_r->resource->info->rec);
+    dav_repos_cache *cache = d->cache;
     int *value;
 
     TRACE();
@@ -793,7 +793,7 @@ int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r,
 	dbms_query_destroy(q);
     }
 
-    value = apr_pcalloc(db_r->p, sizeof(*value));
+    value = apr_pcalloc(cache->pool, sizeof(*value));
     *value = privilege_id;
     apr_hash_set(cache->privileges, key, AHKS, value);
 

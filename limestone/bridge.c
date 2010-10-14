@@ -1230,7 +1230,7 @@ dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_reso
 
     if (!(value = (long *)apr_hash_get(cache->namespaces, namespace, AHKS))) {
         dav_error *err = dbms_get_namespace_id(db_r->p, d, namespace, ns_id);
-        if (err) {
+        if (err || *ns_id == 0) {
             return err;    
         }
 

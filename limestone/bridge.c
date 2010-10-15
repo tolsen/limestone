@@ -1234,7 +1234,7 @@ dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_reso
             return err;    
         }
 
-        value = apr_pcalloc(cache->pool, sizeof(*value));
+        value = apr_pcalloc(db_r->p, sizeof(*value));
         *value = *ns_id;
         apr_hash_set(cache->namespaces, namespace, AHKS, value);
     }

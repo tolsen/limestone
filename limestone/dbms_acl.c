@@ -793,7 +793,7 @@ int dbms_get_privilege_id(const dav_repos_db *d, const dav_repos_resource *db_r,
 	dbms_query_destroy(q);
     }
 
-    value = apr_pcalloc(cache->pool, sizeof(*value));
+    value = apr_pcalloc(db_r->p, sizeof(*value));
     *value = privilege_id;
     apr_hash_set(cache->privileges, key, AHKS, value);
 

@@ -134,14 +134,6 @@ typedef struct {
 } dav_repos_profile_provider;
 
 typedef struct {
-    apr_pool_t *pool;
-    apr_hash_t *principal_type; // user or group
-    apr_hash_t *namespaces;
-    apr_hash_t *privileges;
-} dav_repos_cache;
-
-
-typedef struct {
     const char *tmp_dir;
     const char *file_dir;
 
@@ -158,13 +150,17 @@ typedef struct {
     const dav_repos_profile_provider *profile_provider;
 
     dav_repos_dbms *db;
-
-    dav_repos_cache *cache;
 } dav_repos_server_conf;
 
 /* dav_repos_server_conf is in repos.h */
 typedef dav_repos_server_conf dav_repos_db;
 
+
+typedef struct {
+    apr_hash_t *principal_type; // user or group
+    apr_hash_t *namespaces;
+    apr_hash_t *privileges;
+} dav_repos_cache;
 
 /* our hooks structures; these are gathered into a dav_provider */
 extern const dav_hooks_repository       dav_repos_hooks_repos;

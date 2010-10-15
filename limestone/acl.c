@@ -54,7 +54,7 @@ dav_principal *dav_repos_get_prin_by_name(request_rec *r, const char *name)
         if (!(value = (int *)apr_hash_get(cache->principal_type, name, AHKS))) {
             resource_type = dbms_get_principal_type_from_name(r->pool, 
                     dav_repos_get_db(r), name);
-            value = apr_pcalloc(cache->pool, sizeof(*value));
+            value = apr_pcalloc(r->pool, sizeof(*value));
             *value = resource_type;
             apr_hash_set(cache->principal_type, name, AHKS, value);
         }

@@ -1246,9 +1246,19 @@ dav_error *sabridge_get_namespace_id(const dav_repos_db *d, const dav_repos_reso
 dav_repos_cache *sabridge_get_cache(request_rec *r)
 {
     request_rec *root = r;
-    while(root->main) {
+    while(root->main && !root->notes) {
         root = root->main;    
     }
    
-    return dav_repos_get_db(root)->cache;
+    dav_repos_cache *cache = (dav_repos_cache *)apr_table_get(root->notes, "dav_repos_cache");
+    if (!cache) {
+        cache = (dav_repos_cache *)apr_pcalloc(root->pool, sizeof(*cache));
+        cache->principal_type = apr_hash_make(root->pool);
+        cache->namespaces = apr_hash_make(root->pool);
+        cache->privileges = apr_hash_make(root->pool);
+    }
+
+    apr_table_setn(root->notes, "dav_repos_cache", (char *)cache);
+
+    return cache;
 }

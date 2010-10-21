@@ -262,7 +262,7 @@ static dav_error *dav_repos_db_store(dav_db * db,
 				     dav_namespace_map * mapping)
 {
     size_t l_val;
-    char *val, *xmlinfo, *start_tag, *fullxml;
+    char *val, *xmlinfo, *start_tag, *fullxml, *empty_value;
     dav_repos_property *pr = apr_pcalloc(db->pool, sizeof(*pr));
     dav_repos_resource *dbr = db->mdb_r;
     dav_error *err = NULL;
@@ -299,10 +299,17 @@ static dav_error *dav_repos_db_store(dav_db * db,
 
     /* stop at the end of start tag */
     start_tag = strstr(fullxml, ">");
+    empty_value = start_tag - 1;
 
     /* get start_tag as xmlinfo */
-    int xmlinfosize = strlen(fullxml)-strlen(start_tag)+1;
+    int xmlinfosize = strlen(fullxml)-strlen(start_tag);
+
+    if (*empty_value == '/') {
+        xmlinfosize--;
+    }
+
     xmlinfo = apr_pstrndup(db->pool, fullxml, xmlinfosize);
+    xmlinfo = apr_pstrcat(db->pool, xmlinfo, ">", NULL);
 
     /* Warning : val[0] value is NULL, so you should use 'val+1' */
 

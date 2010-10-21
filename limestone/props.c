@@ -299,12 +299,12 @@ static dav_error *dav_repos_db_store(dav_db * db,
 
     /* stop at the end of start tag */
     start_tag = strstr(fullxml, ">");
-    empty_value = strstr(fullxml, "/>");
+    empty_value = start_tag - 1;
 
     /* get start_tag as xmlinfo */
     int xmlinfosize = strlen(fullxml)-strlen(start_tag);
 
-    if (empty_value) {
+    if (*empty_value == '/') {
         xmlinfosize--;
     }
 

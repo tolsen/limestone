@@ -112,6 +112,8 @@ while (<STDIN>) {
 
 sub create_statement_handle {
   if (! $dbh or $dbh->ping < 1) {
+    my $cur_time = gmtime;
+    print STDERR "${cur_time} plog connecting to database\n";
     $dbh = DBI->connect('dbi:Pg:dbname=' . $dbname . ';host=' . $dbhost . ';port=' . $dbport, $dbuser, $dbpass,{AutoCommit=>1})
       or throw_error($!);
 

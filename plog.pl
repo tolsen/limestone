@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# -*-cperl-*-
 
 # This program takes log data from Apache in 'plog1' format on STDIN. The
 # logged fields are name value pairs. If the field name is the name of a sql
@@ -40,19 +41,19 @@ $ipfilter = $ENV{'LIMESTONE_PLOG_FILTERED_IPS'} || '';
 
 # Collect options
 GetOptions(
-	'user=s' 	=> \$dbuser,   # Database connection user
-	'password=s' 	=> \$dbpass,   # Database user password
-	'host=s' 	=> \$dbhost,   # Database hostname/ip
-	'port=i' 	=> \$dbport,   # Database port
-	'database=s'	=> \$dbname,   # Database name
-	'tracelog=s'	=> \$dbtracelog, # Database trace log used if debugging is on
-	'schema=s'	=> \$dbschema, # Database schema
-	'debug=f'	=> \$debug     # Presence of this option as argument will enable debugging
-);
+           'user=s' 	=> \$dbuser, # Database connection user
+           'password=s' 	=> \$dbpass, # Database user password
+           'host=s' 	=> \$dbhost,     # Database hostname/ip
+           'port=i' 	=> \$dbport,     # Database port
+           'database=s'	=> \$dbname,     # Database name
+           'tracelog=s'	=> \$dbtracelog, # Database trace log used if debugging is on
+           'schema=s'	=> \$dbschema,   # Database schema
+           'debug=f'	=> \$debug # Presence of this option as argument will enable debugging
+          );
 
 # Option processing
 if ($dbschema ne "") {
-	$dbtable = "$dbschema.$dbtable";
+  $dbtable = "$dbschema.$dbtable";
 }
 
 
@@ -64,126 +65,126 @@ if ($dbschema ne "") {
 # which Apache spits these out.
 
 my @fieldnames = (
-         'log_version'   ,  # (int)  3 
-         'http_version'  ,  # (text) %H
-	 'remote_ip'     ,  # (inet) %h
-	 'request_id'    ,  # (char(24)) %{UNIQUE_ID}e
-         'request_method',  # (text) %m 
-         'request_uri'   ,  # (text) %U
-         'request_referer', # (text) %{Referer}i
-         'virtual_host'  ,        # (text) %{Host}i
-         'destination_uri'      , # (text) %{Destination}i 
-         'received_time' ,        # (timestamp tz) %{%F %R:%S %z}t
-         'response_microseconds', # (integer) %D
-         'request_firstline'    , # (text) %r
-         'response_status'      , # (smallint) %>s
-         'resource_uuid' ,        # (bigint) %{LIMESTONE_RESOURCE_UUID}e
-         'response_size' ,  # (integer) %b 
-         'auth_user'     ,  # (text) %u
-         'user_agent'    ,  # (text) %{User-Agent}i
-);
+                  'log_version'   , # (int)  3 
+                  'http_version'  , # (text) %H
+                  'remote_ip'     , # (inet) %h
+                  'request_id'    , # (char(24)) %{UNIQUE_ID}e
+                  'request_method', # (text) %m 
+                  'request_uri'   , # (text) %U
+                  'request_referer', # (text) %{Referer}i
+                  'virtual_host'  ,  # (text) %{Host}i
+                  'destination_uri'      , # (text) %{Destination}i 
+                  'received_time' , # (timestamp tz) %{%F %R:%S %z}t
+                  'response_microseconds', # (integer) %D
+                  'request_firstline'    , # (text) %r
+                  'response_status'      , # (smallint) %>s
+                  'resource_uuid' , # (bigint) %{LIMESTONE_RESOURCE_UUID}e
+                  'response_size' , # (integer) %b 
+                  'auth_user'     , # (text) %u
+                  'user_agent'    , # (text) %{User-Agent}i
+                 );
 
 # Make a map of fieldnames to their index order in the @vals array
-  $index = 0;
-  my %validfields = map { $_ => $index++ } @fieldnames;
+$index = 0;
+my %validfields = map { $_ => $index++ } @fieldnames;
 
 my @vals = ();
 
 # Entry point for doing stuff... main loop
 while (<STDIN>) {
-	if (/^$/) {
-		filter_out_gratuitous_logs(\@vals) or insert_vals (\@vals);
-		@vals =  map { "" } (0..$#fieldnames);
-	} else {
-       		chomp;
-		m/^([^:]+):([\s\S]*)$/;
-		($name, $value) = ($1, $2);
+  if (/^$/) {
+    filter_out_gratuitous_logs(\@vals) or insert_vals (\@vals);
+    @vals =  map { "" } (0..$#fieldnames);
+  } else {
+    chomp;
+    m/^([^:]+):([\s\S]*)$/;
+    ($name, $value) = ($1, $2);
 	# push only if "valid field"
-		if (exists $validfields{$name}) {
-		# insert value into correct place in array, index looked up in %validfields
-			$vals[$validfields{$name}] = $value;
-		}
-	}
+    if (exists $validfields{$name}) {
+      # insert value into correct place in array, index looked up in %validfields
+      $vals[$validfields{$name}] = $value;
+    }
+  }
 }
 
 
 # Subroutines/Functions
 
 sub create_statement_handle {
-	if (! $dbh or $dbh->ping < 1) {
-		$dbh = DBI->connect('dbi:Pg:dbname=' . $dbname . ';host=' . $dbhost . ';port=' . $dbport, $dbuser, $dbpass,{AutoCommit=>1})
-                     or throw_error($!);
+  if (! $dbh or $dbh->ping < 1) {
+    $dbh = DBI->connect('dbi:Pg:dbname=' . $dbname . ';host=' . $dbhost . ';port=' . $dbport, $dbuser, $dbpass,{AutoCommit=>1})
+      or throw_error($!);
 
 	if ( $debug ) {
-		open($tracefile, ">$dbtracelog") or die ($!);
-                autoflush $tracefile 1;
-		$dbh->pg_server_trace($tracefile);
+      open($tracefile, ">$dbtracelog") or die ($!);
+      autoflush $tracefile 1;
+      $dbh->pg_server_trace($tracefile);
 	}
 
-	}
-	if ($error = $dbh->err) {
-		throw_error($error);	
-	} else {
-                $query = 'INSERT INTO ' . $dbtable . ' ("' . join('","', @fieldnames) . '") ' .
-                         'VALUES (';
-		$query .= '?,' x $#fieldnames;
-		$query .= '?)';
+  }
+  if ($error = $dbh->err) {
+    throw_error($error);	
+  } else {
+    $query = 'INSERT INTO ' . $dbtable . ' ("' . join('","', @fieldnames) . '") ' .
+      'VALUES (';
+    $query .= '?,' x $#fieldnames;
+    $query .= '?)';
 
-		$sth = $dbh->prepare($query);
-	}
+    $sth = $dbh->prepare($query);
+  }
 }	
 
 sub insert_vals {
 
-        # Turn dashes into NULL values for numeric columns 
-	if (${$_[0]}[$validfields{'response_size'}] eq '-') {
-                ${$_[0]}[$validfields{'response_size'}] = undef;
-        }
+  # Turn dashes into NULL values for numeric columns 
+  if (${$_[0]}[$validfields{'response_size'}] eq '-') {
+    ${$_[0]}[$validfields{'response_size'}] = undef;
+  }
 
-	if (! $sth or $sth->execute( @{$_[0]} ) != 1) {
+  if (! $sth or $sth->execute( @{$_[0]} ) != 1) {
 	# then the insert didn't work right
 	# let's give it one more shot then shit the bed
 
-                eval {throw_error($dbh->err);};
-                	throw_error($@) if $@;
+    eval {throw_error($dbh->err);};
+    throw_error($@) if $@;
 
-		create_statement_handle();
-		if ($sth->execute ( @{$_[0]} ) != 1) {
-		#shit the bed
-			throw_error($dbh->err);
-                        die;
-		} 
-	}
+    create_statement_handle();
+    if ($sth->execute ( @{$_[0]} ) != 1) {
+      #shit the bed
+      throw_error($dbh->err);
+      die;
+    } 
+  }
 }
 
 sub filter_out_gratuitous_logs {
-# The entry should be filtered out if this function returns true
-       my $filter = 0; 
-       $vals_ref = $_[0];
+  # The entry should be filtered out if this function returns true
+  my $filter = 0; 
+  $vals_ref = $_[0];
 
-# as per https://trac.limebits.net/ticket/4817
-       if ( grep { "$_" eq "${$vals_ref}[$validfields{remote_ip}]" } @filtered_ips ) {
-		if (${$vals_ref}[$validfields{request_method}] eq 'OPTIONS' ||
-                    ${$vals_ref}[$validfields{request_method}] eq 'PROPFIND'
-                   ) {
-       			$filter = 1;
-       		}
-       } 	
+  # as per https://trac.limebits.net/ticket/4817
+  if ( grep { "$_" eq "${$vals_ref}[$validfields{remote_ip}]" } @filtered_ips ) {
+    if (${$vals_ref}[$validfields{request_method}] eq 'OPTIONS' ||
+        ${$vals_ref}[$validfields{request_method}] eq 'PROPFIND'
+       ) {
+      $filter = 1;
+    }
+  } 	
 
-       $filter;
+  $filter;
 }
 
-{ # scope enclosure for myname
+{                               # scope enclosure for myname
 
-BEGIN {
- my $myname = $0;
-}
+  BEGIN {
+    my $myname = $0;
+  }
 
-sub throw_error {
+  sub throw_error {
 	$msg = shift;
 	openlog("$myname", 'pid,nofatal', LOG_LOCAL0);
 	syslog('NOTICE',"$msg");
 	closelog;
-}
+  }
 
 }

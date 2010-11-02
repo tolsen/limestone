@@ -251,6 +251,7 @@ const char *dbms_get_domain_path(apr_pool_t *pool, dav_repos_db *d, const char *
 {
     dav_repos_query *q = NULL;
     const char *user = NULL, *path = NULL;
+    int not_found = 0;
     
     TRACE();
 
@@ -264,7 +265,16 @@ const char *dbms_get_domain_path(apr_pool_t *pool, dav_repos_db *d, const char *
         user = dbms_get_string(q, 1);
         path = dbms_get_string(q, 2);
     }
+    else {
+        not_found = 1;    
+    }
+
     dbms_query_destroy(q);
+
+    // if we could not find domain, don't give up yet, try without www. 
+    if (not_found && strncmp(host, "www.", 4) == 0) {
+        return dbms_get_domain_path(pool, d, host+4);
+    }
 
     if (user && path) {
        return apr_pstrcat(pool, "/home/", user, path, NULL);

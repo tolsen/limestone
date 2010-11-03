@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="tolsen" id="1">
+    <comment>Add copies column to resources table</comment>
+    <addColumn tableName="resources">
+        <column name="copies" type="integer" defaultValue="0"/>
+    </addColumn>
+    <comment>Add rule to update resource copies</comment>
+    <sql>
+CREATE RULE update_copies AS
+ON INSERT TO ${plog_schema}.logdata
+WHERE NEW.request_method = 'COPY' AND
+(NEW.response_status = 201 OR NEW.response_status = 204 OR NEW.response_status = 207)
+DO UPDATE resources SET copies = copies + 1 WHERE uuid = NEW.resource_uuid
+    </sql>
+  </changeSet>
+</databaseChangeLog>

@@ -39,5 +39,6 @@
   <include file="make_emails_case_insensitive_unique.xml"/>
   <include file="migrate_tags_to_properties.xml"/>
   <include file="migrate_description_to_properties.xml"/>
-  <include file="add_resource_edits.xml"/>
+  <include file="add_resource_edits.xml"/> 
+  <include file="add_resource_copies.xml"/>
 </databaseChangeLog>

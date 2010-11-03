@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="tolsen" id="1">
+    <comment>Add editss column to resources table</comment>
+    <addColumn tableName="resources">
+        <column name="edits" type="integer" defaultValue="0"/>
+    </addColumn>
+    <comment>Add rules to update resource views</comment>
+    <sql>
+CREATE RULE update_edits AS ON INSERT TO ${plog_schema}.logdata WHERE NEW.request_method = 'PUT' DO UPDATE resources SET edits = edits + 1 WHERE id IN (SELECT parents.id FROM binds INNER JOIN resources parents ON binds.collection_id = parents.id INNER JOIN resources child ON child.id = binds.resource_id WHERE child.uuid = NEW.resource_uuid AND binds.name = 'bitmix.json')
+    </sql>
+  </changeSet>
+</databaseChangeLog>

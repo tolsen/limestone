@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="tolsen" id="1">
+    <comment>Update update_views rules to only count GETs that return 200 or 304</comment>
+    <sql>DROP RULE update_views ON ${plog_schema}.logdata</sql>
+    <sql>
+      CREATE RULE update_views AS
+      ON INSERT TO ${plog_schema}.logdata
+      WHERE NEW.request_method = 'GET' AND
+      (NEW.response_status = 200 OR NEW.response_status = 304)
+      DO UPDATE resources SET views = views + 1
+      WHERE id IN (
+        SELECT parents.id FROM binds
+        INNER JOIN resources parents ON binds.collection_id = parents.id
+        INNER JOIN resources child ON child.id = binds.resource_id
+        WHERE child.uuid = NEW.resource_uuid AND binds.name LIKE '%.html'
+      )
+    </sql>
+  </changeSet>
+</databaseChangeLog>

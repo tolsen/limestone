@@ -41,4 +41,5 @@
   <include file="migrate_description_to_properties.xml"/>
   <include file="add_resource_edits.xml"/> 
   <include file="add_resource_copies.xml"/>
+  <include file="only_count_successful_views.xml"/>
 </databaseChangeLog>

@@ -43,4 +43,7 @@
   <include file="add_resource_copies.xml"/>
   <include file="only_count_successful_views.xml"/>
   <include file="add_resources_views_edits_copies_indices.xml"/>
+  <include file="add_language_plpgsql.xml"/>
+  <include file="add_resources_coolness.xml"/>
+  <include file="add_update_coolness.xml"/>
 </databaseChangeLog>

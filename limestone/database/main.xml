@@ -46,4 +46,5 @@
   <include file="add_language_plpgsql.xml"/>
   <include file="add_resources_coolness.xml"/>
   <include file="add_update_coolness.xml"/>
+  <include file="add_resources_coolness_index.xml"/>
 </databaseChangeLog>

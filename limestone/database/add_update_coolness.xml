@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION compute_coolness(_views INTEGER, _edits INTEGER, _cop
       -- use minimum of 1 in denominator to prevent division by zero
       SELECT INTO coolness
                     (((CAST(_views AS double precision) /
-                      (SELECT greatest(_views, max(views), 1) FROM resources)) +
+                      (SELECT greatest(_views, max(views), 1) FROM resources WHERE owner_id <> 1)) +
                       (CAST(_edits AS double precision) /
                       (SELECT greatest(_edits, max(edits), 1) FROM resources)) +
                       (CAST(_copies AS double precision) /

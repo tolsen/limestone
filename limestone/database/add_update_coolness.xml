@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="tolsen" id="1" runOnChange="true">
+    <comment>add stored procedure to compute coolness</comment>
+    <createProcedure>
+      <![CDATA[
+CREATE OR REPLACE FUNCTION compute_coolness(_views INTEGER, _edits INTEGER, _copies INTEGER) RETURNS DOUBLE PRECISION AS $$
+   DECLARE
+      coolness DOUBLE PRECISION;
+   BEGIN
+      -- use minimum of 1 in denominator to prevent division by zero
+      SELECT INTO coolness
+                    (((CAST(_views AS double precision) /
+                      (SELECT greatest(_views, max(views), 1) FROM resources WHERE owner_id <> 1)) +
+                      (CAST(_edits AS double precision) /
+                      (SELECT greatest(_edits, max(edits), 1) FROM resources)) +
+                      (CAST(_copies AS double precision) /
+                      (SELECT greatest(_copies, max(copies), 1) FROM resources))) * 100 / 3);
+      RETURN coolness;
+   END;
+$$ LANGUAGE 'plpgsql';
+      ]]>
+    </createProcedure>
+    <sql>
+      UPDATE resources SET coolness = compute_coolness(views, edits, copies)
+    </sql>
+  </changeSet>
+  <changeSet author="tolsen" id="2" runOnChange="true">
+    <comment>add stored procedure to update coolness</comment>
+    <createProcedure>
+      <![CDATA[
+CREATE OR REPLACE FUNCTION update_coolness() RETURNS TRIGGER AS $$
+   BEGIN
+        IF (OLD.views = NEW.views AND OLD.edits = NEW.edits AND OLD.copies = NEW.copies) THEN
+           RETURN NEW;
+        END IF;
+
+        NEW.coolness := compute_coolness(NEW.views, NEW.edits, NEW.copies);
+        RETURN NEW;
+   END;
+$$ LANGUAGE 'plpgsql';
+      ]]>
+    </createProcedure>
+  </changeSet>
+  <changeSet author="tolsen" id="3" runOnChange="true">
+    <comment>add update_coolness trigger</comment>
+    <sql>
+DROP TRIGGER IF EXISTS update_coolness ON resources;
+CREATE TRIGGER update_coolness
+  BEFORE UPDATE
+  ON resources
+  FOR EACH ROW
+    EXECUTE PROCEDURE update_coolness();
+    </sql>
+  </changeSet>
+</databaseChangeLog>
+
+

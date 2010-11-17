@@ -480,9 +480,8 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
     char *uri = NULL;
     const char *href = NULL;
     dav_repos_resource *db_ri = NULL;
-    dav_repos_resource *iter = NULL;
     apr_xml_elem *cur_elem = scope_elem->first_child;
-    int depth, nitems;
+    int depth;
 
     TRACE();
 
@@ -582,15 +581,33 @@ int parse_scope(request_rec * r, search_ctx * sctx, apr_xml_elem * scope_elem)
     dav_get_resource_from_uri(uri, r, 0, NULL, &ri);
     db_ri = ri->info->db_r;
 
-    sabridge_get_collection_children(sctx->db, db_ri, depth, "read", &iter, 
-                                     NULL, &nitems);
-    db_ri->next = iter;
-    iter = db_ri;
-    while(iter) {
-        /* Try to decouple binds from search */
-        apr_hash_set(sctx->bind_uri_map, &iter->bind_id, 
-                     sizeof(int), iter->uri);
-        iter = iter->next;
+    apr_pool_t *pool = r->pool;
+
+    /* append to search_graph_seed and search_graph_cond fragments */
+    const char *fragment = apr_psprintf(pool, "(%d, %d, '%s', %ld::bigint, 0, ARRAY[%d], false)", 
+                                        db_ri->bind_id, db_ri->bind_id, db_ri->uri, db_ri->serialno,
+                                        db_ri->bind_id);
+    if (sctx->search_graph_seed) {
+        sctx->search_graph_seed = apr_pstrcat(pool, sctx->search_graph_seed, ",", fragment, NULL);
+    }
+    else {
+        sctx->search_graph_seed = (char *)fragment;    
+    }
+
+    if (depth == DAV_INFINITY) {
+        fragment = apr_psprintf(pool, "(sg.root_bind_id = %d)", db_ri->bind_id);
+    }
+    else {
+        fragment = apr_psprintf(pool, "(sg.root_bind_id = %d AND sg.depth < %d)", 
+                                db_ri->bind_id, depth);
+    }
+
+    if (sctx->search_graph_cond) {
+        sctx->search_graph_cond = apr_pstrcat(pool, sctx->search_graph_cond, " OR ", 
+                                                fragment, NULL);
+    }
+    else {
+        sctx->search_graph_cond = (char *)fragment;    
     }
 
     /* TODO: include-versions */
@@ -984,7 +1001,7 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
 {
     dav_response *tail;
     char **dbrow, **good_props, **bad_props;
-    int i, results_count = 0, j, bind_id, k;
+    int i, results_count = 0, j, k;
     const char *last_href = NULL, *href;
     apr_hash_t *bitmarks = NULL;
     apr_hash_index_t *hi;
@@ -1005,16 +1022,7 @@ int build_xml_response(apr_pool_t *pool, search_ctx *sctx, dav_response ** res)
     for(i=0; i<results_count+1; i++) {
         if (i != results_count) {
             dbrow = dbms_fetch_row_num(sctx->db->db, sctx->q, pool, i);
-
-            if (sctx->is_bit_query) {
-                href = dbrow[0];
-            }
-            else {
-                bind_id = atoi(dbrow[0]);
-
-                /* Get URI */
-                href = apr_hash_get(sctx->bind_uri_map, &bind_id, sizeof(int));
-            }
+            href = dbrow[0];
         }
         
         if (!last_href || apr_strnatcmp(href, last_href) != 0 || i == results_count ) {
@@ -1286,7 +1294,16 @@ int build_query_select(request_rec *r, search_ctx *sctx)
                 "'/' || b4.name AS path");
     }
     else {
-        sctx->select = apr_psprintf(r->pool, "SELECT binds.id");
+        sctx->select = apr_pstrcat(r->pool, "WITH RECURSIVE "
+        "search_graph(root_bind_id, bind_id, url, resource_id, depth, visited_binds, cycle) AS ("
+        " VALUES ", sctx->search_graph_seed, 
+        " UNION ALL"
+        " SELECT sg.root_bind_id, b.id, url || '/' || b.name, b.resource_id, sg.depth + 1, "
+            "visited_binds || b.id, b.id = ANY(visited_binds)"
+            " FROM binds b, search_graph sg"
+            " WHERE b.collection_id = sg.resource_id AND NOT cycle AND (", 
+                sctx->search_graph_cond, "))"
+        " SELECT search_graph.url", NULL);
     }
 
     if (sctx->bitmark_support_req) {
@@ -1373,7 +1390,7 @@ int build_query_from(request_rec *r, search_ctx *sctx)
     }
     else {
         sctx->from = apr_pstrcat(pool, sctx->from, 
-            " LEFT JOIN binds ON resources.id = binds.resource_id ", NULL);
+            " INNER JOIN search_graph ON resources.id = search_graph.resource_id ", NULL);
     }
 
     for(hi = apr_hash_first(pool, sctx->prop_map); hi;
@@ -1407,7 +1424,6 @@ int build_query_from(request_rec *r, search_ctx *sctx)
 int build_query_where(request_rec *r, search_ctx *sctx)
 {
     apr_hash_index_t *hi;
-    const void *bind;
     char *temp;
     void *val;
 
@@ -1417,18 +1433,6 @@ int build_query_where(request_rec *r, search_ctx *sctx)
         sctx->where = apr_psprintf(r->pool, 
             " WHERE b1.collection_id = %d AND b1.name = 'home'"
             " AND b3.name = 'bits'", ROOT_COLLECTION_ID);
-    }
-    else {    
-        sctx->where = apr_psprintf(r->pool, " WHERE binds.id IN (");
-        for(hi = apr_hash_first(r->pool, sctx->bind_uri_map); hi;
-            hi = apr_hash_next(hi)) {
-            apr_hash_this(hi, &bind, NULL, NULL);
-            temp = apr_psprintf(r->pool, " %d,", *(int *)bind);
-            sctx->where = apr_pstrcat(r->pool, sctx->where, temp, NULL);
-        }
-
-        /* correct the last ',' */
-        sctx->where[strlen(sctx->where) - 1] = ')';
     }
 
     if (sctx->b2_rid) {
@@ -1441,11 +1445,15 @@ int build_query_where(request_rec *r, search_ctx *sctx)
                         " AND b4.name = '", sctx->b4_name, "' ", NULL);
     }
 
-
     if(sctx->where_cond) {
         /* Add other WHERE conditions */
-        sctx->where = apr_pstrcat(r->pool, sctx->where, " AND ", 
-                                  sctx->where_cond, NULL);
+        if (sctx->where) {
+            sctx->where = apr_pstrcat(r->pool, sctx->where, " AND ", 
+                                        sctx->where_cond, NULL);
+        }
+        else {
+            sctx->where = apr_pstrcat(r->pool, " WHERE ", sctx->where_cond, NULL);    
+        }
     }
 
     if(sctx->bitmark_support_req) {

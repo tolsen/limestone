@@ -78,6 +78,8 @@ typedef struct {
     const char *b4_name;        /* set to name of bind 4 in is-bit query */
     int b2_rid;                 /* set to the resource_id on which to filter
                                    the second bind for a is-bit query */
+    char *search_graph_seed;    /* the base case for recursive search graph query */
+    char *search_graph_cond;    /* depth constraints for the various folders in search graph query */
 } search_ctx;
 
 typedef struct dead_prop_list dead_prop_list;

@@ -1476,6 +1476,10 @@ int build_query_where(request_rec *r, search_ctx *sctx)
         }
     }
 
+    if (!sctx->where) {
+        sctx->where = apr_psprintf(r->pool, " ");    
+    }
+
     return HTTP_OK;
 }
 

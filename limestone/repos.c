@@ -1161,6 +1161,16 @@ const char *dav_repos_getetag(const dav_resource * resource)
     return sabridge_getetag_dbr(resource->info->db_r);
 }
 
+static const char *strip_port(apr_pool_t *p, const char *host) 
+{
+    const char *port = strstr(host, ":");
+    if (!port) {
+        return host;
+    }
+
+    return apr_pstrndup(p, host, strlen(host) - strlen(port));
+}
+
 /* Limebits specific, make this configurable */
 const char *dav_repos_response_href_transform(request_rec *r, const char *uri)
 {
@@ -1170,9 +1180,10 @@ const char *dav_repos_response_href_transform(request_rec *r, const char *uri)
     TRACE();
 
     const char *host = apr_table_get(r->headers_in, "Host");
+    host = strip_port(r->pool, host);
     host_len = strlen(host);
 
-    const char *server_name = r->server->defn_name;
+    const char *server_name = r->server->server_hostname;
 
     if (server_name) {
         server_len = strlen(server_name);

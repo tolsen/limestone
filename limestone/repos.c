@@ -1192,7 +1192,7 @@ const char *dav_repos_response_href_transform(request_rec *r, const char *uri)
         if (strcmp(hostname, server_name) == 0 ||
             (host_len > server_len && 
              strcmp(hostname + host_len - server_len, 
-                    apr_pstrcat(r->pool, ".", server_name, NULL))
+                    apr_pstrcat(r->pool, ".", server_name, NULL)) == 0 
             )) {
             return result_uri;
         }

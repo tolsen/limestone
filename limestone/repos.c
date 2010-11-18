@@ -1180,8 +1180,8 @@ const char *dav_repos_response_href_transform(request_rec *r, const char *uri)
     TRACE();
 
     const char *host = apr_table_get(r->headers_in, "Host");
-    host = strip_port(r->pool, host);
-    host_len = strlen(host);
+    const char *hostname = strip_port(r->pool, host);
+    host_len = strlen(hostname);
 
     const char *server_name = r->server->server_hostname;
 
@@ -1189,9 +1189,9 @@ const char *dav_repos_response_href_transform(request_rec *r, const char *uri)
         server_len = strlen(server_name);
 
         /* check if Host matches ServerName, or is a subdomain */
-        if (strcmp(host, server_name) == 0 ||
+        if (strcmp(hostname, server_name) == 0 ||
             (host_len > server_len && 
-             strcmp(host + host_len - server_len, 
+             strcmp(hostname + host_len - server_len, 
                     apr_pstrcat(r->pool, ".", server_name, NULL))
             )) {
             return result_uri;

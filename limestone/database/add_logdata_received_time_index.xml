@@ -5,8 +5,5 @@
     <createIndex schemaName="${plog_schema}" tableName="logdata" indexName="idx_logdata_received_time">
       <column name="received_time"/>
     </createIndex>
-    <createIndex schemaName="${plog_schema}" tableName="logdata" indexName="idx_logdata_request_uri">
-      <column name="request_uri"/>
-    </createIndex>
   </changeSet>
 </databaseChangeLog>

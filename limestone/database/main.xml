@@ -47,5 +47,5 @@
   <include file="add_resources_coolness.xml"/>
   <include file="add_update_coolness.xml"/>
   <include file="add_resources_coolness_index.xml"/>
-  <include file="add_logdata_received_time_and_request_uri_indices.xml"/>
+  <include file="add_logdata_received_time_index.xml"/>
 </databaseChangeLog>

@@ -48,4 +48,5 @@
   <include file="add_update_coolness.xml"/>
   <include file="add_resources_coolness_index.xml"/>
   <include file="add_logdata_received_time_index.xml"/>
+  <include file="run_on_change_resource_views.xml"/>
 </databaseChangeLog>

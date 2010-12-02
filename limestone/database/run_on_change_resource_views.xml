@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+  <changeSet author="paritosh" id="1" runOnChange="true">
+    <comment>Fix rules that update resource views</comment>
+    <sql>DROP RULE update_views ON ${plog_schema}.logdata</sql>
+    <sql>CREATE RULE update_views AS 
+            ON INSERT TO ${plog_schema}.logdata 
+                WHERE NEW.request_method = 'GET' 
+            DO UPDATE resources SET views = views + 1 
+                WHERE id IN (
+                    SELECT parents.id 
+                    FROM binds INNER JOIN resources parents ON binds.collection_id = parents.id 
+                        INNER JOIN resources child ON child.id = binds.resource_id 
+                    WHERE child.uuid = NEW.resource_uuid AND binds.name IN 
+                        ('index.html', 'template.json', 'theme.css', 'combined.js', 'manifest.js')
+                )
+    </sql>
+  </changeSet>
+</databaseChangeLog>

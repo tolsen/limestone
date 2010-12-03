@@ -428,6 +428,8 @@ apr_hash_t *get_liveprop_map(apr_pool_t *pool)
                      APR_HASH_KEY_STRING, "resources.views");
         apr_hash_set(liveprop_map, "coolness", 
                      APR_HASH_KEY_STRING, "resources.coolness");
+        apr_hash_set(liveprop_map, "edits", 
+                     APR_HASH_KEY_STRING, "resources.edits");
     }
 
     return liveprop_map;

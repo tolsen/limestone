@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.8 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.8.xsd">
+
+  <changeSet author="tolsen" id="1">
+    <comment>Recreate acl_inheritance.path index with varchar_pattern_ops</comment>
+    <dropIndex indexName="idx_acl_inheritance_path"/>
+    <sql>CREATE INDEX idx_acl_inheritance_path ON acl_inheritance (path varchar_pattern_ops)</sql>
+  </changeSet>
+  
+</databaseChangeLog>

@@ -49,4 +49,5 @@
   <include file="add_resources_coolness_index.xml"/>
   <include file="add_logdata_received_time_index.xml"/>
   <include file="run_on_change_resource_views.xml"/>
+  <include file="recreate_acl_inheritance_path_index_with_varchar_pattern_ops.xml"/>
 </databaseChangeLog>

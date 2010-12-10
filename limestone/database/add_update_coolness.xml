@@ -4,10 +4,12 @@
     <comment>add stored procedure to compute coolness</comment>
     <createProcedure>
       <![CDATA[
-CREATE OR REPLACE FUNCTION compute_coolness(_views INTEGER, _edits INTEGER, _copies INTEGER) RETURNS DOUBLE PRECISION AS $$
+CREATE OR REPLACE FUNCTION compute_coolness(_id INTEGER, _views INTEGER, _edits INTEGER, _copies INTEGER) RETURNS DOUBLE PRECISION AS $$
    DECLARE
       coolness DOUBLE PRECISION;
       max_edits INTEGER;
+      max_tags INTEGER;
+      tags INTEGER;
    BEGIN
       IF _edits < 30
       THEN
@@ -16,20 +18,30 @@ CREATE OR REPLACE FUNCTION compute_coolness(_views INTEGER, _edits INTEGER, _cop
         SELECT greatest(_edits, max(edits), 1) INTO max_edits FROM resources;
       END IF;
 
+      SELECT length(value) INTO tags FROM properties p, namespaces n WHERE p.namespace_id = n.id AND n.name='http://limebits.com/ns/1.0/' AND p.name='tags' AND resource_id=_id;
+
+      IF tags < 50
+      THEN
+        max_tags := 50;
+      ELSE
+        max_tags := tags;
+      END IF;
+
       -- use minimum of 1 in denominator to prevent division by zero
       SELECT INTO coolness
                     (((CAST(_views AS double precision) /
                       (WITH excluded_users AS (SELECT resource_id FROM principals WHERE name IN ('limestone', 'bits', 'limelabs')) SELECT greatest(_views, max(views), 1) FROM resources WHERE owner_id NOT IN (SELECT * FROM excluded_users)) ) +
                       (2 * (CAST(_edits AS double precision) - 30)/ (max_edits)) +
                       (CAST(_copies AS double precision) /
-                      (WITH excluded_users AS (SELECT resource_id FROM principals WHERE name in ('limestone', 'bits')) SELECT greatest(_copies, max(copies), 1) FROM resources WHERE owner_id NOT IN (SELECT * FROM excluded_users)))) * 100 / 3);
+                      (WITH excluded_users AS (SELECT resource_id FROM principals WHERE name in ('limestone', 'bits')) SELECT greatest(_copies, max(copies), 1) FROM resources WHERE owner_id NOT IN (SELECT * FROM excluded_users))) +
+                      (CAST(tags AS double precision) / (max_tags))) * 100 / 5);
       RETURN coolness;
    END;
 $$ LANGUAGE 'plpgsql';
       ]]>
     </createProcedure>
     <sql>
-      UPDATE resources SET coolness = compute_coolness(views, edits, copies)
+      UPDATE resources SET coolness = compute_coolness(id, views, edits, copies)
     </sql>
   </changeSet>
   <changeSet author="tolsen" id="2" runOnChange="true">
@@ -42,7 +54,7 @@ CREATE OR REPLACE FUNCTION update_coolness() RETURNS TRIGGER AS $$
            RETURN NEW;
         END IF;
 
-        NEW.coolness := compute_coolness(NEW.views, NEW.edits, NEW.copies);
+        NEW.coolness := compute_coolness(NEW.id, NEW.views, NEW.edits, NEW.copies);
         RETURN NEW;
    END;
 $$ LANGUAGE 'plpgsql';

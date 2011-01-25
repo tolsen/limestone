@@ -1,4 +1,5 @@
 # ====================================================================
+# Copyright 2011 Lime Labs LLC
 # Copyright 2007 Lime Spot LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -159,7 +160,7 @@ AUTHBIND_PATH=`which authbind`
 if (test x${LIMESTONE_PGSQL_VHOST_PORT} = x || test ${LIMESTONE_PGSQL_VHOST_PORT} -lt 1024) && \
    test x${AUTHBIND_PATH} != x; then
    AC_MSG_RESULT(yes)
-   AUTHBIND=authbind
+   AUTHBIND="authbind --deep"
 else
    AC_MSG_RESULT(no)
 fi
